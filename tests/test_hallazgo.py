@@ -114,6 +114,60 @@ def test_desde_veredicto_marca_la_inferencia_y_distingue_corte_de_cierre():
     )
 
 
+def _desde(fila):
+    return h.desde_veredicto(fila, nodo="node-1", generado="2026-11-01T09:30:00-06:00", datos="reboots.jsonl#x")
+
+
+INDET = "INDETERMINADA entre energia y hardware interno"
+
+
+def test_la_causa_y_su_fuente_van_en_las_fuentes_y_reemplazan_la_indeterminacion():
+    con = _desde({**FILA, "causa": "PANICO_KDUMP", "causa_fuente": "/var/crash/202611010930/dmesg.202611010930"})
+    fuentes, inferencia = con.split(h.H_INFERENCIA)
+    assert h.valida(con) == [] and 'tipo: "corte_abrupto"' in con
+    assert "**PANICO_KDUMP**" in fuentes and "`/var/crash/202611010930/dmesg.202611010930`" in fuentes
+    assert INDET not in con and "**PANICO_KDUMP**" in inferencia and "dmesg.202611010930" in inferencia
+    # control negativo: la MISMA fila con causa INDETERMINADO si la declara indeterminada
+    sin = _desde({**FILA, "causa": "INDETERMINADO", "causa_fuente": None})
+    assert INDET in sin and "`causa_fuente`): ninguna." in sin and h.valida(sin) == []
+
+
+def test_un_panic_del_journal_no_se_declara_indeterminado():
+    p = _desde({**FILA, "etiqueta": "PANIC_KERNEL", "causa": "PANIC_KERNEL",
+                "causa_fuente": "journal de kernel del boot: Kernel panic - not syncing"})
+    assert INDET not in p and "Kernel panic - not syncing" in p.split(h.H_INFERENCIA)[1]
+    # una fila vieja, sin el campo, deriva la causa de la etiqueta con la regla de reboot_verdict
+    viejo = _desde({**FILA, "etiqueta": "PANIC_KERNEL"})
+    assert INDET not in viejo and "no trae `causa`" in viejo and "**PANIC_KERNEL**" in viejo
+    assert INDET in _desde(FILA)  # control: la vieja CORTE_ABRUPTO sigue indeterminada
+
+
+def test_un_fantasma_que_no_completo_el_arranque_es_reinicio_y_no_corte():
+    fantasma = {**FILA, "etiqueta": "INDETERMINADO", "arranque_fantasma": True, "hueco_s": None,
+                "causa": "FALLO_DE_ARRANQUE_EN_BASIC",
+                "causa_fuente": "/var/lib/blackbox/arranque/etapas.jsonl (ultima etapa 'basic')"}
+    t = _desde(fantasma)
+    assert h.valida(t) == [] and 'tipo: "reinicio"' in t and INDET not in t
+    assert "**FALLO_DE_ARRANQUE_EN_BASIC**" in t.split(h.H_INFERENCIA)[1] and "etapas.jsonl" in t
+    # control negativo: el mismo fantasma sin causa es un corte sin explicar
+    assert 'tipo: "corte_abrupto"' in _desde({**fantasma, "causa": "INDETERMINADO", "causa_fuente": None})
+
+
+def test_corte_de_red_es_corte_abrupto_y_el_cierre_sigue_siendo_reinicio():
+    red = _desde({**FILA, "etiqueta": "CORTE_DE_RED", "causa": "CORTE_DE_RED", "could_not_run": [],
+                  "causa_fuente": "externo/energia.jsonl (voltaje 0)"})
+    assert 'tipo: "corte_abrupto"' in red and INDET not in red
+    cierre = _desde({**FILA, "etiqueta": "CIERRE_ORDENADO_REBOOT", "causa": "CIERRE_ORDENADO_REBOOT",
+                     "causa_fuente": "journal del boot: Reached target reboot.target"})
+    assert 'tipo: "reinicio"' in cierre and "[inferencia]" not in cierre and "Sin inferencia nueva" in cierre
+
+
+def test_con_observador_que_no_decidio_no_se_dice_que_falto():
+    t = _desde({**FILA, "causa": "INDETERMINADO", "causa_fuente": None, "could_not_run": []})
+    assert INDET in t and "no alcanzo a decidirla" in t and "sin observador externo" not in t
+    assert "sin observador externo" in _desde(FILA)  # control: sin observador, lo dice
+
+
 def test_el_nodo_anonimo_no_filtra_el_machine_id_y_declara_su_ausencia():
     n = h.nodo_anonimo(lambda _: "abcdef0123456789")
     assert n.startswith("node-") and "abcdef" not in n

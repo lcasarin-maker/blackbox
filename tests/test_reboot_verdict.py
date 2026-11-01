@@ -135,7 +135,7 @@ def test_la_fila_lleva_la_palabra_bert_0x14_del_arranque_siguiente_y_nada_si_no_
 
 
 # ------------------------------------------------- forense movido desde el detector de un consumidor externo
-# DEBT-CONTRATO-ATLAS-INSTRUMENTOS-EN-BLACKBOX-01: la medicion vive en bb; el consumidor externo solo lee la fila.
+# Una ficha reubicada al consumidor de conocimiento: la medicion vive en bb; el consumidor externo solo lee la fila.
 SMART_SIN_PERMISO = (
     "smartctl 7.4 2023-08-01 r5530 [aarch64-linux-6.17.0-1031-nvidia] (local build)\n"
     "Copyright (C) 2002-23, Bruce Allen, Christian Franke, www.smartmontools.org\n"

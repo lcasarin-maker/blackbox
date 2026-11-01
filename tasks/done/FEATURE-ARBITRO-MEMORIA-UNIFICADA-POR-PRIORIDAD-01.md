@@ -32,7 +32,7 @@ Por que es de bb: `SPEC.md` ("Actuar sobre lo que mide, donde la inaccion cuesta
 ## Lo que la ficha del consumidor de conocimiento decia y esta lectura corrige
 
 1. "Hoy hay una compuerta de entrada y un monitor sin manos": falso para bb. `interruptores.json` marca `memavail: actuar` y `portero: actuar`; `vigilante_memavail` detiene (`systemctl --user stop`) la unidad elegible de mayor `memory.current`. Lo que falta es el RANGO: hoy elige por tamano y solo distingue protegido o no (`data/procesos_protegidos.json`, que protege `vllm`, `docker`, `containerd`).
-2. "Una referencia externa es un OOM": no. `DEBT-VERIFICAR-DGX-30-OOM-LLAMADORES-CONCURRENTES-01` (hecha) lo leyo en el consumidor de conocimiento: cuelgue del 2026-07-31 por `NV_ERR_NO_MEMORY` del driver. Una referencia externa es el cuelgue del 2026-08-21 (la compuerta miro el nivel, no la pendiente). Los OOM del 2026-08-07 y 08-14 NO se leyeron aqui; candidatos del consumidor de conocimiento que los mencionan: cinco referencias externas.
+2. "Una referencia externa es un OOM": no. `DEBT-VERIFICAR-REFERENCIA-OOM-LLAMADORES-CONCURRENTES-01` (hecha) lo leyo en el consumidor de conocimiento: cuelgue del 2026-07-31 por `NV_ERR_NO_MEMORY` del driver. Una referencia externa es el cuelgue del 2026-08-21 (la compuerta miro el nivel, no la pendiente). Los OOM del 2026-08-07 y 08-14 NO se leyeron aqui; candidatos del consumidor de conocimiento que los mencionan: cinco referencias externas.
 3. "Ceder y recuperar" no se traslada tal cual. Medido el 2026-10-30 con una unidad transitoria de 300 MiB:
 
    ```

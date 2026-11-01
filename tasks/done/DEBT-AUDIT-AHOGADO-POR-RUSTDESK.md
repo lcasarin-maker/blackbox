@@ -10,7 +10,7 @@ origin: detected
 detector: {"rule": "audit/execve-flood", "confidence": 1.0}
 satd_family: BLIND_INSTRUMENT
 created: 2026-09-23
-close_check: {"cmd": "grep -q 'CERRADO' tasks/done/DEBT-AUDIT-AHOGADO-POR-RUSTDESK.md", "expect": "exit_zero", "porque": "cierre solo con evidencia real (comando + salida + control negativo) en el done, patron DEBT-DGX-438."}
+close_check: {"cmd": "grep -q 'CERRADO' tasks/done/DEBT-AUDIT-AHOGADO-POR-RUSTDESK.md", "expect": "exit_zero", "porque": "cierre solo con evidencia real (comando + salida + control negativo) en el done, patron DEBT-SIGTERM-SIN-CAUSA-RAIZ."}
 evidence:
   pass: tasks/evidence/DEBT-AUDIT-AHOGADO-POR-RUSTDESK/pass.txt
   fail: tasks/evidence/DEBT-AUDIT-AHOGADO-POR-RUSTDESK/fail.txt

@@ -276,7 +276,7 @@ camino es el que se toma, aunque cueste más pasos.
 
 ## 2026-10-13 — Regla sudoers acotada para el agente (voto de Luis: "Lista corta de comandos fijos")
 
-- **Decidido:** `/etc/sudoers.d/bb-claude` (0440 root:root, instalado por Luis) da `NOPASSWD` a `lcasarin` solo para seis comandos exactos: `auditctl -s`, `augenrules --load`, `auditctl -b 32768`, `systemctl restart bb-usable.service`, `nvidia-spark-ota-check summary`, `apt-mark showhold`.
+- **Decidido:** `/etc/sudoers.d/bb-claude` (0440 root:root, instalado por Luis) da `NOPASSWD` a `<usuario>` solo para seis comandos exactos: `auditctl -s`, `augenrules --load`, `auditctl -b 32768`, `systemctl restart bb-usable.service`, `nvidia-spark-ota-check summary`, `apt-mark showhold`.
 - **Motivo:** esas lecturas y reinicios acotados se repetian y bloqueaban el trabajo autonomo; ninguno puede dejar la maquina sin GPU ni cambiar reglas fuera del limite ya votado.
 - **Medido:** `sudo -n auditctl -s` corre sin clave; controles negativos `sudo -n auditctl -l` y `sudo -n systemctl restart docker` piden contraseña.
 - **Descarta:** NOPASSWD para `enable-privileged.sh`, `docker restart`, `daemon-reload` y comodines (`auditctl *`): un reinicio de docker tumba vLLM y el `daemon-reload` tiene riesgo P1 de perder la GPU.

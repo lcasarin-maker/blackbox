@@ -25,8 +25,8 @@ mata este mismo proceso, asi que la prueba tiene que venir de afuera
 (`--externo`). Ver DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01.
 
 Forense por boot (esquema `bb-reboot/1`, 2026-10-11): la medicion que hacia el
-detector de crashes de un consumidor externo vive aqui (DEBT-CONTRATO-ATLAS-
-INSTRUMENTOS-EN-BLACKBOX-01, enmienda del 2026-10-11 a la SPEC). Cada fila lleva,
+detector de crashes de un consumidor externo vive aqui (una ficha reubicada al
+consumidor de conocimiento, enmienda del 2026-10-11 a la SPEC). Cada fila lleva,
 ademas del veredicto: la linea de journald del arranque siguiente que declara el
 journal corrupto, la linea literal de panic, el `Shutting down.` de PID 1, las
 lineas de kernel con los patrones del diagnostico manual del 2026-08-31, los Xid

@@ -1,5 +1,5 @@
 ---
-id: DEBT-DGX-438-SIN-CAUSA-RAIZ
+id: DEBT-SIGTERM-SIN-CAUSA-RAIZ
 kind: debt
 title: Algo mata procesos de fondo con SIGTERM y no se sabe que
 status: done
@@ -10,11 +10,11 @@ origin: detected
 detector: {"rule": "systemd/unit-killed-by-TERM", "confidence": 1.0}
 satd_family: UNKNOWN_FAILURE
 created: 2026-09-08
-close_check: {"cmd": "grep -q 'CERRADO' tasks/done/DEBT-DGX-438-SIN-CAUSA-RAIZ.md", "expect": "exit_zero", "porque": "cierre solo con evidencia real (comando + salida + control negativo) en el done, patron DEBT-AUDIT-AHOGADO-POR-RUSTDESK."}
+close_check: {"cmd": "grep -q 'CERRADO' tasks/done/DEBT-SIGTERM-SIN-CAUSA-RAIZ.md", "expect": "exit_zero", "porque": "cierre solo con evidencia real (comando + salida + control negativo) en el done, patron DEBT-AUDIT-AHOGADO-POR-RUSTDESK."}
 evidence:
-  pass: tasks/evidence/DEBT-DGX-438-SIN-CAUSA-RAIZ/pass.txt
-  fail: tasks/evidence/DEBT-DGX-438-SIN-CAUSA-RAIZ/fail.txt
-  e2e: tasks/evidence/DEBT-DGX-438-SIN-CAUSA-RAIZ/e2e.txt
+  pass: tasks/evidence/DEBT-SIGTERM-SIN-CAUSA-RAIZ/pass.txt
+  fail: tasks/evidence/DEBT-SIGTERM-SIN-CAUSA-RAIZ/fail.txt
+  e2e: tasks/evidence/DEBT-SIGTERM-SIN-CAUSA-RAIZ/e2e.txt
 reason: "CERRADO como void_wontfix 2026-09-27, por decision del dueno con la objecion puesta delante. El instrumento esta armado, acumula fuera del anillo y su columna de victima quedo arreglada HOY: 44 de 314 capturas (14.0 %) traian el grupo de procesos leido como un pid imposible y 28 mas traian kill(0,sig), o sea 72 (22.9 %) mal clasificadas. Con el arreglo, autolimpieza pasa de 3 a 31 y atribucion incompleta de 70 a 42, y el SUJETO sigue en 0: ni una captura de un demonio matando un proceso ajeno nombrable. No se cierra afirmando que no ocurre -- se cierra porque lo que queda es un limite del corpus (top-5 a 1/min no ve procesos de vida corta) y no una via sin agotar. Se reabre por el trigger de abajo."
 ---
 ## Root Cause
@@ -201,7 +201,7 @@ reproducible con reapertura automatica».
 
 **Ese plan era inejecutable, por cuatro defectos del propio instrumento.** Ninguno
 estaba escrito. Medidos y arreglados hoy; evidencia completa en
-`tasks/evidence/DEBT-DGX-438-SIN-CAUSA-RAIZ/instrumento-2026-09-27.txt`.
+`tasks/evidence/DEBT-SIGTERM-SIN-CAUSA-RAIZ/instrumento-2026-09-27.txt`.
 
 | defecto | medida | despues |
 |---|---|---|

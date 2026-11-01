@@ -23,10 +23,10 @@ def _cae(args: list[str], **kw: Any) -> Any:
 
 
 def test_sondea_distingue_respuesta_de_silencio_y_de_fallo_del_comando() -> None:
-    assert o.sondea("10.0.0.1", _rc(0)) == {"ok": True}
-    assert o.sondea("10.0.0.1", _rc(1)) == {"ok": False}
-    assert o.sondea("10.0.0.1", _cae) == {"ok": False, "error": "TimeoutExpired"}
-    assert o.sondea("10.0.0.1", lambda a, **k: (_ for _ in ()).throw(FileNotFoundError("ping")))["error"] == "FileNotFoundError"
+    assert o.sondea("192.0.2.1", _rc(0)) == {"ok": True}
+    assert o.sondea("192.0.2.1", _rc(1)) == {"ok": False}
+    assert o.sondea("192.0.2.1", _cae) == {"ok": False, "error": "TimeoutExpired"}
+    assert o.sondea("192.0.2.1", lambda a, **k: (_ for _ in ()).throw(FileNotFoundError("ping")))["error"] == "FileNotFoundError"
 
 
 def test_paso_off_no_sondea_y_on_anade_filas(tmp_path: Path) -> None:
@@ -66,9 +66,9 @@ def test_main_sin_argumentos_sin_config_y_con_config(tmp_path: Path, monkeypatch
     assert o.main([]) == 2
     assert o.main(["--paso"]) == 1 and "observador.json" in capsys.readouterr().err
     (tmp_path / "externo").mkdir()
-    (tmp_path / "externo" / "observador.json").write_text(json.dumps({"destino": "10.0.0.1"}), encoding="utf-8")
+    (tmp_path / "externo" / "observador.json").write_text(json.dumps({"destino": "192.0.2.1"}), encoding="utf-8")
     monkeypatch.setattr(o, "paso", lambda modo, destino, ruta, correr=subprocess.run, ahora=None: {"modo": modo, "destino": destino})
-    assert o.main(["--paso"]) == 0 and json.loads(capsys.readouterr().out.strip().splitlines()[-1])["destino"] == "10.0.0.1"
+    assert o.main(["--paso"]) == 0 and json.loads(capsys.readouterr().out.strip().splitlines()[-1])["destino"] == "192.0.2.1"
 
 
 # --- variante NAS: sync por smbclient ---

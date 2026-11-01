@@ -5,8 +5,16 @@ Documentation=file:%h/projects/blackbox/tools/reboot_verdict.py
 [Service]
 Type=oneshot
 WorkingDirectory=%h/projects/blackbox
+# Antes del veredicto, y una sola vez por arranque, lo que el veredicto necesita fresco:
+# 1) el resumen del arranque anterior de las marcas de bb-etapa@ (tools/etapas_arranque.py; rc 1 si este arranque aun
+#    no llego a multi-user, rc 2 sin etapas.jsonl: ninguno debe impedir el veredicto, de ahi el "-");
+# 2) las series del testigo externo traidas por scp a $BLACKBOX_DATA/externo/testigo/ (observador_ping --trae-testigo;
+#    sin externo/testigo.json sale NOT_COLLECTED rc 1 sin tocar nada, y el veredicto declara la fuente que falto).
+ExecStartPre=-/usr/bin/python3 -m tools.etapas_arranque
+ExecStartPre=-/usr/bin/python3 -m tools.observador_ping --trae-testigo
 ExecStart=/usr/bin/python3 -m tools.reboot_verdict --ultimos 1 --escribe
 Nice=19
 IOSchedulingClass=idle
-# La lectura de telemetria recorre un archivo de ~150 MB: 7 s medidos para 10 boots.
-TimeoutStartSec=120
+# La lectura de telemetria recorre un archivo de ~150 MB: 7 s medidos para 10 boots. TimeoutStartSec cubre tambien
+# los ExecStartPre: el scp del testigo tiene su propio tope de 120 s (observador_ping.trae_testigo).
+TimeoutStartSec=300
