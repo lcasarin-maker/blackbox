@@ -1,0 +1,16 @@
+# bb-etapa@<etapa>.service -- anota que el arranque llego a <etapa> (etapa-marca.sh, instalado como
+# /usr/local/sbin/bb-etapa-marca). Unidad de SISTEMA: las forenses de usuario corren despues de default.target, y en un
+# arranque que no termina no corre ninguna. Cada instancia la pide un drop-in `<unidad>.d/bb-etapa.conf` de la unidad
+# que marca la etapa (Wants= + Before=); nada se habilita con `systemctl enable`. Ver LEEME-etapas.md.
+[Unit]
+Description=bb: marca la etapa de arranque %i
+DefaultDependencies=no
+After=local-fs.target
+Conflicts=shutdown.target
+Before=shutdown.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/bb-etapa-marca %i
+TimeoutStartSec=30
