@@ -14,13 +14,13 @@ DATA="${BLACKBOX_DATA:-$HOME/.local/share/blackbox}"
 SAMPLES="$DATA/samples"
 SNAPS="$DATA/snapshots"
 RETAIN_DAYS="${BLACKBOX_RETAIN_DAYS:-14}"
-# La telemetria termica la PRODUCE este repo desde DGX-585: Atlas borro su copia
+# La telemetria termica la PRODUCE este repo desde DGX-585: el consumidor borro su copia
 # y su ruta ya no existe. Se nombra con la MISMA variable de entorno que usa el
 # productor (`tools/atom_gpu_telemetry.py`) para que consumidor y productor no
 # puedan divergir en silencio otra vez.
 #
 # Como se rompio, medido el 2026-09-25: `bb status` decia
-#   FALTA  termica de Atlas (atom_gpu_telemetry, <2 min)
+#   FALTA  termica del consumidor (atom_gpu_telemetry, <2 min)
 #          -- systemctl --user start atom-gpu-telemetry
 # mientras la unit llevaba horas activa escribiendo 711 muestras por hora. El
 # `find` miraba un directorio inexistente, no encontraba nada, y eso se leyo
@@ -246,7 +246,7 @@ claude_scope_pressure_alert() {
 # llama a nvidia-smi con `2>/dev/null || return 1`, que se traga un cuelgue sin
 # dejar rastro.
 #
-# Consolidacion, no sustitucion: Atlas sigue siendo el dueno de los VALORES
+# Consolidacion, no sustitucion: la telemetria termica sigue siendo la duena de los VALORES
 # (vllm_*, zonas termicas, potencia); esta caja se queda con la SALUD de la
 # consulta, que es lo que nadie cubria.
 SMI_TIMEOUT_S="${BB_SMI_TIMEOUT_S:-5}"
@@ -445,9 +445,9 @@ residuo_mb() { # MemTotal - todo lo reclamado, en MiB
 # util cero. `full` de memoria por encima de cero sostenido es la antesala del
 # colapso, y por eso se guardan los dos.
 #
-# Via: sparkview (foro NVIDIA 366877), ingerido en Atlas
-# knowledge/references/forum_nvidia_366877_sparkview-gpu-monitor-tool-with-
-# gb10-aware-unified-memory-handling.md -- clasifica LOW/MODERATE/HIGH/CRITICAL
+# Via: sparkview (foro NVIDIA 366877), ingerido en la KB del consumidor de
+# conocimiento (references/forum_nvidia_366877_sparkview-gpu-monitor-tool-with-
+# gb10-aware-unified-memory-handling.md) -- clasifica LOW/MODERATE/HIGH/CRITICAL
 # sobre esta misma fuente para GB10.
 # BB_PSI_ROOT: sustituible SOLO para probar, como BB_CGROUP_ROOT. Sin el, el
 # camino que enciende `scope_pressure_alert` (y captura el origen) no se podia
@@ -465,7 +465,7 @@ psi_campo() { # recurso, linea(some|full), clave(avg10|avg60) -> valor o ""
 # no basta: durante la carga del modelo responde el proceso pero no el endpoint.
 #
 # Mecanismo tomado de thx0701/dgx_spark_status y MiaAI_Lab/sparkDash (ambos
-# ingeridos en la KB de Atlas), que vigilan el motor de inferencia junto al
+# ingeridos en la KB del consumidor), que vigilan el motor de inferencia junto al
 # hardware en vez de dejarlo fuera del cuadro.
 GATEWAY_URL="${BLACKBOX_GATEWAY_URL:-http://127.0.0.1:8000/v1/models}"
 GATEWAY_CHAT="${BLACKBOX_GATEWAY_CHAT:-http://127.0.0.1:8000/v1/chat/completions}"
@@ -487,12 +487,12 @@ gateway_modelo() { # -> nombre del modelo servido, o "" si no responde
 # expulsando peticiones esta "vivo" y sirviendo mal. `num_preemptions` subiendo
 # es presion de KV cache, que en memoria unificada es presion de TODA la
 # maquina.
-# Via: MiaAI_Lab/sparkDash (KB de Atlas), que lee estas mismas metricas.
+# Via: MiaAI_Lab/sparkDash (KB del consumidor), que lee estas mismas metricas.
 GATEWAY_METRICS="${BLACKBOX_GATEWAY_METRICS:-http://127.0.0.1:8000/metrics}"
 
 # Rendimiento REAL, no un benchmark sintetico. La degradacion de inferencia es
 # un problema documentado en este hardware (foro NVIDIA 374274, "suddenly much
-# lower GPU performance", en la KB de Atlas) y ninguna metrica de ESTADO la ve:
+# lower GPU performance", en la KB del consumidor) y ninguna metrica de ESTADO la ve:
 # un gateway a mitad de velocidad responde igual de "vivo".
 #
 # sparkDash lo resuelve con benchmarks de decode/prefill, pero eso consume GPU y
@@ -517,7 +517,7 @@ gateway_salud() { # -> "run,wait,kv_perc,preempt,gen_tokens,prompt_tokens,errore
 # Uso de disco por particion. Un disco llenandose es un fallo silencioso hasta
 # que algo deja de escribir -- y hoy mismo los core dumps se comieron 2.2 GB en
 # horas. `df` en el snapshot no bastaba: sin serie no se ve la pendiente.
-# Via: thx0701/dgx_spark_status (KB de Atlas), bajado a solo el porcentaje de
+# Via: thx0701/dgx_spark_status (KB del consumidor), bajado a solo el porcentaje de
 # las particiones reales (sin tmpfs ni snaps, que no dicen nada).
 disco_pct() { # -> "montaje:pct,montaje:pct"
   df -P -x tmpfs -x devtmpfs -x squashfs -x overlay -x efivarfs 2>/dev/null |
@@ -526,7 +526,7 @@ disco_pct() { # -> "montaje:pct,montaje:pct"
 
 # Contenedores: aqui viven el gateway, pgvector, librechat y mongo, y un
 # contenedor reiniciandose en bucle es invisible desde `ps`.
-# Via: DanTup/dgx_dashboard (KB de Atlas).
+# Via: DanTup/dgx_dashboard (KB del consumidor).
 docker_estado() { # -> "vivos/total" o ""
   have docker || { echo ""; return 1; }
   local t v
@@ -544,7 +544,7 @@ docker_estado() { # -> "vivos/total" o ""
 # Se guardan CONTADORES CRUDOS, no tasas: la tasa depende del intervalo y una
 # muestra perdida la falsea, mientras que dos contadores siempre dan la verdad
 # entre ellos. El analisis deriva la pendiente.
-# Via: thx0701/dgx_spark_status y GigCoder/ai_dgxtop (KB de Atlas).
+# Via: thx0701/dgx_spark_status y GigCoder/ai_dgxtop (KB del consumidor).
 red_bytes() { # -> "iface:rx:tx,..." solo interfaces fisicas con trafico
   awk 'NR>2 { gsub(":","",$1)
       if ($1 != "lo" && $2 > 0) printf "%s%s:%s:%s", (n++?",":""), $1, $2, $10 }' \
@@ -569,7 +569,7 @@ zombie_parents() {
 # Muestrea SOLO lo que ninguna otra fuente de esta maquina cubre.
 # Ya cubierto, y por eso ausente aqui:
 #   - GPU, zonas termicas, throttle, clocks, memoria del sistema y procesos de
-#     computo -> Atlas/tools/atom_gpu_telemetry.py cada 5s (absorbio a
+#     computo -> tools/atom_gpu_telemetry.py cada 5s (absorbio a
 #     gpu_sampler.sh el 2026-09-07; ver suspended/MANIFIESTO.md)
 #   - CPU, memoria, I/O, red, procesos bloqueados -> sar, cada minuto en /var/log/sysstat
 #   - alarma de margen de memoria -> monitor_memory.sh cada 5 min
@@ -1446,7 +1446,7 @@ for d in fallos[:5]:
   # `bb sample` guarda contadores crudos de red y CPU desde 2026-09-07
   # (red_bytes()/cpu_jiffies() arriba), pero hasta hoy NADA los leia: el dato
   # se acumulaba en disco y `bb scan` nunca cruzaba dos muestras para sacar
-  # una tasa. Hallazgo propio al revisar el codigo contra la cosecha de Atlas
+  # una tasa. Hallazgo propio al revisar el codigo contra la cosecha del consumidor
   # (HARVEST-351340/362964/366125, FEATURE-RED-CPU-SCAN): no faltaba un
   # mecanismo de captura nuevo, faltaba el analisis sobre el que ya existia.
   echo "-- red y CPU por nucleo (muestras de blackbox) --"
@@ -1573,8 +1573,8 @@ else:
   else
     # NO es un COULD_NOT_RUN: gpu_sampler.sh esta suspendido a proposito desde
     # el 2026-09-07 y no escribe CSV nuevos. Su trabajo lo hace la seccion
-    # termica de abajo. Solo seria una averia si TAMPOCO hubiera telemetria de
-    # Atlas fresca, y eso ya lo vigila esa seccion.
+    # termica de abajo. Solo seria una averia si TAMPOCO hubiera telemetria
+    # termica fresca, y eso ya lo vigila esa seccion.
     echo "  (sin CSV para esta ventana: gpu_sampler suspendido el 2026-09-07,"
     echo "   sus campos los cubre atom_gpu_telemetry.py -- los CSV anteriores"
     echo "   a esa fecha siguen en /srv/ai/logs/gpu/ y si se leen)"
@@ -1606,7 +1606,7 @@ else:
     [ "${tc:-0}" -gt 0 ] && grep -a '"corroboracion": *"corrobora"' "$ajl" |
       awk -v s="$since_iso" -F'"' '$4>=s' | tail -3 | sed 's/^/    /' | cut -c1-160
   else
-    cannot_run "termica de Atlas" "no existe $ajl -- atom-gpu-telemetry parado?"
+    cannot_run "telemetria termica" "no existe $ajl -- atom-gpu-telemetry parado?"
     echo "  eventos termicos:            COULD_NOT_RUN"
   fi
   echo
@@ -1762,7 +1762,7 @@ else:
   echo "  muestras con el gateway caido: ${caidas:-0} de ${conmuestra:-0}"
   echo "  contenedores (vivos/total):  $(docker_estado 2>/dev/null || echo '?')"
   # Causas de las caidas del motor (clase de error CUDA, Xid cercanos, cuelgues,
-  # volcados). Absorbido de Declutter el 2026-10-10: el 09 y 10 de octubre hubo
+  # volcados). Absorbido de otro proyecto el 2026-10-10: el 09 y 10 de octubre hubo
   # 12 caidas fatales y este scan solo contaba Xid sueltos, sin unirlos.
   if have python3; then
     journalctl --user -u "$MOTOR_UNIDAD" -S "$since_fmt" --no-pager -o short-iso >"$scan_tmp/motor_unidad.txt" 2>/dev/null
@@ -1838,7 +1838,7 @@ print("  preempciones (presion KV):   %d" % preempt)
   # --- 9a. presion real del kernel (PSI) ----------------------------------
   # Ni MemFree ni MemAvailable dicen cuanto se esta SUFRIENDO por memoria; PSI
   # si, porque mide tiempo de tareas paradas. El MECANISMO (leer /proc/pressure)
-  # sigue viniendo de sparkview (foro NVIDIA 366877, ingerido en Atlas).
+  # sigue viniendo de sparkview (foro NVIDIA 366877, ingerido en la KB del consumidor).
   #
   # Los CORTES ya no. Corte calibrado 2026-09-23 contra los dos congelamientos
   # propios del 2026-09-22/23 -- ambos terminados en reset duro -- sobre 19799
@@ -2079,7 +2079,7 @@ for e in largas[-5:]:
   echo
 
   # --- 10. DGX-438: procesos python que desaparecen -----------------------
-  # Atlas midio muertes con rc=143 (SIGTERM) cada 10-15 min sin causa raiz.
+  # El consumidor midio muertes con rc=143 (SIGTERM) cada 10-15 min sin causa raiz.
   # Un SIGTERM ajeno no deja linea en el journal ni core dump, asi que la via
   # es comparar muestras consecutivas: un pid que estaba y ya no esta, sin OOM
   # ni evento termico en medio, es un candidato.
@@ -2345,10 +2345,6 @@ status_lo_que_corre() {
     if grep -Eq "\"boot_id\": ?\"$_bid\"" "$ARRANQUE_JSONL" 2>/dev/null; then ok=0; else ok=1; _por="$ARRANQUE_JSONL sin fila para este arranque"; fi
   else ok=1; fi
   chk "arranque forense (bb-arranque-forense; pstore, BERT y firmware por arranque)" "$ok" "$_por: systemctl --user status bb-arranque-forense.service"
-
-  # El detector de Atlas escribe en Atlas: se mira su corrida, no su dato.
-  _corrida_ok atom-crash-detector.service 0; ok=$?
-  chk "detector de caidas de Atlas (atom-crash-detector; una corrida por arranque)" "$ok" "$_por: systemctl --user status atom-crash-detector.timer"
 }
 
 clock_lock_evaluate() {
@@ -2419,7 +2415,7 @@ cmd_status_clock_lock() {
   return 1
 }
 
-# Regresion del kernel 7.0.0-1019 (hilo 383023 de Atlas, L20): KHO deja ~9.3 GiB
+# Regresion del kernel 7.0.0-1019 (hilo 383023 del foro NVIDIA, L20): KHO deja ~9.3 GiB
 # marcados MIGRATE_CMA fuera de la contabilidad y CmaTotal cae de 128 MiB a 0;
 # el hotfix oficial es `kho=off`, y el post #44 reporta un caso que persiste con
 # `kho=off`, por eso se exige TAMBIEN CmaTotal>0 y no solo el parametro. Se lee
@@ -3512,8 +3508,7 @@ bb -- caja negra de la maquina
   bb hw                  inventario de hardware y limites aplicados
   bb recovery            estado de RCU, watchdog y pstore, solo lectura
   bb incident [boot]     reporte POR INCIDENTE (formato NVIDIA #1358): 6 timestamps, config, throttle
-  bb reboots             causa de cada reinicio, uno por uno (--ultimos N); deja un hallazgo para Atlas con --escribe
-  bb saber <patron>      busca en la KB de Atlas, solo leyendo archivos (ATLAS_KNOWLEDGE)
+  bb reboots             causa de cada reinicio, uno por uno (--ultimos N); deja un hallazgo en la bandeja con --escribe
   bb status              que instrumento esta armado y cual no
   bb status clock lock   comprobar declaracion y confirmacion reciente del rango GPU
   bb drift               compara lo adoptado en el repo con lo desplegado (exit != 0 si diverge)
@@ -3543,7 +3538,6 @@ case "${1:-}" in
   recovery) python3 "$(dirname "$(readlink -f "$0")")/../tools/recovery_profile.py" ;;
   incident) shift; (cd "$(dirname "$(readlink -f "$0")")/.." && python3 -m tools.incident_report "$@") ;;
   reboots)  shift; (cd "$(dirname "$(readlink -f "$0")")/.." && python3 -m tools.reboot_verdict "$@") ;;
-  saber)    shift; (cd "$(dirname "$(readlink -f "$0")")/.." && python3 -m tools.saber "$@") ;;
   status)   shift; cmd_status "$@" ;;
   drift)    shift; cmd_drift "$@" ;;
   protect)  shift; cmd_protect "$@" ;;

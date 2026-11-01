@@ -3,6 +3,7 @@ y las funciones puras que arman la tabla de seis timestamps."""
 
 import json
 import re
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -237,7 +238,7 @@ def test_el_markdown_incluye_toda_clave_del_reporte_y_no_puede_omitir_una_nueva(
     )  # control: las claves de cabecera no se duplican como seccion
 
 
-def test_adjuntos_marcan_fieldiag_bloqueado_con_secure_boot_y_la_ruta_apunta_a_atlas():
+def test_adjuntos_marcan_fieldiag_bloqueado_con_secure_boot_y_la_ruta_apunta_a_la_kb():
     s = ir.adjuntos_y_ruta({"oem": "GIGABYTE", "secure_boot": "enabled"})
     fieldiag = next(a for a in s["adjuntos_en_orden"] if "fieldiag" in a["que"])
     assert (
@@ -253,11 +254,11 @@ def test_adjuntos_marcan_fieldiag_bloqueado_con_secure_boot_y_la_ruta_apunta_a_a
     )  # control
     ruta = s["ruta_de_soporte"]
     assert ruta["oem"] == "GIGABYTE" and all(
-        d.startswith(ir.ATLAS_RAIZ) for d in ruta["donde_leerla"]
+        d.startswith(ir.REF_RAIZ) for d in ruta["donde_leerla"]
     )
     assert (
         "dicho_por_personal_de_nvidia_en_foros" not in ruta
-    )  # bb no guarda conocimiento: lo consulta en Atlas
+    )  # bb no guarda conocimiento: lo consulta en la KB del consumidor
 
 
 def test_el_journal_del_kernel_para_adjuntar_no_lleva_el_hostname(monkeypatch):
@@ -296,7 +297,7 @@ def test_todas_las_firmas_compilan_tienen_clase_valida_e_ids_unicos():
     assert {x["clase"] for x in f} <= {"incidente", "ruido_conocido", "ambiguo"}
     for x in f:
         re.compile(x["regex"])
-        assert x["atlas"]  # cada firma apunta a donde Atlas la documenta
+        assert x["ref"]  # cada firma apunta a donde la KB del consumidor la documenta
 
 
 def test_las_firmas_reconocen_lineas_literales_y_no_se_confunden():
@@ -339,6 +340,10 @@ def test_coincidencias_separan_incidentes_de_ruido_y_distinguen_fallo_de_cero(
         "mlx5_27w"
     }  # el ruido NO va con los incidentes
     assert next(x for x in c["incidente"] if x["id"] == "nvrm_nomem")["lineas"] == 2
+    nomem = next(x for x in c["incidente"] if x["id"] == "nvrm_nomem")
+    # la referencia neutra cuelga de `ref_raiz`, y la clave anterior se sigue escribiendo con el mismo valor
+    assert nomem["ref"] == ir.REF_RAIZ + "catalogo_destilado.md#github:S1" == nomem[ir.CLAVE_REF_LEGADO]
+    assert ir.REF_RAIZ  # control: la raiz se leyo del archivo de firmas, no quedo vacia
     monkeypatch.setattr(ir.rv, "_journal", lambda *a: R(1, ""))
     assert str(ir.coincidencias_firmas(-1)["incidente"][0]["lineas"]).startswith(
         "0 en el journal"
@@ -356,18 +361,22 @@ def test_si_el_archivo_de_firmas_falta_se_declara_y_no_se_inventa(
     assert ir.coincidencias_firmas(-1)["estado"] == ir.COLLECTION_FAILED
 
 
-def test_los_punteros_a_atlas_existen_si_atlas_esta_y_la_comprobacion_puede_fallar():
-    """Relacion de informacion, no de codigo: bb solo LEE la ruta del documento en Atlas. Sin Atlas, se omite."""
+def test_los_punteros_existen_si_la_kb_esta_y_la_comprobacion_puede_fallar():
+    """Relacion de informacion, no de codigo: bb solo LEE la ruta del documento. La raiz de la KB del consumidor
+    llega por `BB_KB_RAIZ` (ningun literal de su checkout); sin ella, o sin la carpeta, se omite."""
+    import os
     import re
     from pathlib import Path
 
-    raiz = Path.home() / "projects/Atlas" / ir.ATLAS_RAIZ
-    if not raiz.is_dir():
-        import pytest
+    import pytest
 
-        pytest.skip("Atlas no esta en esta maquina")
+    if not os.environ.get("BB_KB_RAIZ"):
+        pytest.skip("sin BB_KB_RAIZ: la KB del consumidor no se nombra desde aqui")
+    raiz = Path(os.environ["BB_KB_RAIZ"]) / ir.REF_RAIZ
+    if not raiz.is_dir():
+        pytest.skip(f"{raiz} no esta en esta maquina")
     for x in _firmas():
-        doc = x["atlas"].split("#")[0].split(" (")[0]
+        doc = x["ref"].split("#")[0].split(" (")[0]
         if (
             "/" in doc
         ):  # `carpeta/prefijo`: debe existir al menos un archivo con ese prefijo
@@ -375,8 +384,8 @@ def test_los_punteros_a_atlas_existen_si_atlas_esta_y_la_comprobacion_puede_fall
             assert list((raiz / carpeta).glob(prefijo + "*")), (x["id"], doc)
         else:
             assert (raiz / doc).exists(), (x["id"], doc)
-        if "#" in x["atlas"]:
-            ident = x["atlas"].split("#")[1]
+        if "#" in x["ref"]:
+            ident = x["ref"].split("#")[1]
             assert re.search(
                 rf"^### {re.escape(ident)} ", (raiz / doc).read_text(encoding="utf-8"), re.M
             ), (x["id"], ident)
@@ -661,12 +670,12 @@ def test_fase_de_carga_adjuntos_reconoce_el_archivo_presente_y_si_falta_dice_por
     assert "root: si" in como_root["adjuntos_en_orden"][0]["estado"]
 
 
-# --- FEATURE-INCIDENTE-CARGA-DE-ATLAS-01
+# --- carga externa: la cola del consumidor al cortar (ficha de origen: FEATURE-INCIDENTE-CARGA-*)
 BOOT = "54b7161869da4fc99f7becb9571f529d"
 BOOT_G = "54b71618-69da-4fc9-9f7b-ecb9571f529d"
 
 
-def _atlas_log(tmp_path, lineas):
+def _cola_log(tmp_path, lineas):
     f = tmp_path / "liberation_watchdog.jsonl"
     f.write_text("\n".join(json.dumps(x) for x in lineas) + "\n", encoding="utf-8")
     return f
@@ -689,8 +698,8 @@ def _done(jf):
     return {"ts": "2026-10-11T11:40:00", "event": "job_done", "job_file": jf, "exit_code": 0}
 
 
-def test_carga_de_atlas_lista_solo_los_jobs_del_boot_sin_job_done(tmp_path):
-    f = _atlas_log(
+def test_carga_externa_lista_solo_los_jobs_del_boot_sin_job_done(tmp_path):
+    f = _cola_log(
         tmp_path,
         [
             _start("a.json"),
@@ -705,60 +714,102 @@ def test_carga_de_atlas_lista_solo_los_jobs_del_boot_sin_job_done(tmp_path):
             },
         ],
     )
-    r = ir.carga_de_atlas(BOOT, f)
+    r = ir.carga_externa(BOOT, f)
     assert (
         r["estado"] == "ok"
         and r["jobs_iniciados_en_el_boot"] == 2
         and r["jobs_terminados_en_el_boot"] == 1
     )
     [job] = r["jobs_en_ejecucion_al_cortar"]
-    assert job["job_file"] == "b.json" and job["atlas_lo_registro_huerfano"] is True
+    assert job["job_file"] == "b.json" and job["el_productor_lo_registro_huerfano"] is True
     assert job["memory_max_gb"] == 12 and "command" not in job  # el comando no se copia
 
 
-def test_carga_de_atlas_un_reintento_cuenta_por_su_ultimo_job_start(tmp_path):
-    f = _atlas_log(tmp_path, [_start("a.json"), _done("a.json"), _start("a.json")])
-    r = ir.carga_de_atlas(BOOT, f)
+def test_carga_externa_un_reintento_cuenta_por_su_ultimo_job_start(tmp_path):
+    f = _cola_log(tmp_path, [_start("a.json"), _done("a.json"), _start("a.json")])
+    r = ir.carga_externa(BOOT, f)
     assert [j["job_file"] for j in r["jobs_en_ejecucion_al_cortar"]] == ["a.json"]
-    cerrado = ir.carga_de_atlas(
-        BOOT, _atlas_log(tmp_path, [_start("a.json"), _done("a.json")])
+    cerrado = ir.carga_externa(
+        BOOT, _cola_log(tmp_path, [_start("a.json"), _done("a.json")])
     )
     # control: cuando todo cerro, el cero se dice con su alcance y no sale una lista vacia muda
     assert cerrado["jobs_en_ejecucion_al_cortar"].startswith("0 jobs sin job_done de 1")
 
 
-def test_carga_de_atlas_sin_jobs_del_boot_dice_el_alcance_y_sin_archivo_es_not_collected(
+def test_carga_externa_sin_jobs_del_boot_dice_el_alcance_y_sin_archivo_es_not_collected(
     tmp_path,
 ):
-    r = ir.carga_de_atlas(BOOT, _atlas_log(tmp_path, [_start("c.json", boot="otro")]))
+    r = ir.carga_externa(BOOT, _cola_log(tmp_path, [_start("c.json", boot="otro")]))
     assert r["estado"].startswith(f"0 job_start con boot_id {BOOT_G} en 1 lineas")
     assert "jobs_en_ejecucion_al_cortar" not in r  # un cero no se rellena con una lista
-    assert ir.carga_de_atlas(BOOT, tmp_path / "no_existe.jsonl")["estado"].startswith(
+    assert ir.carga_externa(BOOT, tmp_path / "no_existe.jsonl")["estado"].startswith(
         ir.NOT_COLLECTED
     )
 
 
-def test_carga_de_atlas_archivo_ilegible_es_collection_failed_no_ausente(tmp_path):
+def test_carga_externa_archivo_ilegible_es_collection_failed_no_ausente(tmp_path):
     f = tmp_path / "liberation_watchdog.jsonl"
     f.write_bytes(b"\xff\xfe\x00 no es utf-8\n" + b'{"event": "job_start"}\n')
-    assert ir.carga_de_atlas(BOOT, f)["estado"] == ir.COLLECTION_FAILED
+    assert ir.carga_externa(BOOT, f)["estado"] == ir.COLLECTION_FAILED
 
 
-def test_carga_de_atlas_es_solo_lectura_y_sin_import_de_codigo_de_atlas():
+def test_carga_externa_es_solo_lectura_y_sin_import_de_codigo_ajeno():
     from pathlib import Path
 
+    import sys
+
     fuente = Path(ir.__file__).read_text(encoding="utf-8")
-    assert not re.search(r"^\s*(from|import)\s+atlas", fuente, re.M | re.I)
+    raices = set(re.findall(r"^(?:from|import)\s+(\w+)", fuente, re.M))
+    # solo la stdlib y `tools` de este repo: ningun paquete de otro checkout entra por import
+    assert raices and raices <= set(sys.stdlib_module_names) | {"tools", "__future__"}, raices
+    locales = {p.stem for p in Path(ir.__file__).parent.glob("*.py")}
+    assert set(re.findall(r"^from\s+tools\s+import\s+(\w+)", fuente, re.M)) <= locales
 
 
-def test_carga_de_atlas_el_markdown_la_imprime_como_seccion():
+def test_carga_externa_el_markdown_la_imprime_como_seccion_y_calla_el_duplicado_legado():
     rep = {
         "formato": "bb-incident/1",
         "resumen": {"incident_id": "i", "nodo_anonimizado": "n", "veredicto": "v"},
         "seis_timestamps": [],
-        "carga_de_atlas": {"estado": ir.NOT_COLLECTED},
+        "carga_externa": {"estado": ir.NOT_COLLECTED},
+        ir.CLAVE_CARGA_LEGADO: {"estado": ir.NOT_COLLECTED},
     }
-    assert "Carga de atlas" in ir.md(rep)
+    md = ir.md(rep)
+    assert "## Carga externa" in md and md.count(ir.NOT_COLLECTED) == 1
+
+
+def test_carga_externa_el_legado_lleva_los_mismos_datos_con_los_nombres_anteriores(tmp_path):
+    """Compatibilidad del formato escrito: la clave vieja no pierde ni un dato y no cambia sus campos."""
+    f = _cola_log(tmp_path, [_start("b.json")])
+    nueva = ir.carga_externa(BOOT, f)
+    vieja = ir.con_nombres_legado(nueva)
+    [jn], [jv] = nueva["jobs_en_ejecucion_al_cortar"], vieja["jobs_en_ejecucion_al_cortar"]
+    assert set(jv) == {ir.CAMPOS_JOB_LEGADO.get(k, k) for k in jn}
+    assert [jv[ir.CAMPOS_JOB_LEGADO.get(k, k)] for k in jn] == list(jn.values())
+    assert set(jn) & set(ir.CAMPOS_JOB_LEGADO.values()) == set()  # la neutra no arrastra nombres viejos
+    sin_jobs = {"estado": ir.NOT_COLLECTED}
+    assert ir.con_nombres_legado(sin_jobs) == sin_jobs
+
+
+def test_la_bitacora_se_busca_en_la_variable_nueva_la_vieja_y_la_declaracion(tmp_path):
+    decl = tmp_path / "carga_pausable.json"
+    assert ir.ruta_bitacora_cola({}, decl) is None  # nadie la declara: no se adivina
+    decl.write_text(json.dumps({"esquema": "carga-pausable/1", "bitacora": "/d/cola.jsonl"}), encoding="utf-8")
+    assert ir.ruta_bitacora_cola({}, decl) == Path("/d/cola.jsonl")
+    assert ir.ruta_bitacora_cola({ir.ENV_COLA_LEGADO: "/v.jsonl"}, decl) == Path("/v.jsonl")
+    assert ir.ruta_bitacora_cola({ir.ENV_COLA_LEGADO: "/v.jsonl", ir.ENV_COLA: "/n.jsonl"}, decl) == Path("/n.jsonl")
+    decl.write_text("{roto", encoding="utf-8")
+    assert ir.ruta_bitacora_cola({}, decl) is None
+    decl.write_text(json.dumps({"bitacora": 7}), encoding="utf-8")
+    assert ir.ruta_bitacora_cola({}, decl) is None  # control: un tipo raro no se vuelve ruta
+
+
+def test_sin_bitacora_declarada_la_carga_es_not_collected_y_lo_dice(tmp_path, monkeypatch):
+    monkeypatch.delenv(ir.ENV_COLA, raising=False)
+    monkeypatch.delenv(ir.ENV_COLA_LEGADO, raising=False)
+    monkeypatch.setattr(ir, "DECLARACION_CARGA", tmp_path / "no_existe.json")
+    r = ir.carga_externa(BOOT)
+    assert r["estado"].startswith(ir.NOT_COLLECTED) and ir.ENV_COLA in r["estado"]
 
 
 def _ventana_viva(paso=60, n=11):

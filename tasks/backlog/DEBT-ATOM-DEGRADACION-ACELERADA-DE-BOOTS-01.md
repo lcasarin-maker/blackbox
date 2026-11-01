@@ -8,7 +8,7 @@ severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-17
-close_check: {"cmd": "bash tools/check_atom_degradacion_atlas.sh", "expect": "exit_zero", "porque": "Criterio de DGX-464 conservado verbatim: sale 0 solo sin espiral activa Y con el boot actual por encima del boot mas largo que termino en crash (146.566 h). Hoy sale 2 (COULD_NOT_RUN: un evento sin crash confirmado, boot 92a1de3d) y antes salia 1 (NO). Ni 1 ni 2 cierran."}
+close_check: {"cmd": "grep -qx 'rc=0' tasks/evidence/DEBT-ATOM-DEGRADACION-ACELERADA-DE-BOOTS-01/criterio_de_cierre.txt", "expect": "exit_zero", "porque": "Especificacion pendiente: el archivo no existe hoy y el criterio falla. El cierre lo mide una evidencia LOCAL, sin ejecutar el otro repo (bb no corre codigo ajeno ni nombra su checkout, boleta #18 A del 2026-11-01): el criterio de DGX-464 del consumidor de conocimiento, conservado verbatim alli, se corre en su repo y su salida se guarda aqui con la linea exacta `rc=<codigo>` mas el stdout y la fecha de la corrida. Solo `rc=0` cierra: sin espiral activa Y con el boot actual por encima del boot mas largo que termino en crash (146.566 h). El 2026-10-17 salia 2 (COULD_NOT_RUN: un evento sin crash confirmado, boot 92a1de3d) y antes 1 (NO); ni 1 ni 2 cierran. Sustituye al script que ejecutaba el criterio desde el checkout del otro repo, retirado el 2026-11-01."}
 ---
 
 ## Origen

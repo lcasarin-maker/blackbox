@@ -56,7 +56,7 @@ ESCENARIOS: dict[str, tuple[list[po.Arbol] | None, po.Estado]] = {
     "freno_termico": ([_arbol(1, 60)], _estado(freno="estado termico 'sostenida'")),
     "holgura_baja": ([_arbol(1, 60)], _estado(uso=42 * G - po.HOLGURA_MIN_KB + 1)),
     "presupuesto_por_tope_propio": ([_arbol(1, 60)], _estado(consumo=23 * G)),
-    "excluido_atlas": ([_arbol(1, 60, cgroup=APP + "/liberation_job.scope")], _estado()),
+    "excluido_carga_externa": ([_arbol(1, 60, cgroup=APP + "/liberation_job.scope")], _estado()),
     "sin_medir": ([_arbol(1, 60)], _estado(psi=None)),
     "proc_ilegible": (None, _estado()),
 }
