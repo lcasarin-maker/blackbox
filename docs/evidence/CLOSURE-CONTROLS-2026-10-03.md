@@ -176,7 +176,7 @@ Para continuar todos los pendientes se generó `hardware-batch03-kernel-executor
 
 El índice schema identificó la matriz documental ubicada bajo tasks/evidence como tarea fuera de carpetas gobernadas. Se movió sin cambiar bytes a `docs/evidence/KERNEL-CLOSURE-CRITERIA-2026-10-03.md` (hash y modo en `kernel-integration/criteria-matrix-relocation.json`). Repetición literal `python3 -m pytest -q tests/test_debt_registration_controls.py::test_debt_schema_evidence_index_scope_01`: 1 passed in 3.43s. Se quitaron únicamente tres wrappers duplicados de `test_closure_kernel_selectors.py`; los helpers y los tres nodos originales de registro siguen ejecutando los mismos controles completos. Ningún close_check se modificó. El gate global aún tiene cierres pendientes y PII; no se afirma limpio.
 
-El parche propuesto de seguridad de Simplecode mostró dos regresiones comprobadas (atributos verify/host). `simplecode-insecure-targets-root-negative.json` archiva casos y hash del detector. Se devolvió al ejecutor antes de aplicar/sync; literal protegido y asignación ejecutable deben conservar distinta clasificación.
+El parche propuesto de seguridad del kit de guardrails mostró dos regresiones comprobadas (atributos verify/host). `simplecode-insecure-targets-root-negative.json` archiva casos y hash del detector. Se devolvió al ejecutor antes de aplicar/sync; literal protegido y asignación ejecutable deben conservar distinta clasificación.
 
 ### Preservación de criterios tras integrar Kernel
 

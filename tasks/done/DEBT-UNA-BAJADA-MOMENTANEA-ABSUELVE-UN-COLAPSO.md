@@ -138,7 +138,7 @@ las 6 excursiones sanas del corpus. Seis excursiones sanas no son muchas, y el
 verdad pide un cuarto colapso, que no se provoca a proposito.
 
 Tampoco dice nada de la CAUSA del colapso -- un herd de workers de
-`pytest-xdist` sin techo a nivel de maquina, que es `DEBT-DGX-438` y la
+`pytest-xdist` sin techo a nivel de maquina, que es la deuda de SIGTERM sin causa raiz y la
 sugerencia que llego de otro proyecto. Este arreglo acota el DANO de un
 colapso; no evita ninguno.
 

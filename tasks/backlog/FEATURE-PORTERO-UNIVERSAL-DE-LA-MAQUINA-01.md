@@ -13,7 +13,7 @@ close_check: {"cmd": "grep -q portero_universal_probado tasks/evidence/FEATURE-P
 
 ## Decision de ubicacion (voto de Luis 2026-10-12, a partir del estudio de frontera entre bb y el consumidor de conocimiento)
 
-La pieza vive en bb: mide y actua sobre la maquina y no necesita al consumidor de conocimiento (regla del analisis una referencia externa: lo que actua sobre la maquina sin el consumidor de conocimiento va a bb). bb es publico y debe funcionar solo. El consumidor de conocimiento conserva su cola y consulta el mismo portero por archivo/CLI; el kit de simplecode puede usarlo, pero el portero NO depende de que ningun llamador lo invoque: debe ser universal y automatico.
+La pieza vive en bb: mide y actua sobre la maquina y no necesita al consumidor de conocimiento (regla del analisis una referencia externa: lo que actua sobre la maquina sin el consumidor de conocimiento va a bb). bb es publico y debe funcionar solo. El consumidor de conocimiento conserva su cola y consulta el mismo portero por archivo/CLI; el kit de guardrails puede usarlo, pero el portero NO depende de que ningun llamador lo invoque: debe ser universal y automatico.
 
 ## Que se midio (2026-10-12, scopes desechables, con control negativo)
 

@@ -10,7 +10,7 @@ created: 2026-09-25
 closed_at: 2026-09-25
 close_check: {"cmd": "python3 -m tools.mutacion_alcanza --root .", "expect": "exit_zero", "porque": "mide el sujeto de ESTA ficha -- que el runner del kit encuentre que mutar aqui -- y no la calidad de un test. `mutation_verify --gate` sale 1 igual con WEAK que con COULD_NOT_RUN, y WEAK es el veredicto normal porque muta el modulo entero y corre UN test: usarlo seria un criterio que no puede pasar nunca."}
 evidence: {"pass": "tasks/evidence/DEBT-SIN-ARNES-DE-MUTACION/pass.txt", "fail": "tasks/evidence/DEBT-SIN-ARNES-DE-MUTACION/fail.txt", "e2e": "tasks/evidence/DEBT-SIN-ARNES-DE-MUTACION/e2e.txt"}
-reason: "El arreglo aterrizo aguas arriba, en simplecode 8.3.1 y 8.3.2, y este repo pasa de 0 a 8 de 10 ficheros de test resolviendo su sujeto. tools/mutacion_alcanza.py guarda esa condicion para que no vuelva a perderse en la proxima sincronizacion del kit."
+reason: "El arreglo aterrizo aguas arriba, en el kit de guardrails 8.3.1 y 8.3.2, y este repo pasa de 0 a 8 de 10 ficheros de test resolviendo su sujeto. tools/mutacion_alcanza.py guarda esa condicion para que no vuelva a perderse en la proxima sincronizacion del kit."
 ---
 
 ## Que pasa
@@ -81,7 +81,7 @@ codigo vive en `tools/` y `bin/`. Devolvia `None` siempre, el llamador lo
 reportaba como COULD_NOT_RUN, y nadie podia correr mutacion aqui.
 
 Medido el 2026-09-25 con la propia funcion del modulo: blackbox **0 de 9**,
-El consumidor de conocimiento **0 de 365**, simplecode **158 de 164** -- funcionaba donde nacio y no
+El consumidor de conocimiento **0 de 365**, el kit de guardrails **158 de 164** -- funcionaba donde nacio y no
 donde se vendoriza. Eso reencuadra las 617 lineas de
 `run_injection_mutation.py` del consumidor de conocimiento: no eran duplicacion caprichosa, eran
 suplir un instrumento del kit que no llegaba.
@@ -106,7 +106,7 @@ dos sentidos, incluido un repo montado a proposito para que NO alcance.
 
 ## Como se cerro
 
-Aguas arriba, que es donde estaba el defecto: `simplecode` 8.3.1 hizo
+Aguas arriba, que es donde estaba el defecto: el kit de guardrails 8.3.1 hizo
 `source_roots()` agnostico de disposicion y corrigio la especificidad, y 8.3.2
 el ValueError con rutas relativas que el primero tapaba. Este repo paso de
 **0 de 9** a **8 de 10** ficheros de test resolviendo su sujeto.
@@ -126,7 +126,7 @@ ordinario; lo que esta ficha cierra es que ya hay con que hacerlo.
 
 ## Como se cierra (version original de la ficha)
 
-**Aguas arriba, en `simplecode`, no aqui.** `resolve_source_for_test` tiene que
+**Aguas arriba, en el kit de guardrails, no aqui.** `resolve_source_for_test` tiene que
 dejar de suponer `src/` y derivar los paquetes locales de lo que el proyecto ya
 declara -- `coverage_targets` en `corpus_exempt.yaml`, o los paquetes de
 `pyproject.toml` -- que es como el resto del kit se adapta a cada satelite.
