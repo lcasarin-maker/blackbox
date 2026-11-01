@@ -16,6 +16,11 @@ cada boot:
 Etiquetas: `corte` = CORTE_ABRUPTO / CORTE_DE_RED / APAGADO_INTERNO / PANIC_KERNEL; `sano` = CIERRE_ORDENADO_*;
 `colapso` = COLAPSO_MEMORIA (no es un corte termico y no cuenta ni como acierto ni como falso positivo);
 cualquier otra, o un boot sin veredicto (el vivo), queda `sin_etiqueta` y sale listado como could_not_run.
+El campo `causa` de `bb-reboot/1` (la causa que cruza journal, kdump, pstore, testigo, etapas y anillo) se lee donde
+la etiqueta sola se queda corta: un boot `INDETERMINADO` (arranque fantasma o journal vacio) con una causa de corte
+(CAUSAS_CORTE) es `corte`, y un `FALLO_DE_ARRANQUE_EN_*` es `arranque` (murio arrancando, sin carga que calibrar: ni
+acierto ni falso positivo, aunque su etiqueta diga CORTE_ABRUPTO). Una fila sin `causa` (anterior al campo) se
+clasifica solo por su etiqueta, como antes.
 
   acierto        boot `corte` donde un episodio estaba activo en la ultima muestra o empezo en los ultimos
                  `ANTICIPO_MIN` minutos.
@@ -46,6 +51,8 @@ UMBRALES_C = (85.0, 88.0, 89.8, 90.0, 92.0, 92.8, 94.0, 94.8, 96.0, 98.0, 100.0)
 BANDAS_C = (2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0)
 FRACCIONES = (0.6, 0.7, 0.8, 0.9)
 CORTES = {"CORTE_ABRUPTO", "CORTE_DE_RED", "APAGADO_INTERNO", "PANIC_KERNEL"}
+CAUSAS_CORTE = {"CUELGUE", "CORTE_DE_ENERGIA", "CORTE_DE_RED", "APAGADO_INTERNO", "PANICO_KDUMP", "PANICO_PSTORE",
+                "PANICO_NETCONSOLE", "PANIC_KERNEL"}
 
 
 @dataclass
@@ -101,9 +108,9 @@ def leer_telemetria(ruta: Path, avisos: list[str]) -> dict[str, Boot]:
     return boots
 
 
-def leer_veredictos(rutas: list[Path], avisos: list[str]) -> dict[str, str]:
-    """boot_id normalizado -> etiqueta. Si dos archivos traen el mismo boot, gana el ultimo pasado."""
-    out: dict[str, str] = {}
+def leer_veredictos(rutas: list[Path], avisos: list[str]) -> dict[str, tuple[str, str | None]]:
+    """boot_id normalizado -> (etiqueta, causa o None). Si dos archivos traen el mismo boot, gana el ultimo pasado."""
+    out: dict[str, tuple[str, str | None]] = {}
     for ruta in rutas:
         if not ruta.exists():
             avisos.append(f"veredictos no existe: {ruta}")
@@ -113,16 +120,18 @@ def leer_veredictos(rutas: list[Path], avisos: list[str]) -> dict[str, str]:
                 continue
             try:
                 d = json.loads(linea)
-                out[norm_id(d["boot_id"])] = str(d["etiqueta"])
+                out[norm_id(d["boot_id"])] = (str(d["etiqueta"]), None if d.get("causa") is None else str(d["causa"]))
             except (json.JSONDecodeError, KeyError) as e:
                 avisos.append(f"{ruta.name}:{n} ilegible ({e!r})")
     return out
 
 
-def clase(etiqueta: str | None) -> str:
+def clase(etiqueta: str | None, causa: str | None = None) -> str:
     if etiqueta is None:
         return "sin_etiqueta"
-    if etiqueta in CORTES:
+    if causa is not None and causa.startswith("FALLO_DE_ARRANQUE_EN_"):
+        return "arranque"
+    if etiqueta in CORTES or etiqueta == "INDETERMINADO" and causa in CAUSAS_CORTE:
         return "corte"
     if etiqueta.startswith("CIERRE_ORDENADO"):
         return "sano"
@@ -207,14 +216,14 @@ def contraste_vivo(boots: dict[str, Boot], umbrales: dict[str, float], banda_c: 
     return ok, tot
 
 
-def resumen_boot(b: Boot, etiqueta: str | None) -> dict[str, Any]:
+def resumen_boot(b: Boot, etiqueta: str | None, causa: str | None = None) -> dict[str, Any]:
     ms = b.muestras
     pws = sorted(m.potencia_w for m in ms if m.potencia_w is not None)
     fin = ms[-1].t
     temps = [max(m.zonas.values()) for m in ms if m.zonas]
     mediana = pws[len(pws) // 2] if pws else None
     return {
-        "boot_id": b.boot_id[:8], "etiqueta": etiqueta, "clase": clase(etiqueta), "muestras": len(ms),
+        "boot_id": b.boot_id[:8], "etiqueta": etiqueta, "causa": causa, "clase": clase(etiqueta, causa), "muestras": len(ms),
         "horas": round((fin - ms[0].t) / 3600, 2), "zona_max_c": max(temps) if temps else None,
         "potencia_mediana_w": mediana, "potencia_p90_w": pws[int(len(pws) * 0.9)] if pws else None,
         "cargado": mediana is not None and mediana >= CARGA_MEDIANA_W,
@@ -234,9 +243,9 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float] | None:
     return (round(max(0.0, centro - medio), 2), round(min(1.0, centro + medio), 2))
 
 
-def calibra(boots: dict[str, Boot], veredictos: dict[str, str], umbrales: dict[str, float],
+def calibra(boots: dict[str, Boot], veredictos: dict[str, tuple[str, str | None]], umbrales: dict[str, float],
             bandas: tuple[float, ...] = BANDAS_C, fracciones: tuple[float, ...] = FRACCIONES) -> dict[str, Any]:
-    pares = [(resumen_boot(b, veredictos.get(bid)), b) for bid, b in boots.items() if b.muestras]
+    pares = [(resumen_boot(b, *veredictos.get(bid, (None, None))), b) for bid, b in boots.items() if b.muestras]
     filas = [f for f, _ in pares]
     could_not_run = [f"{f['boot_id']}: sin veredicto de reboot_verdict (vivo o fuera de rango)"
                      for f in filas if f["clase"] == "sin_etiqueta"]
@@ -276,9 +285,10 @@ def informe(r: dict[str, Any], umbrales: dict[str, float]) -> str:
     out = [f"umbral por zona (trip - {agt.MARGEN_TRIP_C:g} C): {sorted(set(umbrales.values()))}",
            f"vigente: banda {agt.SOSTENIDA_BANDA_C:g} C, fraccion {agt.SOSTENIDA_FRACCION:g}, "
            f"ventana {agt.SOSTENIDA_MUESTRAS} muestras, fin {agt.SOSTENIDA_FIN_FRACCION:g}; anticipo {ANTICIPO_MIN:g} min",
-           "", "boot      clase        etiqueta                  horas  zmax  pw_med  carg  min>=89.8  min>=94.8  ult_h>=89.8"]
+           "", "boot      clase        etiqueta                  causa                          horas  zmax  pw_med  carg  min>=89.8  "
+           "min>=94.8  ult_h>=89.8"]
     for f in r["boots"]:
-        out.append(f"{f['boot_id']}  {f['clase']:<12} {str(f['etiqueta']):<25} {f['horas']:>5}  {f['zona_max_c']}  "
+        out.append(f"{f['boot_id']}  {f['clase']:<12} {str(f['etiqueta']):<25} {str(f['causa']):<30} {f['horas']:>5}  {f['zona_max_c']}  "
                    f"{f['potencia_mediana_w']!s:>6}  {'si' if f['cargado'] else 'no':<4}  {f['min_sobre']['89.8']:>9}  "
                    f"{f['min_sobre']['94.8']:>9}  {f['min_sobre_ultima_hora']['89.8']:>11}")
     out += ["", "banda frac  aciertos  no_det  fp/sanos  IC95_acierto  IC95_fp     fp(cargados)"]
