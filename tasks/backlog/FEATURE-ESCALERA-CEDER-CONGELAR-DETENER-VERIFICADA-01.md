@@ -13,7 +13,7 @@ close_check: {"cmd": "python3 -m pytest -q tests/test_escalera_ceder.py", "expec
 
 ## Idea de origen y por que no se copia tal cual
 
-En Athena el guardian reparte por prioridad y el video "devuelve su memoria en su siguiente paso" cuando alguien mas importante la necesita; para video Full HD, Qwen puede prestar sus pesos mientras descansa y DeepSeek todavia no (`Atlas/knowledge/references/github_com_xangel82_Athena_Engine.md`). Funciona porque el guardian es DUENO de los servicios y ellos cooperan dentro del mismo proceso. bb es un observador externo.
+En Athena el guardian reparte por prioridad y el video "devuelve su memoria en su siguiente paso" cuando alguien mas importante la necesita; para video Full HD, Qwen puede prestar sus pesos mientras descansa y DeepSeek todavia no (una referencia externa). Funciona porque el guardian es DUENO de los servicios y ellos cooperan dentro del mismo proceso. bb es un observador externo.
 
 Medido el 2026-10-30 con una unidad transitoria de 300 MiB (`systemd-run --user`, luego `systemctl --user freeze` y `stop`):
 
@@ -27,7 +27,7 @@ Congelar (lo unico que hace hoy el portero) no devuelve memoria; detener la devu
 
 ## Adaptacion: escalera con verificacion
 
-1. **Ceder**: la unidad que declara ser cooperante en `atlas-carga/1` (`$BLACKBOX_DATA/atlas_carga.json`) recibe la peticion por el canal que declare (archivo o senal) y descarga lo que pueda. Atlas pone la parte de declarar; el vinculo es de datos, sin importar codigo (`SPEC.md`, "Inventario de propiedad").
+1. **Ceder**: la unidad que declara ser cooperante en el contrato de carga externa (el archivo de declaracion de la carga externa) recibe la peticion por el canal que declare (archivo o senal) y descarga lo que pueda. El consumidor de conocimiento pone la parte de declarar; el vinculo es de datos, sin importar codigo (`SPEC.md`, "Inventario de propiedad").
 2. **Congelar** (`cgroup.freeze`): detiene el avance y NO libera memoria; solo sirve para ganar tiempo y para evitar que siga creciendo.
 3. **Detener** (`systemctl --user stop`): libera y pierde el trabajo; solo para unidades elegibles segun rango (`FEATURE-ARBITRO-MEMORIA-UNIFICADA-POR-PRIORIDAD-01`) y nunca las de `data/procesos_protegidos.json`.
 

@@ -6,7 +6,7 @@ title: "bb reloj --arranque: la guarda de GPU ocupada puede dejar ciego el detec
 status: done
 closed_at: 2026-10-30
 closure_type: verified
-reason: "El arranque real del 2026-10-28 (boot 1ac9b61a) con el motor y Atlas en la GPU dio estado SANO por reloj (2067 MHz) con tflops_valido false; unidad Result=success; el close_check falla sobre la fila vieja GPU_OCUPADA (rc=1). Limite: un solo boot."
+reason: "El arranque real del 2026-10-28 (boot 1ac9b61a) con el motor y el consumidor de conocimiento en la GPU dio estado SANO por reloj (2067 MHz) con tflops_valido false; unidad Result=success; el close_check falla sobre la fila vieja GPU_OCUPADA (rc=1). Limite: un solo boot."
 evidence: {"pass": "tasks/evidence/DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01/pass.txt", "fail": "tasks/evidence/DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01/fail.txt", "e2e": "tasks/evidence/DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01/e2e.txt"}
 severity: P2
 origin: asserted
@@ -46,10 +46,10 @@ el comportamiento de hoy; un reloj atascado con el motor activo (fixture) => ATA
 
 `bb-reloj-arranque.timer` disparo a las 20:04:46 (6 min tras el boot de las 19:58:45). Fila nueva de `reloj_arranque.jsonl`:
 `"estado": "INDETERMINADO", "reloj_mediano_mhz": null, "tflops": null, "motivo": "GPU_OCUPADA: pid 3382 (python3, 4522 MiB)..."`. El
-servicio termino con `status=2/INVALIDARGUMENT` y systemd lo marco `Failed`. El ocupante fue el uvicorn de Atlas (pid 3382, 4.5 GiB),
+servicio termino con `status=2/INVALIDARGUMENT` y systemd lo marco `Failed`. El ocupante fue el uvicorn del consumidor de conocimiento (pid 3382, 4.5 GiB),
 no el contenedor del motor; el motor (`nemotron-server`, StartedAt 02:00:44Z, 2 min tras el boot) ya estaba cargado. Tres procesos
 figuraban en `nvidia-smi --query-compute-apps` en ese momento y la guarda listo uno.
-Consecuencia: cualquier proceso residente en la GPU a los 6 minutos anula la prueba del arranque. Con motor y Atlas arrancando solos,
+Consecuencia: cualquier proceso residente en la GPU a los 6 minutos anula la prueba del arranque. Con motor y el consumidor de conocimiento arrancando solos,
 eso ocurre en cada boot. El `close_check` falla hoy (rc=1), como corresponde.
 Direccion de arreglo: la ocupacion invalida los TFLOP/s, no el reloj. En el arranque, correr la carga igualmente, juzgar por reloj y
 potencia observados durante ella, marcar `tflops` no valido, y que `INDETERMINADO` por GPU_OCUPADA deje de ser un fallo de unidad.
@@ -71,7 +71,7 @@ Lo que cambio en `tools/reloj_atascado.py`:
 
 Eleccion del codigo de salida (punto 3), nueva funcion pura `codigo(r, es_arranque)`: 0 sano, 1 atascado, 2 indeterminado, como
 antes, con UNA excepcion solo en `--arranque`: `INDETERMINADO` con motivo `CARGA_NO_PUDO_CORRER` y `ocupantes` no vacio sale 0. Es
-el entorno (motor y Atlas arrancan solos) y la fila ya lo registra; con 2 systemd marcaba `Failed` en cada boot. Siguen en 2 en
+el entorno (motor y el consumidor de conocimiento arrancan solos) y la fila ya lo registra; con 2 systemd marcaba `Failed` en cada boot. Siguen en 2 en
 `--arranque`: `CARGA_NO_PUDO_CORRER` con la GPU libre (instrumento roto), `NOT_COLLECTED`, `THROTTLE_ACTIVO`, `RELOJ_EN_BANDA`,
 `RELOJ_ALTO_RENDIMIENTO_BAJO`. `--prueba` a mano conserva el 2 para todo `INDETERMINADO`. Un `ATASCADO` sale 1 y avisa como antes.
 No se toco la unidad (`SuccessExitStatus` habria exigido reinstalarla y ocultaria tambien los 2 del instrumento roto).
@@ -119,7 +119,7 @@ rc=1
 ```
 Con el codigo nuevo los mismos 11 pasan (dentro de los 120). El test de la fila reproduce la condicion del `close_check` sobre un
 archivo temporal: la fila real del 2026-10-27T02:04Z la hace fallar y la fila nueva (SANO, `tflops_valido: false`) la hace pasar.
-Ninguna corrida de `bb reloj --prueba` ni `--arranque` se hizo sobre la maquina: motor (pid 100762, 30953 MiB) y Atlas (pid 3382,
+Ninguna corrida de `bb reloj --prueba` ni `--arranque` se hizo sobre la maquina: motor (pid 100762, 30953 MiB) y el consumidor de conocimiento (pid 3382,
 4522 MiB) estaban en la GPU (`nvidia-smi --query-compute-apps`, solo lectura).
 
 Tras el proximo reinicio (con este commit en master, que es lo que corre la unidad: `WorkingDirectory=%h/projects/blackbox`):
@@ -129,4 +129,4 @@ tail -1 ~/.local/share/blackbox/interruptores/reloj_arranque.jsonl | python3 -m 
 python3 -c "import json,os,sys;f=os.path.expanduser('~/.local/share/blackbox/interruptores/reloj_arranque.jsonl');r=[json.loads(l) for l in open(f) if l.strip()];r=[x for x in r if x['ts']>'2026-10-27T01:30'];sys.exit(0 if r and 'GPU_OCUPADA' not in str(r[-1].get('motivo')) else 1)"; echo "rc=$?"
 ```
 Se espera: unidad sin `Failed`, fila con `estado` SANO o ATASCADO, `reloj_mediano_mhz` numerico, `tflops_valido: false` y
-`ocupantes` con el motor/Atlas, y `rc=0`. Si la fila sale `CARGA_NO_PUDO_CORRER`, el `rc=0` no basta: el reloj sigue sin medirse.
+`ocupantes` con el motor/carga externa, y `rc=0`. Si la fila sale `CARGA_NO_PUDO_CORRER`, el `rc=0` no basta: el reloj sigue sin medirse.

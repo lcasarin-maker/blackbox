@@ -19,7 +19,7 @@ Lo que la medicion dejo establecido y se reutiliza: senal de inactividad (vLLM c
 
 ## Por que esta bloqueada
 
-El control exige DESCARGAR el modelo del motor durante una ventana de reposo, y el motor sirve a Atlas y a otros proyectos. Esa ventana la decide Luis. Ningun agente puede producirla.
+El control exige DESCARGAR el modelo del motor durante una ventana de reposo, y el motor sirve al consumidor de conocimiento y a otros proyectos. Esa ventana la decide Luis. Ningun agente puede producirla.
 
 ## Para cerrar
 

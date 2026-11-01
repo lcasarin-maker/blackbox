@@ -59,6 +59,6 @@ $ grep -i '^wontmatch12345' /proc/modules || echo '(modulo nvidia NO cargado)'
 Primer intento: `systemctl status gdm.service --no-pager 2>&1 >archivo` -- el orden de redirecciones esta al reves (2>&1 duplica stderr al stdout ORIGINAL antes de que este se redirija al archivo), asi que stderr se habria ido a la terminal y solo stdout al archivo. Corregido a `>archivo 2>&1`, mismo patron que el resto de cmd_snapshot.
 ```
 
-## Fichas HARVEST de origen (cosecha de Atlas, evaluadas 2026-09-09)
+## Fichas HARVEST de origen (cosecha del consumidor de conocimiento, evaluadas 2026-09-09)
 
 - HARVEST-366211-my-gui-is-gone-and-nvidia-smi-is-not-working

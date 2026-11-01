@@ -102,6 +102,6 @@ soporta) no se evaluo esta sesion: `/sys/fs/pstore` no es legible sin sudo, y
 esta sesion no tiene password para elevar. Queda como trabajo futuro genuino,
 no como "ya cubierto".
 
-## Fichas HARVEST de origen (cosecha de Atlas, evaluadas 2026-09-09)
+## Fichas HARVEST de origen (cosecha del consumidor de conocimiento, evaluadas 2026-09-09)
 
 - HARVEST-373251-dgx-spark-gb10-reproducibly-hard-powers-off-u

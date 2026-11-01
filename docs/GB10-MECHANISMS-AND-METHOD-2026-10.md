@@ -47,7 +47,7 @@ that card's check was tightened to `-k "test_tflops_"` (exit 5 before, 6 passed 
 
 **Declared limits.**
 - Until card DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01, another process on the GPU stopped the active test before loading
-  (`GPU_OCUPADA`). On 2026-10-26 the boot-time run returned that verdict because an Atlas process held 4.5 GiB, so the boot check
+  (`GPU_OCUPADA`). On 2026-10-26 the boot-time run returned that verdict because an external-load process held 4.5 GiB, so the boot check
   measured nothing. The fix (load anyway, judge by clock, TFLOP/s marked invalid) is in code; a real boot has not run it yet.
 - `inicio()` now returns the last closed episode and appends each episode to `episodios_reloj.jsonl`. The telemetry that held the
   2026-10-12 transition was rotated before the instrument existed in this form.

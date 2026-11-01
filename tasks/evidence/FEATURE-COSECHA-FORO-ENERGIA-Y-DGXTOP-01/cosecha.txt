@@ -20,7 +20,7 @@ HUECO DE COSECHA: el hilo 384499 tiene un id MENOR que los ya cosechados (el mas
 
 LO QUE ESTE HOST YA MIDE y apoya estas ideas (medido hoy, atom_gpu_telemetry.jsonl, campo `zonas`): en la ultima muestra de los 3 arranques que terminaron en corte con telemetria, la zona ACPI mas caliente marcaba 98.0 C (2026-10-10), 95.7 C (2026-10-11) y 96.3 C (2026-10-12); el trip del kernel es 104.8 C. 96 C es el tope de aborto de la zona en el repo de djmad.
 LO QUE ESTE HOST NO TIENE: powercap ni hwmon de potencia (solo acpitz, nvme, wifi, bateria del raton); la potencia total del SoC no se puede leer, solo gpu_power_w de nvidia-smi. Cubre FEATURE-MEDIDOR-DE-ENERGIA-EXTERNO-01.
-LO QUE bb YA TIENE de esto: muestreo cada 5 s con zonas, aviso por estado, congelado de la carga pausable que Atlas declara (accion_termica.py, en el corte decia no_actua: unidad inactiva). NO tiene: accion sobre el reloj de la GPU o sobre vLLM, rampa de carga, guardia predictivo, historial por proceso con motivo de fin.
+LO QUE bb YA TIENE de esto: muestreo cada 5 s con zonas, aviso por estado, congelado de la carga pausable que [externo] declara (accion_termica.py, en el corte decia no_actua: unidad inactiva). NO tiene: accion sobre el reloj de la GPU o sobre vLLM, rampa de carga, guardia predictivo, historial por proceso con motivo de fin.
 Control negativo del grep de cobertura: el mismo patron encontro "nvtop" en 8 archivos y "Prometheus" en 18, asi que el patron distingue; 0 en dgxtop, NVML Support y el repo de djmad.
 
 === SEGUNDA TANDA (2026-10-12, hilos que dio Luis) ===

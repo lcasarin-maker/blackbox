@@ -31,11 +31,11 @@ estado atomico, 3 por hora por defecto, y nunca reinicia por si mismo.
 
 ## Cuidado
 
-La sesion Declutter espera al servidor hasta 30 min por llamada. Un tope que deje al motor
+La sesion de otro proyecto espera al servidor hasta 30 min por llamada. Un tope que deje al motor
 colgado sin reiniciar tambien la detiene: al agotarse el presupuesto hay que AVISAR, no
 quedarse mudo.
 
-## Datos de la sesion Declutter (2026-10-10, mensaje entre sesiones, sin verificar aqui)
+## Datos de la sesion de otro proyecto (2026-10-10, mensaje entre sesiones, sin verificar aqui)
 
 - Su corrida de fichas sobrevive a caidas por conexion rechazada y por chat colgado sin
   perder documentos (sus fichas DECL-CORE-326 y 327). Un reinicio rapido le sale barato.
