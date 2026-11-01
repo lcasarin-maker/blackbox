@@ -10,7 +10,7 @@ origin: detected
 detector: {"rule": "simplecode/pii-scan", "confidence": 1.0}
 satd_family: FALSE_POSITIVE
 created: 2026-09-25
-close_check: {"cmd": "grep -q 'unit de systemd deja de casar' tasks/done/DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS.md", "expect": "exit_zero", "porque": "el arreglo vive aguas arriba, en simplecode, y esta ficha no lo puede provocar. Mismo patron que DGX-438: cierra cuando alguien ESCRIBE que aterrizo. La senal automatica la da tests/test_pii_scan_systemd.py, que lleva xfail(strict=True) y pondra la suite ROJA el dia que el kit se sincronice arreglado."}
+close_check: {"cmd": "grep -q 'unit de systemd deja de casar' tasks/done/DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS.md", "expect": "exit_zero", "porque": "el arreglo vive aguas arriba, en simplecode, y esta ficha no lo puede provocar. Mismo patron que DEBT-SIGTERM-SIN-CAUSA-RAIZ: cierra cuando alguien ESCRIBE que aterrizo. La senal automatica la da tests/test_pii_scan_systemd.py, que lleva xfail(strict=True) y pondra la suite ROJA el dia que el kit se sincronice arreglado."}
 evidence:
   pass: tasks/evidence/DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS/aterrizaje-8.6.3.txt
   fail: tasks/evidence/DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS/fail.txt

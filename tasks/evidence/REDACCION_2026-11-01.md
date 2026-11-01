@@ -183,3 +183,30 @@ Luis decidió neutralizar en este repositorio los identificadores de tickets del
 | `tasks/evidence/RELEASE-2.1.0/h1-results.json` | 0 | 1 | 0 | `d1bbaa40d863` | `c1901693b7e7` |
 | `tasks/evidence/RELEASE-2.1.0/sunset-review.json` | 0 | 1 | 0 | `3f5d145caf55` | `d0bec5fed745` |
 | `tasks/evidence/RELEASE-SUNSET-2-2-01/source.json` | 0 | 1 | 0 | `6bdabd9b641a` | `abffdd6198eb` |
+
+## Actualización 2026-11-01 (boleta #27 A): las dos fichas con id ajeno en el nombre, renombradas
+
+Lo que la actualización anterior dejó como «decisión aparte». Las dos fichas se movieron con `git mv` (ficha y directorio de
+evidencia), y su `id:` cambió con el nombre:
+
+| Antes | Después |
+|---|---|
+| `DEBT-DGX-438-SIN-CAUSA-RAIZ` (y la forma corta `DEBT-DGX-438` / `DGX-438`) | `DEBT-SIGTERM-SIN-CAUSA-RAIZ` |
+| `DEBT-VERIFICAR-DGX-30-OOM-LLAMADORES-CONCURRENTES-01` | `DEBT-VERIFICAR-REFERENCIA-OOM-LLAMADORES-CONCURRENTES-01` |
+
+- Fuera de `tasks/evidence/` se actualizaron TODAS las referencias: `bin/bb` (comentarios, la cabecera de `bb sigterm` en el
+  `--help` y el título de la sección 10 de `bb scan`), `enable-privileged.sh`, `tools/nombra_victimas.py` (incluida su línea
+  `SUJETO DE ...`), `tests/test_nombra_victimas.py`, `tests/test_bb_bash.py` y 18 fichas de `tasks/done/`: las dos renombradas,
+  13 por el `porque` de su `close_check` (11 dicen «patron DEBT-DGX-438»; una de ellas,
+  `FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR`, también por un encabezado) y 3 por su prosa (`DEBT-PSI-UMBRALES-SIN-CALIBRAR`,
+  `DEBT-SLUGGISH-SIN-CAUSA-PROBADA`, `FEATURE-ARBITRO-MEMORIA-UNIFICADA-POR-PRIORIDAD-01`).
+- `close_check`: en los dos que citaban su propia ruta solo cambió la ruta; ninguna lógica cambió. El marcador
+  `dgx30_verificado` de `verificacion.txt` se conserva: es el contenido de la evidencia que el `close_check` busca. Los 18
+  `close_check` de las fichas tocadas dan el mismo rc antes y después (17 rc=0; `FEATURE-ARBITRO-MEMORIA-UNIFICADA-POR-PRIORIDAD-01`
+  da rc=1 en las dos corridas, porque su test hace `git show` de un commit que no está en este clon).
+- En la evidencia, las salidas literales con el nombre viejo (los `AVISO <ficha>.md`, los `.tsv` y `.json` de clasificación, las
+  tablas de arriba) **quedan como están**: son registro. A cada `e2e.txt` de las dos fichas se le AÑADIÓ al final una sección
+  fechada con el `close_check` corrido con la ruta nueva y su salida (rc=0), para que la evidencia nombre a su ficha por el nombre
+  vigente; lo anterior del archivo no cambió. Su sha256 pasa de `6837e6d358fd` a `0134ad80ae61` (`DEBT-SIGTERM-SIN-CAUSA-RAIZ/e2e.txt`) y de
+  `48d85a09824f` a `de5ffa5d021e` (`DEBT-VERIFICAR-REFERENCIA-OOM-LLAMADORES-CONCURRENTES-01/e2e.txt`); el único archivo que citaba esos
+  hashes es esta misma tabla (fila de arriba), que queda superada por ésta.

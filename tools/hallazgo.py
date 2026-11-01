@@ -189,31 +189,66 @@ def publica(texto: str, destino: Path | None = None) -> tuple[Path, str]:
     return ruta, "publicado"
 
 
+# Las etiquetas cuya causa ya nombra el journal (o la telemetria): la misma regla de `veredicto` en
+# tools/reboot_verdict.py, para leer una fila de antes del campo `causa`.
+_CAUSA_ES_ETIQUETA = ("PANIC_", "COLAPSO_", "CIERRE_ORDENADO_")
+
+
+def _tipo(etiqueta: str, causa: str) -> str:
+    """`reinicio` para el cierre ordenado y para el arranque que no completo (FALLO_DE_ARRANQUE_*, fantasma
+    o no): ahi no hubo maquina en marcha que cortar, el arranque se quedo en una etapa y volvio a arrancar.
+    Todo lo demas es una maquina que murio en marcha: `corte_abrupto`, tambien CORTE_DE_RED y
+    APAGADO_INTERNO, que antes de leer la causa salian `reinicio`."""
+    if etiqueta.startswith("CIERRE_ORDENADO_") or causa.startswith(("CIERRE_ORDENADO_", "FALLO_DE_ARRANQUE_")):
+        return "reinicio"
+    return "corte_abrupto"
+
+
 def desde_veredicto(
     fila: dict[str, Any], *, nodo: str, generado: str, datos: str
 ) -> str:
-    """Hallazgo de un reinicio a partir de una fila de `bb reboots`. Lo medido va en fuentes; lo no
-    probado (la causa de un corte abrupto) va en inferencia, marcado como tal."""
+    """Hallazgo de un reinicio a partir de una fila `bb-reboot/1` de `bb reboots`. Lo medido va en fuentes,
+    incluida la causa que cruza todas las fuentes (`causa`) con su cita (`causa_fuente`); lo no probado va
+    en inferencia, marcado como tal. Solo una causa INDETERMINADO se declara indeterminada."""
     et = fila["etiqueta"]
     boot = fila["boot_id"][:8]
-    tipo = (
-        "corte_abrupto"
-        if et in ("CORTE_ABRUPTO", "COLAPSO_MEMORIA", "PANIC_KERNEL", "INDETERMINADO")
-        else "reinicio"
-    )
+    if "causa" in fila:
+        causa, cita = fila["causa"] or "INDETERMINADO", fila.get("causa_fuente")
+        linea_causa = f"- Causa cruzando las fuentes (`causa`): **{causa}**; su fuente (`causa_fuente`): " + (
+            f"`{cita}`." if cita else "ninguna."
+        )
+    else:
+        causa, cita = (et if et.startswith(_CAUSA_ES_ETIQUETA) else "INDETERMINADO"), None
+        linea_causa = (
+            "- La fila no trae `causa` ni `causa_fuente` (es anterior a esos campos): "
+            f"de la etiqueta se lee **{causa}**, con la regla de `tools/reboot_verdict.py`."
+        )
+    tipo = _tipo(et, causa)
+    no_corrio = fila.get("could_not_run") or []
     fuentes = [
         f"- Veredicto de `{datos}`: **{et}** para el boot `{boot}`; hueco hasta el siguiente arranque: {fila.get('hueco_s')} s.",
+        linea_causa,
         *[f"- {r}" for r in fila.get("razones", [])],
         f"- Registro BERT en el arranque siguiente: guid `{fila.get('bert_guid')}`, palabra en 0x14 `{fila.get('bert_palabra_0x14')}`.",
-        f"- Lo que no pudo correr (`could_not_run`): {', '.join(fila.get('could_not_run') or ['nada'])}.",
+        f"- Lo que no pudo correr (`could_not_run`): {', '.join(no_corrio or ['nada'])}.",
     ]
-    inferencia = (
-        "- [inferencia] La causa de un corte abrupto sin observador externo queda INDETERMINADA entre energia y hardware interno; "
+    bert = (
         "la palabra BERT no esta decodificada y su relacion con el tipo de reset es una hipotesis (ver "
         "`DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01.md`)."
-        if tipo == "corte_abrupto"
-        else "- Sin inferencia nueva: el cierre quedo registrado y clasificado."
     )
+    if tipo == "corte_abrupto" and causa == "INDETERMINADO":
+        inferencia = (
+            "- [inferencia] La causa de un corte abrupto sin observador externo queda INDETERMINADA entre energia y hardware interno; "
+            if "observador_externo" in no_corrio
+            else "- [inferencia] La causa de este corte abrupto queda INDETERMINADA entre energia y hardware interno: "
+            "el observador externo no alcanzo a decidirla; "
+        ) + bert
+    elif tipo == "reinicio" and not causa.startswith("FALLO_DE_ARRANQUE_"):
+        inferencia = "- Sin inferencia nueva: el cierre quedo registrado y clasificado."
+    else:
+        inferencia = f"- La causa la nombra la fila: **{causa}**, con fuente `{cita or 'ninguna'}`." + (
+            " [inferencia] En el corte, " + bert if tipo == "corte_abrupto" else ""
+        )
     return construye(
         Hallazgo(
             id=f"bb-{generado[:10]}-{et.lower().replace('_', '-')}-{boot}",

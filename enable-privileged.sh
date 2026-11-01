@@ -73,7 +73,7 @@ if [ "$REVERT" = 1 ]; then
   if [ -f /etc/audit/rules.d/10-blackbox-signals.rules ]; then
     run rm -f /etc/audit/rules.d/10-blackbox-signals.rules
     run augenrules --load
-    echo "  regla de auditoria de senales retirada (DGX-438 se queda sin instrumento)"
+    echo "  regla de auditoria de senales retirada (DEBT-SIGTERM-SIN-CAUSA-RAIZ se queda sin instrumento)"
   fi
   if [ -f /etc/audit/rules.d/zz-blackbox-backlog.rules ]; then
     run rm -f /etc/audit/rules.d/zz-blackbox-backlog.rules
@@ -422,10 +422,10 @@ else
   echo "  /etc/default/earlyoom no existe, se omite"
 fi
 
-# --- 7. quien manda el SIGTERM (DEBT-DGX-438) ----------------------------
+# --- 7. quien manda el SIGTERM (DEBT-SIGTERM-SIN-CAUSA-RAIZ) -------------
 echo
 echo "-- 7. auditoria de senales: quien mata a quien --"
-# Por que: DEBT-DGX-438 lleva abierta desde el 2026-09-08. Algo mata procesos
+# Por que: DEBT-SIGTERM-SIN-CAUSA-RAIZ lleva abierta desde el 2026-09-08. Algo mata procesos
 # python de fondo con SIGTERM a intervalos irregulares (10-15 min) y no se
 # sabe que. Descartados CON evidencia: systemd-oomd (`is-enabled` -> not-found,
 # ni instalado), la mitigacion de atom_gpu_telemetry.py (usa SIGSTOP/SIGCONT,
@@ -437,12 +437,12 @@ echo "-- 7. auditoria de senales: quien mata a quien --"
 # 4 h 08 min que cubria el anillo. No es que nadie matara: es que nadie
 # miraba. Falta la regla, no el demonio.
 if [ "$DRY" = 0 ] && ! command -v auditctl >/dev/null 2>&1; then
-  echo "  auditctl no esta: se omite (instala auditd para cerrar DGX-438)"
+  echo "  auditctl no esta: se omite (instala auditd para cerrar DEBT-SIGTERM-SIN-CAUSA-RAIZ)"
 else
   run mkdir -p /etc/audit/rules.d
   if [ "$DRY" = 0 ]; then
     cat >/etc/audit/rules.d/10-blackbox-signals.rules <<'RULES'
-## blackbox -- DEBT-DGX-438: quien manda la senal que mata.
+## blackbox -- DEBT-SIGTERM-SIN-CAUSA-RAIZ: quien manda la senal que mata.
 ## Se carga con `augenrules --load`. El numero 10 es para entrar ANTES que la
 ## regla estandar que genera el diluvio de abajo: auditd resuelve por primera
 ## coincidencia, asi que un `never` posterior no serviria de nada.
@@ -502,7 +502,7 @@ RULES
       echo "  Algo las esta borrando despues de cargarlas -- lo tipico es un -D"
       echo "  en un fichero de /etc/audit/rules.d que ordene despues de 10-."
       echo "  Comprueba:  grep -rn '^-D' /etc/audit/rules.d/"
-      echo "  Hasta que aparezcan ahi, DGX-438 sigue sin instrumento y"
+      echo "  Hasta que aparezcan ahi, DEBT-SIGTERM-SIN-CAUSA-RAIZ sigue sin instrumento y"
       echo "  'bb sigterm' te lo dira en vez de darte un cero limpio."
     fi
     echo

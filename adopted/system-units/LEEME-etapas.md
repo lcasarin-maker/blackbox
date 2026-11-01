@@ -98,7 +98,10 @@ kernel, y las unidades `active (exited)`.
 bootstatus y sysfs de cada watchdog (sin abrir `/dev/watchdog`), la línea de comandos del kernel, srcversion y
 firmante del módulo nvidia y `dmem.capacity`. Correrlo otra vez en el mismo arranque no escribe nada;
 `--imprime` muestra la fila sin escribirla. Esquema y códigos de salida: el docstring de `tools/etapas_arranque.py`.
-Ninguna unidad lo corre todavía.
+Lo corre `bb-reboot-verdict.service` (`systemd/` y su copia adoptada) como `ExecStartPre=-`, una vez por arranque,
+3 min después de iniciar y justo antes del veredicto, que lee las etapas. El `-` es deliberado: su rc 1 (el
+arranque actual aún no llegó a `multi-user`) o rc 2 (no hay `etapas.jsonl`) no impide el veredicto. En una
+máquina con la unidad vieja instalada no corre hasta reinstalarla (`~/.config/systemd/user/`).
 
 Límite: un arranque que no llegó a `local-fs` no deja marca en disco, y el resumen no lo distingue de uno que no
 existió. Ese caso solo lo delata la ausencia de `bb-etapa` en la consola serie o en pstore.

@@ -130,11 +130,114 @@ El testigo escucha. Para que tenga qué escuchar, la ATOM tiene que mandarle sus
 
 Mientras la ATOM no arranque, el testigo igual sirve: anota que no responde y cuánta electricidad consume.
 
+## Paso 6. Que la ATOM se traiga lo que anotó el testigo
+
+Lo que el testigo anota se queda en el equipo testigo. Para que sirva, tiene que llegar a la ATOM después del corte, que
+es donde se decide qué pasó. La ATOM lo **trae** sola cada vez que arranca: se conecta al testigo con `scp` (copia de
+archivos por SSH) y copia sus anotaciones. En la ATOM no se abre ningún puerto; la conexión sale de ella hacia el testigo.
+
+Aquí se explica con el equipo testigo de la casa, **la Dell con Linux**. Hace falta preparar dos cosas: que la Dell
+acepte conexiones SSH, y que la ATOM tenga permiso para entrar sin escribir contraseña (al arrancar no hay nadie que
+la escriba).
+
+En los comandos, `<USUARIO-DEL-TESTIGO>` es tu usuario en la Dell y `<IP-DEL-TESTIGO>` su IP: escribe los tuyos.
+
+### En la Dell (el equipo testigo)
+
+1. Averigua tu usuario y la IP de la Dell. Abre una Terminal y escribe:
+
+   ```bash
+   whoami
+   hostname -I
+   ```
+
+   El primero es `<USUARIO-DEL-TESTIGO>`; del segundo, la IP de la red de casa es `<IP-DEL-TESTIGO>`.
+2. Instala y enciende el servidor SSH (`sshd`). En Ubuntu o Debian el servicio se llama `ssh`; en Fedora, `sshd`:
+
+   ```bash
+   sudo apt install openssh-server
+   sudo systemctl enable --now ssh
+   systemctl is-active ssh
+   ```
+
+   La última línea debe decir `active`. Queda encendido también en los siguientes arranques de la Dell.
+3. Anota la carpeta donde el testigo guarda sus datos, escrita completa (sin `~`):
+
+   ```bash
+   echo ~/.local/share/bb-testigo
+   ```
+
+   Sale algo como `/home/<USUARIO-DEL-TESTIGO>/.local/share/bb-testigo`. Es la `ruta` del paso de la ATOM.
+
+### En la ATOM
+
+Todo con el usuario de siempre de la ATOM (el que corre los servicios de bb), **sin** `sudo`.
+
+1. Una llave SSH. Si `ls ~/.ssh/id_ed25519.pub` dice que no existe, créala con `ssh-keygen -t ed25519` y pulsa Enter
+   en todas las preguntas, **también en la de la frase de paso**: la ATOM la usa al arrancar, cuando nadie puede
+   escribirla. Esa llave solo abre la cuenta de la Dell donde la autorices en el paso siguiente.
+2. Copia la llave **pública** a la Dell. Te pide una vez la contraseña de la Dell, y si es la primera conexión pregunta
+   si confías en ella: responde `yes`. La llave queda añadida al final de `~/.ssh/authorized_keys` de la Dell:
+
+   ```bash
+   ssh-copy-id <USUARIO-DEL-TESTIGO>@<IP-DEL-TESTIGO>
+   ```
+
+   Comprueba que ya entra sin preguntar nada (debe imprimir `entra sin clave`):
+
+   ```bash
+   ssh -o BatchMode=yes <USUARIO-DEL-TESTIGO>@<IP-DEL-TESTIGO> true && echo "entra sin clave"
+   ```
+
+3. Dile a la ATOM dónde está el testigo: el archivo `externo/testigo.json` dentro de la carpeta de datos de bb
+   (`~/.local/share/blackbox`, o la de `$BLACKBOX_DATA` si la cambiaste). Lleva dos datos: `origen`, quién y dónde, y
+   `ruta`, la carpeta del paso 3 de la Dell:
+
+   ```bash
+   mkdir -p ~/.local/share/blackbox/externo
+   cat > ~/.local/share/blackbox/externo/testigo.json <<'FIN'
+   {"origen": "<USUARIO-DEL-TESTIGO>@<IP-DEL-TESTIGO>", "ruta": "/home/<USUARIO-DEL-TESTIGO>/.local/share/bb-testigo"}
+   FIN
+   ```
+
+### Probarlo
+
+1. En la ATOM, trae las anotaciones a mano, desde la carpeta del repo:
+
+   ```bash
+   cd ~/projects/blackbox
+   python3 -m tools.observador_ping --trae-testigo; echo "rc=$?"
+   ```
+
+   Si todo está bien imprime una línea con `"estado": "OK"` y la lista de `archivos` (`latido.jsonl`, `ping.jsonl` y los
+   demás, con sus rotaciones), y luego `rc=0`. Las copias quedan en `~/.local/share/blackbox/externo/testigo/`, con el
+   mismo nombre y contenido que en la Dell; el resultado de la última corrida queda en `trae.json`, en esa carpeta.
+2. Si dice `"estado": "NOT_COLLECTED"` (y `rc=1`), el campo `motivo` dice por qué, y nada de lo ya traído se toca:
+
+   | `motivo`                                   | Qué revisar                                                                |
+   |--------------------------------------------|----------------------------------------------------------------------------|
+   | `falta o es ilegible testigo.json`         | El archivo del paso 3 de la ATOM no existe o le falta una coma o comilla.  |
+   | `'origen' debe ser <usuario>@<host>`       | `origen` mal escrito: usuario, `@` y la IP, sin espacios.                  |
+   | `'ruta' debe ser el directorio de datos…`  | `ruta` vacía o con `*`, `?`, `[` o comillas.                               |
+   | `scp rc <número>`                          | No pudo copiar. Repite la prueba de `entra sin clave`: si falla, es la conexión (la Dell apagada o sin red, `ssh` parado, IP mala, llave no autorizada); si entra, revisa la `ruta`. |
+   | `scp rc 0 sin archivos *.jsonl*`           | Conectó, pero en esa `ruta` no hay anotaciones: revisa la carpeta.         |
+   | `scp: TimeoutExpired`                      | La copia tardó más de 120 s.                                               |
+
+3. Prueba de que el fallo se nota (control negativo): en la Dell, para el servidor un momento con
+   `sudo systemctl stop ssh`; en la ATOM repite el comando del punto 1. Debe salir `NOT_COLLECTED` con un `scp rc` distinto de 0 y `rc=1`,
+   y los archivos de `externo/testigo/` deben seguir ahí. Vuelve a encenderlo con `sudo systemctl start ssh` y repite: otra
+   vez `OK`.
+4. Al arrancar lo hace sola: `bb-reboot-verdict.service` lo corre justo antes del veredicto del reinicio, unos 3 min
+   después de encender. Tras el siguiente arranque, `cat ~/.local/share/blackbox/externo/testigo/trae.json` debe mostrar la
+   hora de esa corrida, y `journalctl --user -u bb-reboot-verdict -b` su salida. Si la ATOM tiene instalada una versión vieja
+   de esa unidad (sin `ExecStartPre`), no lo hará hasta reinstalarla.
+
 ## Cuando la ATOM se caiga
 
 1. **No apagues ni desinstales el testigo.**
 2. Corre `status` (paso 4) y guarda lo que muestra.
-3. Copia **la carpeta de datos entera**: `~/.local/share/bb-testigo` en Linux, `~/Library/Application Support/bb-testigo`
+3. Con el paso 6 hecho, la ATOM se trae las anotaciones sola al volver a arrancar. Igual, como respaldo, copia **la
+   carpeta de datos entera**: `~/.local/share/bb-testigo` en Linux, `~/Library/Application Support/bb-testigo`
    en macOS o `%LOCALAPPDATA%\bb-testigo` en Windows. Dentro están `netconsole.jsonl`, `ping.jsonl`, `energia.jsonl` y
    `latido.jsonl`, más sus rotaciones `.1`, `.2`, etc.
 
@@ -159,6 +262,8 @@ añade `--borrar-datos`. Lo mismo que con la instalación, `--dry-run` muestra l
   `schtasks`, `netsh`) está comprobado por pruebas, pero no en un Mac ni en un Windows de verdad. Tampoco se probó WSL.
 - Los campos que se leen de Shelly y Tasmota salen de la documentación de cada fabricante. No se probaron con un
   enchufe real. Si un campo no viene, el testigo anota «sin lectura»; nunca inventa un cero.
+- La copia del paso 6 (`--trae-testigo`) está probada con un `scp` de mentira (`tests/test_observador_ping.py`); en este
+  repositorio no consta una corrida contra la Dell de verdad. La primera la da el punto 1 de «Probarlo».
 - En Windows, `ping` y el puerto cerrado tardan más que en Linux: por eso el sondeo TCP espera 2 s.
 - En macOS reciente, el permiso de «red local» puede bloquear el sondeo cuando el testigo corre como servicio. Si
   `status` muestra `inalcanzable` y desde la Terminal la ATOM sí responde, revisa Ajustes del Sistema, Privacidad y

@@ -9,7 +9,9 @@ Ampliada el 2026-11-01 (boleta #23 A de Luis: el repo publico no lleva datos per
 usuario, cualquier IP RFC 1918 (las de documentacion, 192.0.2.x, 198.51.100.x y 203.0.113.x, no lo son), los
 nombres de proyectos ajenos y las rutas privadas de la base de conocimiento. La linea base se recalculo ese
 dia; lo que queda fuera de `tasks/` y `docs/` lleva su motivo en `MOTIVOS`. `simplecode` NO entra en el patron:
-es el nombre real de una dependencia de los hooks.
+es el nombre real de una dependencia de los hooks. Al cerrar la boleta ese mismo dia salieron de la linea base
+`DECISIONS.md` (el usuario del sudoers), el usuario de las rutas de `SPEC.md`, la IP de `tests/test_observador_ping.py`
+y el id de ficha ajeno de `tools/reboot_verdict.py` y su test: ninguno tenia motivo, solo esperaba su turno.
 """
 
 from __future__ import annotations
@@ -38,15 +40,13 @@ PATRON = re.compile(
 # Lo que queda en la linea base FUERA de `tasks/` y `docs/`, con su motivo (2026-11-01). Un archivo de codigo,
 # unidad o test no entra en la linea base sin una razon escrita aqui; uno que se limpia sale de las dos.
 _ADOPTADA = "copia adoptada: `bb drift` la compara byte a byte con el instalado, que lleva el nombre en un comentario"
-_AJENO = "lo limpia otro agente en paralelo (2026-11-01): fuera del alcance de la boleta #23 A en este cambio"
 _MAC = "MAC sintetica de fixture (aa:bb:..., 00:11:...), en la linea base desde el 2026-10-11"
 _REF = "ruta de procedencia en la KB del consumidor (`ref_raiz` de rules/firmas_gb10.json, una sola fuente)"
 _ENTREGA = "la entrega al consumidor de conocimiento: su carpeta y el manifiesto que citan las evidencias"
 _LEGADO = "clave de legado del contrato neutro (boleta #18 A): se lee por compatibilidad hasta que el productor migre"
 _LAB = "la /24 RFC 1918 es la direccion de DISENO del puente propio del laboratorio (bblab0), no un dato de la maquina"
 MOTIVOS: dict[str, str] = {
-    "DECISIONS.md": _AJENO,
-    "SPEC.md": _AJENO,
+    "SPEC.md": _LAB,
     "adopted/root-scripts/earlyoom-proteger.sh": "script sellado por sha256 en el manifiesto de bb-root-run",
     "adopted/system-config/etc_default_earlyoom": _ADOPTADA,
     "adopted/system-config/etc_sysctl.d_99-blackbox-panic.conf": _ADOPTADA,
@@ -66,15 +66,12 @@ MOTIVOS: dict[str, str] = {
     "tests/test_hardware_reader_safety.py": _MAC,
     "tests/test_kernel_capture.py": _MAC,
     "tests/test_lab_no_toca_docker0.py": _LAB,
-    "tests/test_observador_ping.py": _AJENO + " (IP RFC 1918 de prueba; su reemplazo es 192.0.2.x)",
-    "tests/test_reboot_verdict.py": _AJENO,
     "tests/test_wifi_trial_invariants.py": _MAC,
     "tools/accion_termica.py": _LEGADO,
     "tools/entrega_cosecha_foro.py": _ENTREGA,
     "tools/hallazgo.py": _REF,
     "tools/incident_report.py": _LEGADO,
     "tools/portero_docker_lab.sh": _LAB,
-    "tools/reboot_verdict.py": _AJENO,
     "tools/verifica_cosecha_foro.py": "atribucion del origen del patron cosechado (lente de cosecha)",
 }
 

@@ -1305,7 +1305,7 @@ def test_control_negativo_sin_rafagas_NO_se_filtra_nada(datos):
 
 
 # =====================================================================
-# bb sigterm, los cuatro defectos medidos el 2026-09-27 (DEBT-DGX-438)
+# bb sigterm, los cuatro defectos medidos el 2026-09-27 (DEBT-SIGTERM-SIN-CAUSA-RAIZ)
 #
 # La ficha planeaba dejar el instrumento un mes acumulando evidencia. Medido
 # ese dia: llevaba 76 HORAS armado y podia contestar sobre 10 MINUTOS, porque
@@ -1336,7 +1336,7 @@ def _syscall(ts, serial, **campos):
 
 
 def test_sigterm_lee_las_ROTACIONES_y_no_solo_el_fichero_actual(datos, tmp_path):
-    """El defecto que hacia inejecutable el plan de DEBT-DGX-438.
+    """El defecto que hacia inejecutable el plan de DEBT-SIGTERM-SIN-CAUSA-RAIZ.
 
     El anillo rota por tamano: 5 ficheros, 33.6 MB, 136 min en esta caja. Leer
     solo `audit.log` veia 10 de esos 136 minutos, y una pregunta por cuatro
@@ -1354,7 +1354,7 @@ def test_sigterm_lee_las_ROTACIONES_y_no_solo_el_fichero_actual(datos, tmp_path)
     assert "nuevo[2222]" in r.stdout
     assert "viejo[1111]" in r.stdout, (
         "la captura de la ROTACION no aparece: se volvio a leer solo audit.log, "
-        "que es el defecto que dejaba a DGX-438 mirando 10 min de 136")
+        "que es el defecto que dejaba a DEBT-SIGTERM-SIN-CAUSA-RAIZ mirando 10 min de 136")
 
 
 def test_sigterm_DECLARA_la_ventana_que_el_anillo_cubre(datos, tmp_path):
@@ -1395,7 +1395,7 @@ def test_control_negativo_un_hueco_de_SEGUNDOS_no_levanta_el_aviso(datos, tmp_pa
 
 
 def test_sigterm_NOMBRA_a_la_victima_desde_a0_cuando_no_hay_OBJ_PID(datos, tmp_path):
-    """La mitad que DGX-438 pregunta, y que estaba estructuralmente vacia.
+    """La mitad que DEBT-SIGTERM-SIN-CAUSA-RAIZ pregunta, y que estaba estructuralmente vacia.
 
     El anillo de esta caja tiene 0 registros type=OBJ_PID contra 307 SYSCALL
     con la clave de blackbox, asi que la rama que los une no corre nunca. Pero

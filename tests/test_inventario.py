@@ -224,3 +224,32 @@ def test_los_tres_directorios_del_mapeo_siguen_dando_destino():
         Path("adopted/systemd-user/x.service")) == "~/.config/systemd/user/x.service"
     assert inventario.destino_desplegado(
         Path("adopted/gpu_governance/y.sh")) == "/srv/ai/gpu_governance/y.sh"
+
+
+RAIZ = Path(__file__).resolve().parent.parent
+
+
+def gemelas_distintas(raiz: Path) -> list[str]:
+    """Las unidades de usuario que viven en `systemd/` Y en `adopted/systemd-user/` tienen que ser el mismo
+    archivo: `bb install` y la instalacion a mano copian de `systemd/`, y `bb drift` compara lo instalado
+    con `adopted/`. Si divergen, la unidad recien instalada sale divergente (medido el 2026-11-01 con
+    `bb-reboot-verdict.service`: los `ExecStartPre` y `TimeoutStartSec=300` solo estaban en `systemd/`)."""
+    return sorted(
+        f.name for f in (raiz / "adopted" / "systemd-user").iterdir()
+        if (raiz / "systemd" / f.name).is_file()
+        and (raiz / "systemd" / f.name).read_bytes() != f.read_bytes()
+    )
+
+
+def test_las_unidades_gemelas_de_systemd_y_adopted_son_identicas():
+    assert gemelas_distintas(RAIZ) == []
+
+
+def test_control_negativo_una_gemela_que_diverge_se_detecta(tmp_path):
+    for d in ("systemd", "adopted/systemd-user"):
+        (tmp_path / d).mkdir(parents=True)
+        (tmp_path / d / "u.service").write_text("[Service]\n", encoding="utf-8")
+    (tmp_path / "adopted/systemd-user/solo-adoptada.service").write_text("x", encoding="utf-8")
+    assert gemelas_distintas(tmp_path) == []
+    (tmp_path / "systemd/u.service").write_text("[Service]\nTimeoutStartSec=300\n", encoding="utf-8")
+    assert gemelas_distintas(tmp_path) == ["u.service"]

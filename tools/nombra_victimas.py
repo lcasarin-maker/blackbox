@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Le pone NOMBRE a las victimas de las senales que `bb sample` acumula
-(DEBT-DGX-438-SIN-CAUSA-RAIZ).
+(DEBT-SIGTERM-SIN-CAUSA-RAIZ).
 
 Por que hace falta
 ------------------
@@ -175,7 +175,7 @@ def es_autolimpieza(c: dict) -> bool:
     La version anterior de esta funcion comparaba el nombre del EMISOR con el de
     la victima, y eso fallaba justo en el caso que domina esta caja: `kill` y
     `pkill` matando a `rustdesk`. Reportaba 12 capturas como "sujeto de
-    DGX-438" cuando eran rustdesk limpiando sus propios hijos a traves de un
+    DEBT-SIGTERM-SIN-CAUSA-RAIZ" cuando eran rustdesk limpiando sus propios hijos a traves de un
     envoltorio. Lo vi en su propia salida, no en el codigo.
     """
     e = c.get("emisor") or {}
@@ -208,7 +208,7 @@ def es_autolimpieza(c: dict) -> bool:
 def atribucion_incompleta(c: dict) -> bool:
     """El emisor es un ENVOLTORIO y su padre no se pudo nombrar.
 
-    Estas capturas no son el sujeto de DGX-438 ni lo contrario: no se sabe quien
+    Estas capturas no son el sujeto de DEBT-SIGTERM-SIN-CAUSA-RAIZ ni lo contrario: no se sabe quien
     decidio. Contarlas como sujeto manda a buscar un culpable llamado `kill`.
     """
     ec = Path(str((c.get("emisor") or {}).get("comm") or "")).name
@@ -220,7 +220,7 @@ def main(argv=None) -> int:
     ap.add_argument("--capturas", type=Path, default=CAPTURAS)
     ap.add_argument("--muestras", type=Path, default=MUESTRAS)
     ap.add_argument("--solo-demonios", action="store_true",
-                    help="solo los emisores con auid unset, que es el sujeto de DGX-438")
+                    help="solo los emisores con auid unset, que es el sujeto de DEBT-SIGTERM-SIN-CAUSA-RAIZ")
     a = ap.parse_args(argv)
 
     caps = capturas(a.capturas)
@@ -263,7 +263,7 @@ def main(argv=None) -> int:
         print(f"  {n:>4}  {cl:8} {ec[:22]:22} -> {vc}{marca}")
     print()
 
-    # El sujeto de DGX-438, aislado: demonio -> proceso ajeno, no autolimpieza.
+    # El sujeto de DEBT-SIGTERM-SIN-CAUSA-RAIZ, aislado: demonio -> proceso ajeno, no autolimpieza.
     incompletas = [c for c in ns if atribucion_incompleta(c)]
     sujeto = [c for c in ns
               if (c.get("emisor") or {}).get("clase") == "demonio"
@@ -275,7 +275,7 @@ def main(argv=None) -> int:
     print(f"ATRIBUCION INCOMPLETA (emisor es un envoltorio y su padre no se "
           f"nombro): {len(incompletas)}")
     print()
-    print(f"SUJETO DE DGX-438 (emisor demonio, victima ajena y nombrada): {len(sujeto)}")
+    print(f"SUJETO DE DEBT-SIGTERM-SIN-CAUSA-RAIZ (emisor demonio, victima ajena y nombrada): {len(sujeto)}")
     for c in sujeto[:10]:
         print(f"  {dt.datetime.fromtimestamp(c['ts']):%Y-%m-%d %H:%M:%S} "
               f"{c['senal']:8} {Path(c['emisor']['comm']).name[:20]:20} -> "
