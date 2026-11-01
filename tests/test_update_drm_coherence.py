@@ -211,7 +211,7 @@ def test_inventario_de_conectores_desde_un_sysfs_sustituto(tmp_path: Path) -> No
 def test_fase_de_prueba_registra_ssh_sin_ips_y_could_not_run() -> None:
     def correr(argv: list[str], **_kw: Any) -> subprocess.CompletedProcess[str]:
         if argv == udc.SSH_SESION:
-            return subprocess.CompletedProcess(argv, 0, "10.0.0.7 50000 10.0.0.9 22\n", "")
+            return subprocess.CompletedProcess(argv, 0, "192.0.2.7 50000 192.0.2.9 22\n", "")
         if argv[0] == "dpkg-query":
             raise FileNotFoundError("dpkg-query")
         return subprocess.CompletedProcess(argv, 0, "", "")
