@@ -56,7 +56,7 @@ def _muestras(tmp_path, picos_mib):
     return d
 
 
-def _firma(gib=1000.0, dias=30, owner="lcasarin (prueba)", reason="control de la suite"):
+def _firma(gib=1000.0, dias=30, owner="ejemplo (prueba)", reason="control de la suite"):
     """Una declaracion de excursion VALIDA. Por defecto autoriza mas que
     cualquier serie de los tests, para que la mitad 2 no contamine a la mitad 1:
     un test que quiere medir la aritmetica tiene que fallar por la aritmetica."""

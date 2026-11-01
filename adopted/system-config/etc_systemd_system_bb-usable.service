@@ -22,8 +22,8 @@ Environment=XAUTHORITY=/run/user/1000/gdm/Xauthority
 # los procesos en $BLACKBOX_DATA/origen/. Esta unit corre como root, y sin esto
 # el defecto (~/.local/share/blackbox) seria el de /root, donde nadie lo lee.
 # LIMITE DECLARADO: misma convencion de usuario fijo que XAUTHORITY arriba.
-Environment=BLACKBOX_DATA=/home/lcasarin/.local/share/blackbox
-ExecStart=/home/lcasarin/projects/blackbox/bin/bb-usable
+Environment=BLACKBOX_DATA=@BB_HOME@/.local/share/blackbox
+ExecStart=@BB_HOME@/projects/blackbox/bin/bb-usable
 
 # El plazo que cobra. bb-usable acaricia cada PROBE_INTERVAL (30s) y se niega
 # a acariciar si su sonda pasa de PROBE_DEADLINE (300s), asi que este numero

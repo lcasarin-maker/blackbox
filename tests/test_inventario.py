@@ -137,6 +137,17 @@ def test_destino_de_cada_familia_de_adoptados() -> None:
     assert inventario.destino_desplegado(Path("adopted/gateway/w.sh")) == "/srv/ai/gateway/w.sh"
 
 
+def test_el_home_del_usuario_es_plantilla_y_no_se_parte():
+    """`home_@BB_USUARIO@_` es el home de quien corre el drift: sale como `~/`, con el
+    marcador entero. Con el replace de siempre saldria `/home/@BB/USUARIO@/...`."""
+    assert inventario.destino_desplegado(Path(
+        "adopted/system-config/home_@BB_USUARIO@_.config_systemd_user_app.slice.d_x.conf"
+    )) == "~/.config/systemd/user/app.slice.d/x.conf"
+    # control negativo: un home literal sigue siendo una ruta absoluta, no `~/`
+    assert inventario.destino_desplegado(Path(
+        "adopted/system-config/home_otro_.config_x.conf")) == "/home/otro/.config/x.conf"
+
+
 # --------------------------------------------------------------- seccion()
 # `tools/piso_cobertura.sh` y el trinquete miden que las lineas se EJECUTEN.
 # El runner de mutacion mide otra cosa: si un fallo se cazaria. Sobre

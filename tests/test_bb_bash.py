@@ -1792,17 +1792,21 @@ def test_drift_suspension_VENCIDA_SI_cuenta_como_fallo(raiz_drift):
 
 # FEATURE-OWNEAR-EN-BB-LO-QUE-ACTUA-SOBRE-LA-MAQUINA-01: el repo es publico, asi
 # que una copia adoptada con IP de LAN la lleva redactada, y `bb drift` aplica la
-# misma redaccion al desplegado antes de comparar.
+# misma redaccion al desplegado antes de comparar. La IP sembrada va partida, como
+# los secretos sembrados de test_adopted_sin_secretos.py: la redaccion solo actua
+# sobre RFC 1918, y la guarda de test_sin_datos_privados.py cuenta toda IP RFC 1918
+# literal del repo.
+_IP_LAN_SEMBRADA = "192.168." + "7.20"
 
 def test_drift_compara_una_copia_REDACTADA_contra_el_desplegado(raiz_drift):
     raiz, home = raiz_drift
     (raiz / "adopted" / "systemd-user" / "f.sh").write_text(
         "echo x > /dev/udp/<REDACTADO-IP-LAN>/6666\n", encoding="utf-8")
     (home / ".config" / "systemd" / "user" / "f.sh").write_text(
-        "echo x > /dev/udp/192.168.7.20/6666\n", encoding="utf-8")
+        f"echo x > /dev/udp/{_IP_LAN_SEMBRADA}/6666\n", encoding="utf-8")
     r = _correr_drift(raiz, home)
     assert r.returncode == 0, r.stdout
-    assert "192.168.7.20" not in r.stdout
+    assert _IP_LAN_SEMBRADA not in r.stdout
 
 
 def test_drift_redactado_SIGUE_viendo_un_cambio_fuera_de_la_IP(raiz_drift):
@@ -1812,11 +1816,11 @@ def test_drift_redactado_SIGUE_viendo_un_cambio_fuera_de_la_IP(raiz_drift):
     (raiz / "adopted" / "systemd-user" / "f.sh").write_text(
         "echo x > /dev/udp/<REDACTADO-IP-LAN>/6666\n", encoding="utf-8")
     (home / ".config" / "systemd" / "user" / "f.sh").write_text(
-        "echo x > /dev/udp/192.168.7.20/7777\n", encoding="utf-8")
+        f"echo x > /dev/udp/{_IP_LAN_SEMBRADA}/7777\n", encoding="utf-8")
     r = _correr_drift(raiz, home)
     assert r.returncode != 0, r.stdout
     assert "divergentes: 1" in r.stdout
-    assert "192.168.7.20" not in r.stdout, "el diff imprimio la IP sin redactar"
+    assert _IP_LAN_SEMBRADA not in r.stdout, "el diff imprimio la IP sin redactar"
 
 
 def test_drift_vigila_srv_ai_gateway(raiz_drift, tmp_path):
@@ -1830,6 +1834,110 @@ def test_drift_vigila_srv_ai_gateway(raiz_drift, tmp_path):
                                      "BLACKBOX_DRIFT_SRV": str(srv)})
     assert r.returncode != 0, r.stdout
     assert f"DIVERGE     {srv}/gateway/w.sh" in r.stdout
+
+
+# Boleta #23 A de Luis (2026-11-01): el repo es publico y no lleva el usuario ni
+# su home. Una copia adoptada cuyo instalado los lleva es una PLANTILLA
+# (@BB_USUARIO@, @BB_HOME@) y `bb drift` la renderiza antes de comparar, con los
+# valores del instalador. BLACKBOX_DRIFT_USUARIO fija el usuario como
+# BLACKBOX_DRIFT_ROOT fija el repo: sin el, el usuario del contenedor (root) no
+# lo aceptaria tools/bb_root_manifest.renderizar_sudoers.
+
+def _correr_drift_como(raiz, home, usuario="ejemplo"):
+    return correr(["drift"], extra_env={
+        "BLACKBOX_DRIFT_ROOT": str(raiz), "HOME": str(home), "BLACKBOX_DRIFT_USUARIO": usuario})
+
+
+_PLANTILLA = "[Service]\nUser=@BB_USUARIO@\nExecStart=@BB_HOME@/projects/blackbox/bin/x\n"
+
+
+def test_drift_plantilla_con_usuario_y_home_rinde_igual(raiz_drift):
+    raiz, home = raiz_drift
+    (raiz / "adopted" / "systemd-user" / "u.service").write_text(_PLANTILLA, encoding="utf-8")
+    (home / ".config" / "systemd" / "user" / "u.service").write_text(
+        f"[Service]\nUser=ejemplo\nExecStart={home}/projects/blackbox/bin/x\n", encoding="utf-8")
+    r = _correr_drift_como(raiz, home)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "revisados: 1   divergentes: 0   ausentes: 0" in r.stdout
+
+
+@pytest.mark.parametrize("desplegado", [
+    "[Service]\nUser=ejemplo\nExecStart={home}/projects/blackbox/bin/y\n",   # cambio real fuera del marcador
+    "[Service]\nUser=otro\nExecStart={home}/projects/blackbox/bin/x\n",      # otro usuario
+    "[Service]\nUser=ejemplo\nExecStart=/home/otro/projects/blackbox/bin/x\n",  # otro home
+    "[Service]\nUser=@BB_USUARIO@\nExecStart=@BB_HOME@/projects/blackbox/bin/x\n",  # la plantilla sin renderizar
+])
+def test_drift_plantilla_SIGUE_viendo_un_cambio_real(raiz_drift, desplegado):
+    """Control negativo del anterior: el render no puede volver ciego al fichero,
+    ni al usuario o al home que pone."""
+    raiz, home = raiz_drift
+    (raiz / "adopted" / "systemd-user" / "u.service").write_text(_PLANTILLA, encoding="utf-8")
+    (home / ".config" / "systemd" / "user" / "u.service").write_text(
+        desplegado.format(home=home), encoding="utf-8")
+    r = _correr_drift_como(raiz, home)
+    assert r.returncode != 0, r.stdout
+    assert "divergentes: 1" in r.stdout
+
+
+def test_drift_home_del_usuario_en_system_config_va_al_HOME(raiz_drift):
+    """`home_@BB_USUARIO@_<resto>` se compara contra $HOME/<resto>, con el marcador
+    entero: el `tr _ /` de siempre lo habria partido en /home/@BB/USUARIO@/."""
+    raiz, home = raiz_drift
+    sc = raiz / "adopted" / "system-config"
+    sc.mkdir()
+    (sc / "home_@BB_USUARIO@_.config_systemd_user_app.slice.d_x.conf").write_text("techo\n", encoding="utf-8")
+    destino = home / ".config" / "systemd" / "user" / "app.slice.d" / "x.conf"
+    destino.parent.mkdir()
+    destino.write_text("techo\n", encoding="utf-8")
+    r = _correr_drift_como(raiz, home)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert f"igual       {destino}" in r.stdout
+    destino.write_text("otro techo\n", encoding="utf-8")
+    r = _correr_drift_como(raiz, home)
+    assert r.returncode != 0 and f"DIVERGE     {destino}" in r.stdout, r.stdout
+
+
+_SUDOERS = Path(__file__).resolve().parent.parent / "adopted" / "pendiente-de-despliegue" / "etc_sudoers.d_bb-root-run"
+
+
+def test_drift_sudoers_plantilla_rinde_igual_que_el_instalador(raiz_drift):
+    """La plantilla REAL del sudoers contra lo que instala tools/bb_root_manifest:
+    el render de `bb drift` y el del instalador son el mismo fichero."""
+    from tools import bb_root_manifest as m
+    raiz, home = raiz_drift
+    plantilla = _SUDOERS.read_text(encoding="utf-8")
+    (raiz / "adopted" / "systemd-user" / "bb-root-run").write_text(plantilla, encoding="utf-8")
+    instalado = home / ".config" / "systemd" / "user" / "bb-root-run"
+    instalado.write_text(m.renderizar_sudoers(plantilla, "ejemplo"), encoding="utf-8")
+    r = _correr_drift_como(raiz, home)
+    assert r.returncode == 0, r.stdout + r.stderr
+    # control negativo: una regla ensanchada en la maquina SI diverge
+    instalado.write_text(m.renderizar_sudoers(plantilla, "ejemplo").replace("*$", "*"), encoding="utf-8")
+    r = _correr_drift_como(raiz, home)
+    assert r.returncode != 0 and "divergentes: 1" in r.stdout, r.stdout
+
+
+_UNIT_USABLE = Path(__file__).resolve().parent.parent / "systemd" / "bb-usable.service"
+_SED_INSTALADOR = 'sed -e "s|@BB_HOME@/projects/blackbox|$SELF_DIR|g" -e "s|@BB_HOME@|$HOME_DUENO|g"'
+
+
+def test_drift_bb_usable_rinde_igual_que_enable_privileged(raiz_drift):
+    """La unit que escribe enable-privileged.sh (checkout en su sitio) contra la
+    copia adoptada renderizada por `bb drift`: igual, y la copia sigue siendo la
+    plantilla byte a byte."""
+    raiz, home = raiz_drift
+    repo = _UNIT_USABLE.parent.parent
+    assert _SED_INSTALADOR in (repo / "enable-privileged.sh").read_text(encoding="utf-8")
+    adoptada = repo / "adopted" / "system-config" / "etc_systemd_system_bb-usable.service"
+    assert adoptada.read_bytes() == _UNIT_USABLE.read_bytes()
+    (raiz / "adopted" / "systemd-user" / "bb-usable.service").write_bytes(adoptada.read_bytes())
+    instalada = subprocess.run(
+        ["bash", "-c", _SED_INSTALADOR + ' "$1"', "_", str(_UNIT_USABLE)], capture_output=True, text=True,
+        env={**os.environ, "SELF_DIR": f"{home}/projects/blackbox", "HOME_DUENO": str(home)}, check=True).stdout
+    assert "@BB_" not in instalada and f"ExecStart={home}/projects/blackbox/bin/bb-usable" in instalada
+    (home / ".config" / "systemd" / "user" / "bb-usable.service").write_text(instalada, encoding="utf-8")
+    r = _correr_drift_como(raiz, home)
+    assert r.returncode == 0, r.stdout + r.stderr
 
 
 # =====================================================================

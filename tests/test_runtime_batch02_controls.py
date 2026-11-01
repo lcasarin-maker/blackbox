@@ -224,7 +224,7 @@ def _nccl() -> dict[str, Any]:
     doc = _base(card)
     doc.update({
         "nodes": [{"node_id": f"n{i}", "launcher_argv_sha256": "argv", "effective_nccl_env_sha256": "env",
-                   "interface": "eth0", "subnet": "10.0.0.0/24"} for i in range(2)],
+                   "interface": "eth0", "subnet": "198.51.100.0/24"} for i in range(2)],
         "nccl_microtest": {"command_sha256": "allreduce", "rank_results": [
             {"exit_code": 0, "bus_bandwidth_gbps": 10.0} for _ in range(2)]},
         "recipe_manual_ab": [{"mode": mode, "request_id": "req-1", "rank_logs": [{}, {}],
