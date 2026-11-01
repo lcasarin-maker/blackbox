@@ -227,7 +227,7 @@ def test_ping_without_summary_line_yields_nothing_and_family_detection() -> None
     assert fhs._parse_ping(["ping", "h"], "no summary") == {}
     out = "3 packets transmitted, 3 received, 0% packet loss\n"
     assert fhs._parse_ping(["ping", "fe80::1"], out)["network_family"] == "ipv6"
-    assert fhs._parse_ping(["ping", "10.0.0.1"], out)["network_family"] == "ipv4"
+    assert fhs._parse_ping(["ping", "192.0.2.1"], out)["network_family"] == "ipv4"
     assert fhs._parse_ping(["ping", "-6", "h"], out)["network_family"] == "ipv6"
 
 
@@ -321,8 +321,8 @@ def test_xrandr_and_desktop_journal_and_cmdline_and_route() -> None:
     assert fhs._parse_cmdline(["cat", "/proc/cmdline"], "ro quiet") == {"rescue_target": False}
     assert fhs._parse_cmdline(["cat", "x"], "") == {}
     ip = ["ip", "route", "get", "1.1.1.1"]
-    assert fhs._parse_route(ip, "1.1.1.1 via 10.0.0.1 dev eth0 src 10.0.0.5") == {"network_route": "dev eth0 via 10.0.0.1"}
-    assert fhs._parse_route(ip, "10.0.0.0/24 dev eth0") == {"network_route": "dev eth0"}
+    assert fhs._parse_route(ip, "1.1.1.1 via 192.0.2.1 dev eth0 src 192.0.2.5") == {"network_route": "dev eth0 via 192.0.2.1"}
+    assert fhs._parse_route(ip, "192.0.2.0/24 dev eth0") == {"network_route": "dev eth0"}
     assert fhs._parse_route(ip, "unreachable") == {"network_route": None}
     assert fhs._parse_route(["ls", "route"], "") == {}
 

@@ -7,7 +7,7 @@
         "sh",
         "-c",
         "list=$(git diff --name-only -z --diff-filter=ACMR \"$SIMPLE_BASE\" HEAD | tr '\\0' '\\n')\nfiles=\nIFS='\n'\nfor f in $list; do\n  case \"$f\" in\n    *.py|*.pyi|*.ipynb) files=\"$files$f\n\" ;;\n    *) if [ -x \"$f\" ] && head -n1 \"$f\" 2>/dev/null | grep -qE '^#!.*python'; then files=\"$files$f\n\"; fi ;;\n  esac\ndone\nfiles=$(printf '%s' \"$files\" | sed '/^$/d')\nn=$(printf '%s' \"$files\" | grep -c .)\nprintf '{\"examined\":%s}' \"$n\" > \"$SIMPLE_SCOPE_FILE\"\necho \"changed_python_files=$n base=$SIMPLE_BASE\"\n[ \"$n\" -gt 0 ] || exit 0\nset -f\nset -- $files\nexec \"$0\" check --force-exclude --extend-select S102,S301,S602,S608,S307,S506,S604,S605,PLE2502,PLE2510,PLE2512,PLE2513,PLE2514,PLE2515 \"$@\"",
-        "/home/<usuario>/.local/bin/ruff"
+        "../../.local/bin/ruff"
       ],
       "timeout_ms": 300000,
       "cache": false,
@@ -35,7 +35,7 @@
         "sh",
         "-c",
         "n=$(git rev-list --count \"$SIMPLE_BASE\"..HEAD)\necho \"range_commits=$n\"\nexec \"$0\" git --no-banner --redact --exit-code 23 --log-opts=\"$SIMPLE_BASE..HEAD\" .",
-        "/home/<usuario>/.local/bin/gitleaks"
+        "../../.local/bin/gitleaks"
       ],
       "timeout_ms": 300000,
       "cache": false,
@@ -61,7 +61,7 @@
         "sh",
         "-c",
         "n=$(\"$0\" check --show-files . | grep -c .)\nprintf '{\"examined\":%s}' \"$n\" > \"$SIMPLE_SCOPE_FILE\"\nexec \"$0\" check . --extend-select S102,S301,S602,S608,S307,S506,S604,S605,PLE2502,PLE2510,PLE2512,PLE2513,PLE2514,PLE2515",
-        "/home/<usuario>/.local/bin/ruff"
+        "../../.local/bin/ruff"
       ],
       "timeout_ms": 300000,
       "cache": false,
@@ -89,12 +89,12 @@
         "python": "/usr/bin/python3",
         "args": [
           "--tool",
-          "/home/<usuario>/.local/bin/pyright"
+          "../../.local/bin/pyright"
         ]
       },
       "env": {
         "PYTHONDONTWRITEBYTECODE": "1",
-        "PYTHONUSERBASE": "/home/<usuario>/.local"
+        "PYTHONUSERBASE": "../../.local"
       },
       "timeout_ms": 600000,
       "cache": false,
@@ -134,7 +134,7 @@
         "sh",
         "-c",
         "n=$(git rev-list --count \"$SIMPLE_BASE\"..HEAD)\necho \"range_commits=$n\"\nexec \"$0\" git --no-banner --redact --exit-code 23 --log-opts=\"$SIMPLE_BASE..HEAD\" .",
-        "/home/<usuario>/.local/bin/gitleaks"
+        "../../.local/bin/gitleaks"
       ],
       "timeout_ms": 300000,
       "cache": false,
@@ -164,7 +164,7 @@
       ],
       "env": {
         "PYTHONDONTWRITEBYTECODE": "1",
-        "PYTHONUSERBASE": "/home/<usuario>/.local"
+        "PYTHONUSERBASE": "../../.local"
       },
       "timeout_ms": 900000,
       "cache": false,
@@ -218,7 +218,7 @@
       ],
       "env": {
         "PYTHONDONTWRITEBYTECODE": "1",
-        "PYTHONUSERBASE": "/home/<usuario>/.local"
+        "PYTHONUSERBASE": "../../.local"
       },
       "timeout_ms": 900000,
       "cache": false,

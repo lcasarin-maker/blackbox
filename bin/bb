@@ -2947,6 +2947,8 @@ cmd_drift() {
   # apuntar a un repo y un HOME de mentira sin tocar los sujetos reales.
   local root; root="${BLACKBOX_DRIFT_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}"
   local diverged=0 checked=0 missing=0 suspended=0
+  # BLACKBOX_DRIFT_USUARIO: el mismo patron, para el valor de @BB_USUARIO@.
+  local usuario="${BLACKBOX_DRIFT_USUARIO:-$(id -un)}"
 
   suspension_caduca() { # ruta_desplegada -> imprime fecha de caducidad si esta suspendida
     local path="$1" manifest="$root/suspended/MANIFIESTO.md"
@@ -2996,15 +2998,28 @@ cmd_drift() {
       sed -E "s/\\b(10(\\.[0-9]{1,3}){3}|192\\.168(\\.[0-9]{1,3}){2}|172\\.(1[6-9]|2[0-9]|3[01])(\\.[0-9]{1,3}){2})\\b/$marca/g" \
         "$1" > "$desplegado"
     fi
-    if cmp -s "$desplegado" "$2"; then
+    # Al reves que la IP, el usuario y su home NO se redactan del desplegado: la
+    # copia del repo es una PLANTILLA (boleta #23 A de Luis) y se renderiza con
+    # los valores de quien corre el drift -- los mismos que pone el instalador:
+    # $DUENO y su home en enable-privileged.sh, ${SUDO_USER:-$(id -un)} en
+    # tools/bb_root_manifest.py. Asi un cambio del usuario o del home SI se ve.
+    local repo="$2"
+    if grep -qE '@BB_(USUARIO|HOME)@' "$2"; then
+      repo=$(mktemp)
+      sed -e "s|@BB_USUARIO@|$(_drift_literal "$usuario")|g" \
+          -e "s|@BB_HOME@|$(_drift_literal "$HOME")|g" "$2" > "$repo"
+    fi
+    if cmp -s "$desplegado" "$repo"; then
       echo "  igual       $1"
     else
       echo "  DIVERGE     $1"
-      diff -u "$2" "$desplegado" 2>/dev/null | head -12 | sed 's/^/                /'
+      diff -u "$repo" "$desplegado" 2>/dev/null | head -12 | sed 's/^/                /'
       diverged=$((diverged + 1))
     fi
     [ "$desplegado" = "$1" ] || rm -f "$desplegado"
+    [ "$repo" = "$2" ] || rm -f "$repo"
   }
+  _drift_literal() { printf '%s' "$1" | sed -e 's/[\\&|]/\\&/g'; } # valor -> reemplazo literal de sed
 
   echo "== divergencia repo vs maquina =="
   # BLACKBOX_DRIFT_SRV: el mismo patron que BLACKBOX_DRIFT_ROOT, para el lado
@@ -3020,9 +3035,16 @@ cmd_drift() {
     [ -e "$f" ] || continue
     cmp_one "$HOME/.config/systemd/user/$(basename "$f")" "$f"
   done
+  local nombre
   for f in "$root"/adopted/system-config/*; do
     [ -e "$f" ] || continue
-    cmp_one "/$(basename "$f" | tr _ /)" "$f"
+    nombre="$(basename "$f")"
+    case "$nombre" in
+      # home_@BB_USUARIO@_<resto>: el home de quien corre el drift (el instalador
+      # copia al home de $DUENO). El prefijo va aparte: `tr` partiria el marcador.
+      "home_@BB_USUARIO@_"*) cmp_one "$HOME/$(printf '%s' "${nombre#home_@BB_USUARIO@_}" | tr _ /)" "$f" ;;
+      *) cmp_one "/$(printf '%s' "$nombre" | tr _ /)" "$f" ;;
+    esac
   done
 
   echo
@@ -3461,7 +3483,7 @@ cmd_cap() {
   local gb="${1:-}"; shift 2>/dev/null || true
   case "$gb" in
     ''|*[!0-9]*) echo "uso: bb cap <GB> <comando...>" >&2
-                 echo "  ej: bb cap 16 /home/<usuario>/.local/share/antigravity-ide/antigravity" >&2
+                 echo "  ej: bb cap 16 ~/.local/share/antigravity-ide/antigravity" >&2
                  return 2 ;;
   esac
   [ $# -eq 0 ] && { echo "falta el comando" >&2; return 2; }
