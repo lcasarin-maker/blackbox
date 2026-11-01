@@ -59,7 +59,9 @@ def test_control_negativo_cada_secreto_sembrado_se_caza():
         "sk-" + "a" * 24,
         "ROOT_" + "PASSWD: " + "hunt" * 2,
         "NO" + "PASSWD=" + "hunt" * 2,
-        "echo x > /dev/udp/192.168.7.20/6666",
+        # La IP sembrada tambien va partida: el repo es publico y la guarda de
+        # tests/test_sin_datos_privados.py cuenta toda IP RFC 1918 literal.
+        "echo x > /dev/udp/192.168." + "7.20/6666",
     ]
     for s in sembrados:
         assert hallazgos("x.conf", s), f"la guarda dejo pasar {s!r}"
@@ -70,6 +72,6 @@ def test_control_negativo_cada_secreto_sembrado_se_caza():
 def test_control_negativo_lo_limpio_no_da_falsos_positivos():
     limpios = ['#FTP_PASSWORD=""', '#SSH_KEY="<path>"', "host 127.0.0.1",
                "echo x > /dev/udp/<REDACTADO-IP-LAN>/6666", "token de prosa sin asignacion",
-               "lcasarin ALL=(root) NOPASSWD: /usr/local/sbin/bb-root-run ^[a-z0-9][a-z0-9-]*$"]
+               "ejemplo ALL=(root) NOPASSWD: /usr/local/sbin/bb-root-run ^[a-z0-9][a-z0-9-]*$"]
     for s in limpios:
         assert hallazgos("x.conf", s) == [], s

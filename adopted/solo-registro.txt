@@ -43,12 +43,17 @@ etc_systemd_system_bb-usable.service
     `bb drift` compare la unit instalada y no la plantilla.
 
     Verificado el 2026-09-28 que las dos son el mismo fichero aqui (la
-    sustitucion es identidad cuando el checkout esta en su sitio):
+    sustitucion es identidad cuando el checkout esta en su sitio).
 
-      $ sed "s|/home/lcasarin/projects/blackbox|/home/lcasarin/projects/blackbox|g" \
-            systemd/bb-usable.service > <scratch>/bb-usable-producido.txt
-      $ diff <scratch>/bb-usable-producido.txt \
-             adopted/system-config/etc_systemd_system_bb-usable.service
+    Desde la boleta #23 A de Luis (2026-11-01) las dos llevan `@BB_HOME@` en
+    vez del home literal, porque el repo es publico: el instalador pone el
+    checkout en `@BB_HOME@/projects/blackbox` y el home de $DUENO en el resto,
+    y `bb drift` renderiza la copia adoptada con su $HOME antes de comparar.
+    La comprobacion de hoy es que la plantilla y la copia sigan siendo el
+    mismo fichero:
+
+      $ cmp systemd/bb-usable.service \
+            adopted/system-config/etc_systemd_system_bb-usable.service
       $ echo $?
       0
 
