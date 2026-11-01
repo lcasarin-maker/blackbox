@@ -1,9 +1,9 @@
-"""El gate termico: DGX-342, llegado de Atlas el 2026-09-25 (DGX-585).
+"""El gate termico: DGX-342, llegado del consumidor de conocimiento el 2026-09-25 (DGX-585).
 
 Vino entero salvo su ultimo tercio, que probaba `_no_se_puede_tomar_otro` de
-`liberation_watchdog` -- el DRENADOR de Atlas, que se queda alli y ahora
+`liberation_watchdog` -- el DRENADOR del consumidor, que se queda alli y ahora
 consulta este gate por proceso en vez de importarlo. Ese cableado se prueba
-en `tests/test_liberation_watchdog.py` del repo de Atlas, y aqui se prueba lo
+en `tests/test_liberation_watchdog.py` del repo del consumidor, y aqui se prueba lo
 que decide: el presupuesto termico.
 
 Original:

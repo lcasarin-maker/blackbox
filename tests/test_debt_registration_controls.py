@@ -910,7 +910,7 @@ def test_debt_no_cover_test_atom_gpu_telemetry_bb_85(monkeypatch):
 
     def reads_non_200_body(url, timeout_s=subject.VLLM_METRICS_TIMEOUT_S):
         req = subject.urllib.request.Request(
-            url, headers={"User-Agent": "Atlas-Telemetry/1.0"})
+            url, headers={"User-Agent": "blackbox-telemetry/1.0"})
         with subject.urllib.request.urlopen(req, timeout=timeout_s) as response:
             response.read()
 

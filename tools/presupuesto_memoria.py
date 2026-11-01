@@ -17,7 +17,7 @@ medida y comprueba la suma.
 proceso no la contabiliza. Medido el 2026-09-25 en esta caja:
 
     pid 20687  VLLM::EngineCore   nvidia-smi 32837 MiB   su cgroup 10.0 GB
-    pid  3443  atlas-api          nvidia-smi  4522 MiB   su cgroup  5.9 GB
+    pid  3443  kb-api             nvidia-smi  4522 MiB   su cgroup  5.9 GB
 
 Un punto no es una medida, asi que el techo sale del HISTORICO que bb ya
 guarda: el campo `gpu` de sus muestras lleva pid y MiB desde el 2026-09-08.

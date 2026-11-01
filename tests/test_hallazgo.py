@@ -1,14 +1,13 @@
-"""bb-hallazgo/1: el esquema, el validador (cada regla con su caso negativo), la publicacion idempotente,
-el contrato de Atlas y `bb saber`. Relacion de informacion: nada aqui importa codigo de Atlas."""
+"""bb-hallazgo/2: el esquema, el validador (cada regla con su caso negativo), la publicacion idempotente y
+el contrato con el consumidor, fijado por un fixture DORADO que vive copiado en los dos repos. Relacion de
+informacion: nada aqui importa ni ejecuta codigo de otro repo."""
 
-import json
-import subprocess
+import hashlib
 from pathlib import Path
 
 import pytest
 
 from tools import hallazgo as h
-from tools import saber
 
 pytestmark = pytest.mark.unit
 
@@ -32,7 +31,7 @@ def hallazgo_valido(**kw):
         por="bb reboots",
         nodo="node-9d835fe3",
         datos="reboots.jsonl#54b7161869da4fc99f7becb9571f529d",
-        atlas_refs=("knowledge/investigations/gb10_cortes_2026-10-11/00_INDICE.md",),
+        refs=("knowledge/investigations/gb10_cortes_2026-10-11/00_INDICE.md",),
         fuentes="- Veredicto de `reboots.jsonl`: CORTE_ABRUPTO.",
         inferencia="- [inferencia] causa indeterminada.",
     )
@@ -69,7 +68,7 @@ def test_cada_regla_del_esquema_falla_con_su_caso_negativo():
 
 def test_un_valor_sin_comillas_se_reporta_y_no_lanza():
     texto = hallazgo_valido().replace(
-        'esquema: "bb-hallazgo/1"', "esquema: bb-hallazgo/1"
+        'esquema: "bb-hallazgo/2"', "esquema: bb-hallazgo/2"
     )
     assert any(
         "'esquema' sin comillas" in f for f in h.valida(texto)
@@ -121,96 +120,33 @@ def test_el_nodo_anonimo_no_filtra_el_machine_id_y_declara_su_ausencia():
     assert h.nodo_anonimo(lambda _: "UNSUPPORTED") == "COLLECTION_FAILED"
 
 
-ATLAS = Path.home() / "projects/Atlas"
+DORADO = Path(__file__).parent / "fixtures" / "contrato" / "bb_hallazgo_2.md"
+SHA_DORADO = "b9a6b21741e7a1abda610c824b0658c5da23f206227f47d0b7446a074b33f46c"
 
 
-@pytest.mark.skipif(
-    not (ATLAS / "tools/kb_investigator.py").exists(),
-    reason="Atlas no esta en esta maquina",
-)
-def test_hallazgo_cumple_el_contrato_de_atlas():
-    """Se ejecuta como PROCESO aparte dentro de Atlas: no hay import cruzado y los dos `tools` no se mezclan."""
-    texto = h.desde_veredicto(
-        FILA,
-        nodo="node-1",
-        generado="2026-10-11T12:13:23-06:00",
-        datos="reboots.jsonl#x",
-    )
-    codigo = (
-        "import sys, json, datetime; sys.path.insert(0, '.')\n"
-        "from tools.kb_investigator import _contract_violations as cv, REQUIRED_SOURCES_HEADING as S, REQUIRED_INFERENCE_HEADING as I\n"
-        "import rag.indexer as ix\n"
-        "t = sys.stdin.read(); fm, _ = ix.split_frontmatter(t)\n"
-        "print(json.dumps({'faltas': cv(t), 'S': S, 'I': I, 'sin_citar': [k for k, v in fm.items() if isinstance(v, (datetime.date, datetime.datetime))], 'claves': len(fm)}))\n"
-    )
-    r = subprocess.run(
-        ["python3", "-c", codigo],
-        input=texto,
-        capture_output=True,
-        text=True,
-        cwd=ATLAS,
-        timeout=90,
-    )
-    assert r.returncode == 0, r.stderr[-400:]
-    d = json.loads(r.stdout.strip().splitlines()[-1])
-    assert d["faltas"] == [] and d["sin_citar"] == [] and d["claves"] >= 10
-    assert (d["S"], d["I"]) == (
-        h.H_FUENTES,
-        h.H_INFERENCIA,
-    )  # si Atlas cambia sus encabezados, esto lo avisa
-    roto = subprocess.run(
-        ["python3", "-c", codigo],
-        input=texto.replace(h.H_INFERENCIA, "## x"),
-        capture_output=True,
-        text=True,
-        cwd=ATLAS,
-        timeout=90,
-    )
-    assert json.loads(roto.stdout.strip().splitlines()[-1])[
-        "faltas"
-    ]  # control negativo: el contrato de Atlas SI puede rechazar
+def test_el_dorado_es_el_mismo_que_fija_el_consumidor():
+    """El consumidor fija el mismo sha256 en su test y valida este archivo con su propio validador."""
+    assert hashlib.sha256(DORADO.read_bytes()).hexdigest() == SHA_DORADO
 
 
-# -------------------------------------------------------------------------------- bb saber
-def test_saber_encuentra_con_archivo_y_linea_y_salta_las_carpetas_con_guion_bajo(
-    tmp_path,
-):
-    (tmp_path / "a").mkdir()
-    (tmp_path / "a/uno.md").write_text(
-        "hola\nel codigo MODS-020000600139 aparece\nfin\n",
-        encoding="utf-8",
-    )
-    (tmp_path / "_procedencia").mkdir()
-    (tmp_path / "_procedencia/oculto.md").write_text("MODS-020000600139\n", encoding="utf-8")
-    r = saber.busca("mods-020000600139", base=tmp_path)
-    assert r["estado"] == "ok" and r["total"] == 1 and r["archivos_revisados"] == 1
-    assert r["coincidencias"][0] == {
-        "archivo": "a/uno.md",
-        "linea": 2,
-        "texto": "el codigo MODS-020000600139 aparece",
-    }
+def test_construye_escribe_el_dorado_byte_a_byte():
+    """La forma entera del contrato: claves, orden, comillas, encabezados literales y salto final."""
+    texto = h.construye(h.Hallazgo(
+        id="bb-2026-11-01-corte-abrupto-0123abcd",
+        tipo="corte_abrupto",
+        confianza="medido",
+        generado="2026-11-01T09:30:00-06:00",
+        por="bb reboots",
+        nodo="node-00000000",
+        datos="reboots.jsonl#0123abcd0123abcd0123abcd0123abcd",
+        refs=("investigations/cortes/00_INDICE.md",),
+        fuentes="- Veredicto de `reboots.jsonl`: **CORTE_ABRUPTO** para el boot `0123abcd`.",
+        inferencia="- [inferencia] La causa queda INDETERMINADA.",
+    ))
+    assert texto == DORADO.read_text(encoding="utf-8")
+    assert h.valida(texto) == []
 
 
-def test_saber_declara_el_cero_con_su_alcance_y_la_ruta_ausente_como_no_se_pudo_correr(
-    tmp_path, capsys, monkeypatch
-):
-    (tmp_path / "x.md").write_text("nada\n", encoding="utf-8")
-    monkeypatch.setenv("ATLAS_KNOWLEDGE", str(tmp_path))
-    assert (
-        saber.main(["inexistente"]) == 1
-        and "0 coincidencias en" in capsys.readouterr().err
-    )
-    monkeypatch.setenv("ATLAS_KNOWLEDGE", str(tmp_path / "no_existe"))
-    assert (
-        saber.main(["x"]) == 2 and "COULD_NOT_RUN" in capsys.readouterr().err
-    )  # ausente != cero
-    monkeypatch.setenv("ATLAS_KNOWLEDGE", str(tmp_path))
-    assert (
-        saber.busca("(", base=tmp_path, regex=True)["estado"] == "COULD_NOT_RUN"
-    )  # regex invalida no es "sin resultados"
-
-
-def test_saber_trunca_y_lo_dice(tmp_path):
-    (tmp_path / "m.md").write_text("\n".join(["clave"] * 10), encoding="utf-8")
-    r = saber.busca("clave", base=tmp_path, maximo=3)
-    assert r["total"] == 10 and r["mostradas"] == 3 and r["truncado"] is True
+def test_control_negativo_el_dorado_con_la_clave_vieja_no_valida():
+    viejo = DORADO.read_text(encoding="utf-8").replace("\nrefs: [", "\nlista_vieja: [")
+    assert any("falta la clave 'refs'" in f for f in h.valida(viejo))
