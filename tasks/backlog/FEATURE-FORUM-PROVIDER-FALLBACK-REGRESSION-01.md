@@ -11,9 +11,23 @@ created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01 --evidence tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01", "expect": "exit_zero", "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."}
 ---
 
-## Fuente y evidencia
+## Trabajo en la ATOM
 
-[380948](https://forums.developer.nvidia.com/t/380948). ONNX reporta cuDNN FE11/cuBLAS internal, respawn, fallo cudaGetDeviceCount y CPU silencioso. El mismo batch pasó tras OTA OS7.5/kernel6.17-1031/driver580.173 en tres OEM según el autor. NVIDIA dice que la actualización pudo resolverlo; el bundle deja pendiente aislar driver como causa.
+Corregir el lector estricto de `provider_trace` (claves duplicadas, FIFO, tamano) y despues enlazar `tools/canario_motor.py` con una comprobacion de que el motor responde por GPU tras reiniciar el contenedor.
+
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/380948
+- https://forums.developer.nvidia.com/t/382922
+- https://forums.developer.nvidia.com/t/372486
+- https://forums.developer.nvidia.com/t/dgx-spark-gpu-usage-0-after-24-hours-open-webui/353683
+- https://forums.developer.nvidia.com/t/353683/1
+- https://forums.developer.nvidia.com/t/gb10-dgx-spark-cudnn-fe-failure-11-and-cublas-status-internal-error-under-batch-load-fixed-by-driver-580-173/380948/1
+- https://forums.developer.nvidia.com/t/build-sglang-from-source-on-blackwell-pro-6000-dgx-spark/360785/8
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
 
 ## Delta y prevención/resolución
 
@@ -27,10 +41,6 @@ fallback tras reemplazo de worker, GPU idle sin requests, CPU intencional y GPU 
 
 El verificador de close_check todavía debe implementarse; ejecutar esta ficha exige evidencia adicional y deja registradas las consultas que no pueden correr. Ningún cambio del host se aplica al registrar la propuesta. Detalle fuente preservado en tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_*.json y threads/.
 
-[382922](https://forums.developer.nvidia.com/t/382922) añade tres recurrencias con nvidia-smi sano y fallo de creación del contexto CUDA; llama-server termina sirviendo CPU. Hubo distro upgrade parcial no soportado y NVIDIA indicó revertir. Incorporar fixture de GPU enumerada pero offload efectivo fallido, sin recomendar ese stack ni un rollback universal.
-
-[372486](https://forums.developer.nvidia.com/t/372486) reports a GX10 idle hang despite a GPU cap, persistence setting and firmware state; the author says `cgroupfs` ran for 24 hours without a hang, but gives no weekly soak confirmation and binary logs remain unread. Do not change Blackbox systemd/cgroup-v2 behavior from this anecdote; retain it as a provider-specific reproducer and compare the same workload, cgroup provider and longer predeclared soak before proposing fallback changes.
-
 ## Progreso de preflight (2026-10-02)
 
 Se implementó `python3 -m tools.preflight fallback <snapshot.json>` para detectar solicitudes GPU atendidas por CPU, exigir solicitudes observadas y rechazar observaciones malformadas. El host tiene un contenedor vLLM en ejecución con contador de reinicios cero y un proceso `VLLM::EngineCore` usando GPU; estos datos no identifican el proveedor de cada solicitud tras un respawn. El resultado queda `unknown`. Comandos y salidas literales: `tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/commands.json`; evaluación: `preflight.json` y `validator-run.json`.
@@ -40,21 +50,6 @@ La ficha sigue abierta: faltan cronología request/provider/PID/respawn/latencia
 ## Progreso del analizador JSONL (2026-10-02)
 
 Se añadió `python3 -m tools.provider_trace <trace.jsonl>`, un analizador de solo lectura que conserva cada petición separada y exige observaciones de worker/PID, proveedor y latencia asociadas al worker activo. El historial del proveedor conserva las transiciones por worker: una observación CPU seguida de GPU sigue bloqueando y se atribuye al worker donde apareció; un CPU anterior al respawn nunca se atribuye al replacement. Si faltan observaciones del worker actual, el resultado incluye `unknowns` aparte de los hallazgos; la salida también declara `could_not_run_count` (0 normalmente, 1 cuando la lectura/decodificación falla). Proveedores desconocidos, eventos huérfanos, campos inválidos, UTF-8 inválido y JSON truncado producen `unknown`; un cambio de PID sin evento restart también queda `unknown`. Fixtures sintéticos cubren GPU sano, CPU intencional y GPU→CPU tras respawn. La evaluación registrada en `tasks/evidence/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01/provider-trace-run.json` muestra 100% de cobertura de `tools/provider_trace.py`, Ruff y Pyright limpios, y los controles esperados. No se obtuvo una traza de workload real, ni se validaron los tres OEM ni recuperación/rollback; la ficha permanece abierta.
-
-[353683](https://forums.developer.nvidia.com/t/dgx-spark-gpu-usage-0-after-24-hours-open-webui/353683) reports an Open-WebUI/Ollama container falling back to CPU after more than 24 hours; Docker restart or host reboot restored GPU use temporarily, but the author never posted closure logs. A separate reporter in the thread confirms `systemctl daemon-reload` preceded container NVML `Unknown Error` and that a documented NVIDIA Container Toolkit workaround prevented recurrence. Keep the two incidents distinct; test exact driver/toolkit/cgroup state around daemon reload, collect host and container GPU health before recovery, and do not force cgroupfs or restart workloads automatically from this evidence.
-
-
-## Índice de propuestas registradas del swarm NVIDIA categoría 721
-
-- **`BB-DOCKER-GPU-LIVENESS-DAEMON-RELOAD`** — Open-WebUI/Ollama owner reports GPU utilization falling to zero and workload reverting to CPU after >24 hours; a separate reporter confirms `systemctl daemon-reload` triggers container NVML Unknown Error and NVIDIA Container Toolkit… Fuente: [353683](https://forums.developer.nvidia.com/t/353683/1).
-
-
-## Índice de hallazgos asociados
-
-- **`BB-GPU-PROVIDER-SILENT-FALLBACK`** — A reported ONNX Runtime service crashed with cuDNN FE 11/cuBLAS internal errors on older GB10 stacks; a respawned worker then failed cudaGetDeviceCount and silently fell back to CPU, degrading inference by multiple times until container… Fuente: [380948](https://forums.developer.nvidia.com/t/gb10-dgx-spark-cudnn-fe-failure-11-and-cublas-status-internal-error-under-batch-load-fixed-by-driver-580-173/380948/1).
-
-[360785](https://forums.developer.nvidia.com/t/build-sglang-from-source-on-blackwell-pro-6000-dgx-spark/360785/8) is a negative control for health and provider telemetry: SGLang’s post-decode `pynvml.NVMLError_NotSupported` coincides with a saved image, and the author later confirms that the HTTP response succeeded with a corrected curl (post 14). The SGLang commit is not pinned. Keep request delivery, provider selection, and unsupported metric errors as separate observations; report provider `unknown` when native telemetry is unsupported. This does not establish CPU fallback.
-
 
 ## Defecto de ambigüedad y lectura detectado (2026-10-04)
 

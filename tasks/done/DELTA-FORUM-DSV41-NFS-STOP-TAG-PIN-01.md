@@ -15,17 +15,17 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01.md", "expect": "exit_zero", "porque": "Cerrada por aplicabilidad (void_wontfix, decision de Luis 2026-10-13): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a un test por ficha que se retiro con la deprecacion."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/382725/138
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-DSV41-NFS-STOP-TAG-PIN-01.** En la migración de un clúster de 4 Spark a DeepSeek-V4.1, un operador reportó que `stop.sh` elimina por wildcard todos los contenedores `dsv41-*`, incluido el NFS exporter; los workers conservaban mounts persistentes y el siguiente `serve` quedaba bloqueado en doctor. El mismo cambio detectó un tag `dev-dsv41` flotante que apuntaba a una base distinta del digest fijado previamente ([382725, post 138](https://forums.developer.nvidia.com/t/382725/138)). Proteger exporter y dependencias con allowlist/orden de parada, validar mount/export antes del servicio y fijar digest/commit del canary. El reporte es de un operador; repos y logs no auditados.
-
-Fuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.
 
 ## Criterio de cierre y control negativo
 

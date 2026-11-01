@@ -11,11 +11,18 @@ created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT --evidence tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT", "expect": "exit_zero", "porque": "Show that OTA compatibility checks detect a conflicting DRM modeset override before update, with safe recovery and a clean-system negative control."}
 ---
 
-## Fallo y receta reportados
+## Trabajo en la ATOM
 
-En [NVIDIA forum 382452, post 1](https://forums.developer.nvidia.com/t/dgx-spark-ota-update-to-dgx-os-7-5-0-kills-all-display-output-when-nvidias-own-nvidia-drm-options-modeset0-package-is-installed/382452/1), un DGX Spark GB10 con BIOS 5.36_0ACUM018, DGX OS 7.2.3 pasando a OTA 7.5.0 / meta 26.03.1, kernel 6.17.0-1032, driver 580.173.02 y el paquete NVIDIA `nvidia-drm-options-modeset0` perdió HDMI y USB-C/DP después del OTA. El archivo `/etc/modprobe.d/zz-nvidia-drm-override.conf` fijaba `nvidia-drm modeset=0`; el autor reporta que no quedaban conectores DRM registrados y GNOME no obtenía modos. El SSH seguía disponible.
+Antes de una OTA o un reinicio, leer con root el valor efectivo de `nvidia_drm.modeset` (`adopted/root-scripts/drm-modeset-leer.sh`) y capturar el estado DRM con `tools/update_drm_coherence.py`; no retirar el override sin la declaracion de compatibilidad de la OTA objetivo.
 
-El autor verificó recuperación tras quitar el override/paquete, reiniciar y cortar AC durante aproximadamente un minuto para reinitializar el display engine; su Thunderbolt hub también necesitó ciclo de alimentación. En su caso OTA meta 26.04.1 resolvió la interacción después de retirar el override. Propone que la OTA advierta/pare si hay incompatibilidad con KMS. Este es un caso reproducido por un propietario y no demuestra que toda instalación de ese paquete falle, ni que el paquete resulte incompatible en cada OEM.
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/dgx-spark-ota-update-to-dgx-os-7-5-0-kills-all-display-output-when-nvidias-own-nvidia-drm-options-modeset0-package-is-installed/382452/1
+- https://<pagina
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
 
 ## Exposición local y cobertura
 
@@ -64,7 +71,6 @@ Sigue ABIERTA. Lo que falta es de Luis, en la consola:
 
 1. Valor efectivo de este arranque (fuera del repo):
    `cd ~/projects/blackbox && python3 -m tools.update_drm_coherence drm --root-read --out /tmp/drm-gate && cat /tmp/drm-gate/preflight.json`
-2. Declaracion del vendor para la OTA objetivo: escribir `tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT/ota-target.json` con `{"id": "FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT", "target_ota": "<version>", "requires_kms": <true|false>, "source": "https://<pagina de nvidia.com o gigabyte.com>", "statement": "<texto literal>"}`.
 3. Si (1) da `N` con el override: decidir con guia del vendor la retirada soportada del override (no la hace ninguna herramienta de este repo), reiniciar y repetir (1). Con el gate en `pass`, capturarlo en el repo:
    `python3 -m tools.update_drm_coherence drm --root-read --out tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT`
 4. Prueba de recuperacion en el equipo de laboratorio, cada fase lanzada por SSH desde OTRA maquina (con HDMI y USB-C/DP conectados):

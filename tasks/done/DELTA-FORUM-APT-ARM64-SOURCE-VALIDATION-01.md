@@ -15,17 +15,19 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a tests/test_debt_registration_controls.py::test_delta_forum_apt_arm64_source_validation_01, un xfail que se retira con el cierre."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/355471
+- http://ports.ubuntu.com/ubuntu-ports/
+- https://archive.ubuntu.com/ubuntu
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01.** En DGX Spark/Noble arm64, un dueño publicó `ubuntu.sources` mezclando `archive.ubuntu.com` (404 en binary-arm64) y `ports.ubuntu.com`; soporte NVIDIA indicó `ports.ubuntu.com/ubuntu-ports` como fuente Ubuntu esperada. En paralelo, un PPA NVIDIA Vulkan reportó tamaño/hash inesperado durante sincronización de espejo, y otro usuario luego obtuvo `apt update` limpio. El autor dijo que retirar el archivo con source incorrecta restauró apt, pero sincronización y cambio de source no quedan aislados ([355471](https://forums.developer.nvidia.com/t/355471)). Validar perfil de repos aprobado y frescura/integridad de índices antes de upgrades; no borrar fuentes automáticamente ni continuar sobre índices stale.
-
-Fuentes: tasks/backlog/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.md.
 
 ## Criterio de cierre y control negativo
 
@@ -37,17 +39,11 @@ La ficha permanece abierta. El test selector del close_check es una especificaci
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
 
-## Inspección local de solo lectura (2026-10-03)
-
-En el host actual, `dpkg --print-architecture` devuelve `arm64`; `/etc/apt/sources.list.d/ubuntu.sources` usa `http://ports.ubuntu.com/ubuntu-ports/` para Noble y sus pockets. `apt-get indextargets` lista índices Ubuntu arm64. `gpgv --keyring /usr/share/keyrings/ubuntu-archive-keyring.gpg ...noble-updates_InRelease` verifica la firma del índice local, cuyo campo `Date` dice 2026-10-03; `apt-get -s -o Debug::NoLocking=1 upgrade` termina con rc=0 y cero paquetes por remover. El control negativo altera `Suite` en una copia temporal del mismo InRelease; `gpgv` devuelve rc=1 y `BAD signature`. Comandos y stdout crudos: `tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/commands.json`. Esta observación demuestra configuración local de Ubuntu apta para arm64 e integridad de la firma de ese índice, sin fijar un cutoff de frescura arbitrario ni afirmar que la matriz de repositorios de terceros sea aprobada. No se cambió la configuración ni se ejecutó `apt update`. El close_check aún no existe y la ficha sigue abierta: queda sin reproducir el negativo de source Ubuntu incompatible que describe el foro.
-
 ## Avance de instrumento — 2026-10-03
 
 `tools/apt_sources.py` parsea el archivo Deb822 activo, lee la arquitectura nativa y los tuples efectivos de `apt-get indextargets`. Diagnostica solo la contradicción de endpoint Ubuntu ya observada (`archive.ubuntu.com/ubuntu` con `arm64`); conserva los endpoints desconocidos como no evaluados. La captura local `tasks/evidence/BB-INSTRUMENTS-2026-10-03/apt-sources-capture.json` salió `observed`, `could_not_run_count=0`, 54 tuples efectivos, cuatro tuples configurados de Ubuntu ports y 26 tuples de índices no evaluados. Los valores gpgv previos siguen limitados al `InRelease` de `noble-updates` y al keyring Ubuntu que muestran `commands.json`; el capturador nuevo no afirma verificar firmas ni frescura. Sin fallo reproducido en APT real ni negativo source configurado en un sujeto canary, permanece abierta.
 
 ## Negativo APT real con source incompatible — 2026-10-03
-
-El coordinador ejecutó `apt-get update` contra un source Deb822 `https://archive.ubuntu.com/ubuntu`, suite `noble-updates`, componente `main`, arquitectura `arm64`. Configuración, listas, cache y logs se aislaron en un directorio temporal nuevo bajo `/tmp`; `apt-config dump` corroboró ausencia de hooks Pre/Post-Invoke heredados. El comando devolvió rc100 y `404 Not Found` para `binary-arm64/Packages`; `apt-get indextargets` sobre ese estado aislado devolvió rc0 con salida vacía. could_not_run=0. No se modificaron las fuentes del host ni se ejecutó upgrade/install. Se preservaron comandos, stdout/stderr, configuración y hashes antes de limpiar exclusivamente el directorio creado por el ensayo.
 
 Evidencia: `tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/wrong-source-canary/run.json`, `canary.sources` e `isolated.conf`. El negativo pendiente ya está reproducido con APT real. La ficha conserva `open`: falta integrar el verificador, sus regresiones y la comprobación completa del perfil/índices admitidos. El ensayo no aprueba automáticamente repositorios de terceros ni acredita integridad/frescura de todos sus índices.
 
