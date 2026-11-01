@@ -118,9 +118,9 @@ Validación: documentar OEM/equipo, montaje, orientación, alimentación y ambie
 
 Cierre: prueba reproducible bajo carga sostenida con criterios de rendimiento y estabilidad; parametrizar margen térmico por OEM/workload a partir de evidencia. Riesgos: flujo obstruido o recirculación, polvo, vibraciones, alimentación y temperatura de la fuente. Rollback: conservar descripción del montaje original y restaurar parámetros verificados ante degradación. Este registro autoriza investigación; cualquier prueba disruptiva o modificación física requiere alcance específico.
 
-## Revisión Atlas de fronteras de potencia — 2026-10-03
+## Revisión externa de fronteras de potencia — 2026-10-03
 
-La [revisión de la nota Atlas](../../docs/evidence/GB10-POWER-BOUNDARIES-ATLAS-REVIEW-2026-10-03.md) contrasta 140 W TDP SoC, 240 W fuente y 233,2 W Maximum Power del ensayo regulatorio NVIDIA P4242. Rechaza atribuir 233,2−140 a auxiliares por mezclar TDP y medición, corrige 240−140−100=0 W y conserva desconocida la frontera de ~164 W. Reutiliza BB-POWER-TELEMETRY-BOUNDARY: registrar contador/dominio, AC/DC, intervalo, OEM/workload y errores; ninguna resta sustituye medidas pareadas. Ensayo eléctrico local: 0; validación externa ~164 W: could_not_run=1. Status y close_check permanecen abiertos.
+La revisión de la nota externa (una referencia externa) contrasta 140 W TDP SoC, 240 W fuente y 233,2 W Maximum Power del ensayo regulatorio NVIDIA P4242. Rechaza atribuir 233,2−140 a auxiliares por mezclar TDP y medición, corrige 240−140−100=0 W y conserva desconocida la frontera de ~164 W. Reutiliza BB-POWER-TELEMETRY-BOUNDARY: registrar contador/dominio, AC/DC, intervalo, OEM/workload y errores; ninguna resta sustituye medidas pareadas. Ensayo eléctrico local: 0; validación externa ~164 W: could_not_run=1. Status y close_check permanecen abiertos.
 
 ## Clasificación del impedimento — 2026-10-04
 

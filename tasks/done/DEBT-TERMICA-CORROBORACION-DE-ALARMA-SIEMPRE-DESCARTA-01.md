@@ -56,7 +56,7 @@ Alcance a agregar al cierre: ademas del arreglo de la corroboracion, un evento `
 
 ## CORRECCION (2026-10-11, tarde): el defecto estaba en `bb scan`, no en la corroboracion del sampler
 
-Al ir a "arreglar la corroboracion" lei el docstring de `_alarmas` (DGX-396): en el flanco de subida `descarta` es **por diseno** y se lee "en este instante el gate todavia no bloquearia", nunca "esto fue ruido"; quien mitiga lee `carga_gpu`. Tocar su semantica reabriria la divergencia que ese diseno cerro, asi que **no se toco**. Lo que estaba mal:
+Al ir a "arreglar la corroboracion" lei el docstring de `_alarmas` (una referencia externa): en el flanco de subida `descarta` es **por diseno** y se lee "en este instante el gate todavia no bloquearia", nunca "esto fue ruido"; quien mitiga lee `carga_gpu`. Tocar su semantica reabriria la divergencia que ese diseno cerro, asi que **no se toco**. Lo que estaba mal:
 
 1. **`bb scan` leia `descarta` como ruido** ("picos de sensor descartados (ruido, no eventos)") e imprimia 0 eventos reales: **corregido**; ahora imprime calor sostenido y throttle decodificado (`incident_report.residencia_ventana`).
 2. **El sampler no tenia ningun evento de calor sostenido**: **agregado**, aditivo y sin cambiar `_alarmas` ni lo que recibe `mitigar`: `temp_sostenida` / `temp_sostenida_fin` (ventana de 60 lecturas, banda umbral-5 C = 89.8 C, 80 %) y `temp_sobre_100` (pedido de la sesion externa).
@@ -72,7 +72,7 @@ Al ir a "arreglar la corroboracion" lei el docstring de `_alarmas` (DGX-396): en
 
 **Aviso en pantalla** (`tools/aviso_termico.py`, servicio `bb-aviso-termico`) leyendo `estado_termico.json` que publica el sampler en cada muestra. Notifica solo al cambiar de estado y recuerda cada 10 min sobre 100 C; el texto de la notificacion dice que hacer (`bb who`, detener lo que no sea esencial). Entrega probada: `notify-send` salio con 0 desde un servicio de usuario.
 
-**Correccion sobre Atlas:** se habia propuesto que Atlas consultara el archivo para frenar trabajos. Medido el mismo dia: el freno que Atlas YA usa (`tools/bb_consulta.py` llama a `--gate-termico`) habria bloqueado el 100 % de las lecturas calientes de los periodos A, B y el pre-corte, y el 93 % del periodo C, incluso con la GPU consumiendo 32-46 W de media, porque mira el pico de potencia de una ventana corta. Un consumidor nuevo en Atlas no aportaria nada, y no se construyo.
+**Correccion sobre el consumidor de conocimiento:** se habia propuesto que el consumidor de conocimiento consultara el archivo para frenar trabajos. Medido el mismo dia: el freno que el consumidor de conocimiento YA usa (`tools/bb_consulta.py` llama a `--gate-termico`) habria bloqueado el 100 % de las lecturas calientes de los periodos A, B y el pre-corte, y el 93 % del periodo C, incluso con la GPU consumiendo 32-46 W de media, porque mira el pico de potencia de una ventana corta. Un consumidor nuevo en el consumidor de conocimiento no aportaria nada, y no se construyo.
 
 **Limites:** el aviso es manual: nadie lo atiende si no mira la pantalla, y `sostenida` ocurre varias veces por boot (3 episodios en las 22 h del boot del 11-oct), asi que puede avisar seguido. `sobre_100` no sono en ningun corte medido (maximo historico de zona: 98.6 C). Falta una prueba del aviso con un estado real de `sobre_100`, que no ha ocurrido.
 
@@ -80,7 +80,7 @@ El `close_check` de esta ficha pide un test `destino_del_aviso` que hoy no exist
 
 ## Root Cause
 
-`bb scan` leyo el campo `corroboracion` de la alarma de flanco (`descarta` por diseno, DGX-396) como "sin calor", y el sampler no emitia ningun evento de calor sostenido ni publicaba estado para que alguien lo leyera en tiempo real.
+`bb scan` leyo el campo `corroboracion` de la alarma de flanco (`descarta` por diseno, una referencia externa) como "sin calor", y el sampler no emitia ningun evento de calor sostenido ni publicaba estado para que alguien lo leyera en tiempo real.
 
 ## Regression Test
 

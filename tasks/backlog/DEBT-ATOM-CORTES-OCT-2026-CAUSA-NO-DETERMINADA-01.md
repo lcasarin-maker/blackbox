@@ -2,7 +2,7 @@
 id: DEBT-ATOM-CORTES-OCT-2026-CAUSA-NO-DETERMINADA-01
 kind: task
 domain: HARDWARE
-title: "Cortes de la ATOM de octubre 2026 sin causa determinada (trasladada de Atlas DGX-640)"
+title: "Cortes de la ATOM de octubre 2026 sin causa determinada (trasladada de una referencia externa)"
 status: open
 severity: P1
 origin: asserted
@@ -13,13 +13,13 @@ close_check: {"cmd": "grep -q \"CAUSA DETERMINADA\" /home/lcasarin/projects/Atla
 
 ## Origen
 
-Trasladada el 2026-10-17 por pedido de Luis desde Atlas `tasks/backlog/DGX-640` (`tasks/done/DGX-640.md`, `closure_type: relocated`). La evidencia, los dictamenes `crash_atom_*` y el dictamen de correlacion siguen en Atlas (`docs/agent_findings/`, indexados); esta ficha los cita, no los copia.
+Trasladada el 2026-10-17 por pedido de Luis desde una referencia externa (una referencia externa, `closure_type: relocated`). La evidencia, los dictamenes `crash_atom_*` y el dictamen de correlacion siguen en el consumidor de conocimiento (`docs/agent_findings/`, indexados); esta ficha los cita, no los copia.
 
 ## Estado heredado (la decision de Luis del 2026-10-12 sigue vigente)
 
 - Veredicto vigente: **CAUSA NO DETERMINADA**. Se descarta cerrar con la correlacion de la cola o con la tendencia de tres boots (refutadas por los cortes sin jobs y por la serie no monotona).
 - El cierre exige evidencia NUEVA: para el proximo proceso grande o caida, blackbox guarda RSS y PSI por minuto, `pid`/`ppid`/cgroup/ancestros del proceso de mayor RSS y un recibo externo. La captura prospectiva esta desplegada desde 2026-10-13 (`bb-guardia-proceso`, `blackbox-sample.timer`, `atom-gpu-telemetry.service`); se dispara por crecimiento de VmSize >= 2 GiB, no reconstruye PIDs de boots perdidos.
-- Dictamen: `/home/lcasarin/projects/Atlas/docs/agent_findings/2026-10-12_atom_causa_de_los_cortes_oct_2026.md`. Lista de cortes y actualizaciones (1)-(8): `/home/lcasarin/projects/Atlas/tasks/done/DGX-640.md`.
+- Dictamen: una referencia externa. Lista de cortes y actualizaciones (1)-(8): una referencia externa.
 - 2026-10-17: otra caida (reinicio por lentitud, Luis) sin dictamen todavia.
 
 ## Relacionadas

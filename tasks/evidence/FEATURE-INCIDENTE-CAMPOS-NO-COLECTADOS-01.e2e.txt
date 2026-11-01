@@ -76,11 +76,11 @@ $ python3 -m tools.incident_report --json   (boot terminado -1 de esta maquina; 
 reinicio de contador no se salta: rc=1 ['FAILED tests/test_incident_report.py::test_fase_de_carga_progreso_calcula_tok_s_de_los_contadores_y_un_reinicio_no_da_negativos']
 S11 sin exigir peticiones: rc=1 ['FAILED tests/test_incident_report.py::test_fase_de_carga_progreso_detecta_la_firma_s11_y_no_la_confunde_con_decode']
 sin /metrics siempre es carga: rc=1 ['FAILED tests/test_incident_report.py::test_fase_de_carga_distingue_carga_descarga_decode_prefill_inactivo_y_motor_detenido']
-job_done no cierra el job: rc=1 ['FAILED tests/test_incident_report.py::test_carga_de_atlas_lista_solo_los_jobs_del_boot_sin_job_done']
-job de otro boot cuenta: rc=1 ['FAILED tests/test_incident_report.py::test_carga_de_atlas_lista_solo_los_jobs_del_boot_sin_job_done']
+job_done no cierra el job: rc=1 ['FAILED tests/test_incident_report.py::test_carga_de_[externo]_lista_solo_los_jobs_del_boot_sin_job_done']
+job de otro boot cuenta: rc=1 ['FAILED tests/test_incident_report.py::test_carga_de_[externo]_lista_solo_los_jobs_del_boot_sin_job_done']
 primera respuesta: cualquier fila: rc=1 ['FAILED tests/test_incident_report.py::test_fase_de_carga_primera_respuesta_de_aplicacion_no_cuenta_el_boot_sin_metrics']
 adjunto de cualquier incidente: rc=1 ['FAILED tests/test_incident_report.py::test_fase_de_carga_adjuntos_reconoce_el_archivo_presente_y_si_falta_dice_por_que']
-archivo ilegible se lee como ausente: rc=1 ['FAILED tests/test_incident_report.py::test_carga_de_atlas_archivo_ilegible_es_collection_failed_no_ausente']
+archivo ilegible se lee como ausente: rc=1 ['FAILED tests/test_incident_report.py::test_carga_de_[externo]_archivo_ilegible_es_collection_failed_no_ausente']
 restaurado: 42 passed in 0.32s
 
 $ python3 -m pytest -q tests/test_incident_report.py tests/test_atom_gpu_telemetry.py

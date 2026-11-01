@@ -14,7 +14,7 @@ close_check: {"cmd": "grep -q 'bridge=bblab0' tools/portero_docker_lab.sh", "exp
 ---
 
 ## Root Cause
-El segundo `dockerd` del laboratorio nivel 2 arrancaba con `--bridge=none`. Con el puente desactivado Docker elimina el `docker0` del host (es un netdev global, no del daemon). `docker0` desaparecio a las 07:55:30 del 2026-10-12, segundos despues del primer `up`, y `atlas-pgvector` (red bridge) quedo sin red 5 h hasta que Luis reinicio Docker a las 13:16. El script declaraba "unico contacto con produccion: docker save": falso. Atribucion: por coincidencia de hora y comportamiento conocido de dockerd; no se reprodujo en un host aparte (exigiria root).
+El segundo `dockerd` del laboratorio nivel 2 arrancaba con `--bridge=none`. Con el puente desactivado Docker elimina el `docker0` del host (es un netdev global, no del daemon). `docker0` desaparecio a las 07:55:30 del 2026-10-12, segundos despues del primer `up`, y pgvector externo (red bridge) quedo sin red 5 h hasta que Luis reinicio Docker a las 13:16. El script declaraba "unico contacto con produccion: docker save": falso. Atribucion: por coincidencia de hora y comportamiento conocido de dockerd; no se reprodujo en un host aparte (exigiria root).
 
 ## Regression Test
 `tests/test_lab_no_toca_docker0.py`: el script no contiene `--bridge=none` en codigo, usa `--bridge=bblab0 --bip=172.31.250.1/24`, `up` aborta si `docker0` existia antes y ya no, y `down` borra solo `bblab0`. Control negativo corrido: con la bandera vieja fallan 2 de 3.

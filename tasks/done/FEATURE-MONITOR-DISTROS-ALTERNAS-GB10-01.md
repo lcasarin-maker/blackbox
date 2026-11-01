@@ -20,7 +20,7 @@ Lista versionada de fuentes en este repo (`data/distros_alternas.json`, esquema 
 ## Que busca (palabras y archivos, no opiniones)
 `CGROUP_DMEM`, `memacct`, `dmem.capacity`, `HAMi`, `MemoryMax` con GPU, guardias de `MemAvailable`, empaquetado de driver 610/615 y firma Secure Boot, cambios en la configuracion de kernel.
 ## Contrato de informacion (sin imports cruzados)
-El monitor escribe `$BLACKBOX_DATA/hallazgos/distros_alternas.jsonl` (`bb-hallazgo/1`, como los demas hallazgos de bb); Atlas los recoge con `tools/recoge_hallazgos_bb.py`. bb no sabe de Atlas.
+El monitor escribe `$BLACKBOX_DATA/hallazgos/distros_alternas.jsonl` (`bb-hallazgo/1`, como los demas hallazgos de bb); el consumidor de conocimiento los recoge con `tools/recoge_hallazgos_bb.py`. bb no sabe del consumidor de conocimiento.
 ## Plan
 1. HECHO 2026-10-12: lista de fuentes `data/distros_alternas.json` (15 fuentes, `bb-fuentes/1`) con `tests/test_distros_alternas_fuentes.py`, de la cosecha FEATURE-COSECHA-DISTROS-ALTERNAS-GB10-01.
 2. Comparador por fuente con `git ls-remote` (HEAD) y la API de commits recientes; el hilo del foro por numero de respuestas. Sin descargar codigo.
@@ -32,7 +32,7 @@ Detecta actividad y palabras clave, no juzga si el mecanismo sirve: eso lo mide 
 ## Adaptacion a este equipo (clasificacion 2026-10-13)
 Aplicabilidad: adaptable · utilidad: baja · lectura: completa.
 
-Decision de Luis 2026-10-12: quedarse en DGX OS y monitorear distros alternas; data/distros_alternas.json existe (15 fuentes). El monitor semanal con git ls-remote es barato pero P3 y la utilidad es de vigilancia de conocimiento (hallazgos para Atlas), no de proteccion del equipo. Falta comparador, interruptor monitor_distros en tools/interruptores.py y primera pasada.
+Decision de Luis 2026-10-12: quedarse en DGX OS y monitorear distros alternas; data/distros_alternas.json existe (15 fuentes). El monitor semanal con git ls-remote es barato pero P3 y la utilidad es de vigilancia de conocimiento (hallazgos para el consumidor de conocimiento), no de proteccion del equipo. Falta comparador, interruptor monitor_distros en tools/interruptores.py y primera pasada.
 
 Version para un solo nodo Gigabyte AI TOP ATOM: Implementar el comparador con git ls-remote sobre data/distros_alternas.json, escribir hallazgos bb-hallazgo/1 y correr una primera pasada semanal con control negativo (fuente sin actividad no genera hallazgo).
 

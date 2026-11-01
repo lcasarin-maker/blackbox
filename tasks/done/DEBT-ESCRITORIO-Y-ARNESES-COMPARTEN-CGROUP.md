@@ -21,7 +21,7 @@ Medido el 2026-09-25 dentro de `app.slice`:
 ```
 app-com.anthropic.Claude-<pid>.scope        19.74 GB actual   22.70 GB pico   <- ARNES
 app-gnome-com.anthropic.Claude-<pid>.scope   1.04 GB actual    1.29 GB pico   <- VENTANA
-atlas-api.service                            5.85 GB actual    8.00 GB pico
+Servicio externo                            5.85 GB actual    8.00 GB pico
 ```
 
 Los dos primeros son hermanos y **ninguno tenia proteccion**: `memory.low = 0`.

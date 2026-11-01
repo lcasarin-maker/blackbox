@@ -14,7 +14,7 @@ close_check: {"cmd": "grep -q docker_slice_dimensionado tasks/evidence/DEBT-DOCK
 ## Medido
 - `bb portero contenedores` (lectura en seco) no acota ninguno: el reparto sale negativo (-758 180 kB para librechat).
 - Los contenedores se crean con `docker run` (sin etiquetas de compose): hallar quien los crea.
-- Topes aplicados por `docker update` el 2026-10-12: librechat 3g, mongo-librechat 2g, proyecto-A-pg 2g (4x pico medido, sin swap, pids 2048) y atlas-pgvector swap 0.
+- Topes aplicados por `docker update` el 2026-10-12: librechat 3g, mongo-librechat 2g, proyecto-A-pg 2g (4x pico medido, sin swap, pids 2048) y pgvector externo swap 0.
 ## Que falta
 Decidir el tope de docker.slice frente al presupuesto de slices votado el 2026-09-27 (42/14/12) o bajar el de vLLM; persistir; revisar tras el despliegue del runtime OCI (`FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01`).
 
@@ -30,11 +30,11 @@ Ventana del motor con sudo de Luis (`tasks/evidence/VENTANA-VLLM-20261015/ventan
 ## Avance 2026-10-16: BLOQUEADA, ningun creador vive en este repo
 Medido con `docker inspect` (tabla completa en `medicion.txt`). Librechat y mongo-librechat ya no existen. Los contenedores vivos y quien los crea:
 - `nemotron-server` (75 GiB, swap 75 GiB, sin pids): `/srv/ai/gateway/main.py`, `build_vllm_args`, fuera de todo repo (blackbox solo adopta `admission_check_wrapper.sh`). Ya persiste memory y memory-swap; falta `--pids-limit`.
-- `atlas-pgvector` (2 GiB, swap 2 GiB, sin pids): repo Atlas, `deploy/atlas-pgvector.sh`, comando `docker run` de `levantar()`. Ya persiste memory y memory-swap; añadir `--pids-limit=2048`.
+- Pgvector externo (2 GiB, swap 2 GiB, sin pids): repo del consumidor de conocimiento, una referencia externa, comando `docker run` de `levantar()`. Ya persiste memory y memory-swap; añadir `--pids-limit=2048`.
 - `proyecto-A-pg` (2 GiB, swap 2 GiB, pids 2048): creador NO ENCONTRADO en ningun repo hermano. El tope se aplico con `docker update` y se pierde al recrearlo. Flags: `--memory=2g --memory-swap=2g --pids-limit=2048`.
-- `nemotron-bolt-test` (48 GiB, swap 96 GiB, sin pids): creador NO ENCONTRADO; la receta `Atlas/playbooks/nemotron-bolt/README.md` crea `nemotron-bolt` con `--memory 48g` y sin `--memory-swap`. Si ese contenedor debe vivir: `--memory-swap=48g --pids-limit=2048`.
+- `nemotron-bolt-test` (48 GiB, swap 96 GiB, sin pids): creador NO ENCONTRADO; la receta una referencia externa crea `nemotron-bolt` con `--memory 48g` y sin `--memory-swap`. Si ese contenedor debe vivir: `--memory-swap=48g --pids-limit=2048`.
 - Parados y de un solo uso (`proyecto-A-etapa1-20260912`, `proyecto-A-audit-20260927`, dos de documenso): sin accion, retirar con `docker rm` cuando Luis lo decida.
-Quedan por hacer: Atlas (una linea en su script), la sesion del gateway en `/srv/ai/gateway/main.py`, y localizar o crear el creador de `proyecto-A-pg`. Cuando los tres esten persistidos, escribir `docker_slice_dimensionado` con la salida de `docker inspect` recreado.
+Quedan por hacer: el consumidor de conocimiento (una linea en su script), la sesion del gateway en `/srv/ai/gateway/main.py`, y localizar o crear el creador de `proyecto-A-pg`. Cuando los tres esten persistidos, escribir `docker_slice_dimensionado` con la salida de `docker inspect` recreado.
 
-## Voto de Luis 2026-10-16: `--pids-limit=2048` para el motor y atlas-pgvector
-Registrado en `DECISIONS.md`. Queda por aplicar en los creadores, fuera de este repo: (1) `/srv/ai/gateway/main.py`, funcion `build_vllm_args`, anadir `"--pids-limit", "2048"` junto a `--memory` (no esta en git); medir antes `ls /proc/$(docker inspect -f '{{.State.Pid}}' nemotron-server)/task | wc -l` para comprobar que 2048 deja holgura. (2) `/home/lcasarin/projects/Atlas/deploy/atlas-pgvector.sh`, `levantar()`, anadir `--pids-limit=2048` al `docker run`. Sigue sin creador hallado para `proyecto-A-pg` (flags: `--memory=2g --memory-swap=2g --pids-limit=2048`) y `nemotron-bolt-test`. La ficha sigue abierta hasta que los tres creadores vivos lo persistan.
+## Voto de Luis 2026-10-16: `--pids-limit=2048` para el motor y pgvector externo
+Registrado en `DECISIONS.md`. Queda por aplicar en los creadores, fuera de este repo: (1) `/srv/ai/gateway/main.py`, funcion `build_vllm_args`, anadir `"--pids-limit", "2048"` junto a `--memory` (no esta en git); medir antes `ls /proc/$(docker inspect -f '{{.State.Pid}}' nemotron-server)/task | wc -l` para comprobar que 2048 deja holgura. (2) una referencia externa, `levantar()`, anadir `--pids-limit=2048` al `docker run`. Sigue sin creador hallado para `proyecto-A-pg` (flags: `--memory=2g --memory-swap=2g --pids-limit=2048`) y `nemotron-bolt-test`. La ficha sigue abierta hasta que los tres creadores vivos lo persistan.
