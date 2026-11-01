@@ -42,21 +42,58 @@ from tools import reboot_verdict as rv
 
 RAIZ = Path(__file__).resolve().parents[1]
 FIRMAS = RAIZ / "rules/firmas_gb10.json"
-# Clase de registro BERT que el personal de NVIDIA cita (hilo 384436): ver Atlas, catalogo_destilado.md#forum:G6
-ATLAS_RAIZ = "knowledge/investigations/gb10_cortes_2026-10-11/"
+# Clase de registro BERT que el personal de NVIDIA cita (hilo 384436): ver catalogo_destilado.md#forum:G6, en la
+# KB del consumidor de conocimiento. Las referencias cuelgan de `ref_raiz` de rules/firmas_gb10.json (una sola fuente).
+
+
+def _ref_raiz() -> str:
+    """`ref_raiz` de las firmas; '' si el archivo no se lee (las referencias quedan relativas, no inventadas)."""
+    try:
+        raiz = json.loads(FIRMAS.read_text(encoding="utf-8")).get("ref_raiz", "")
+    except (OSError, ValueError, AttributeError):
+        return ""
+    return raiz if isinstance(raiz, str) else ""
+
+
+REF_RAIZ = _ref_raiz()
+# Compatibilidad del formato ESCRITO (boleta #18 A, 2026-11-01): cada clave neutra del reporte sale tambien con su
+# nombre anterior, para que un lector viejo del JSON no pierda el dato. El markdown solo muestra la neutra. Se
+# retira cuando ningun lector use los nombres anteriores.
+CLAVE_REF_LEGADO = "atlas"
+CLAVE_CARGA_LEGADO = "carga_de_" + CLAVE_REF_LEGADO
+CAMPOS_JOB_LEGADO = {
+    "inicio_hora_local_del_productor": "inicio_hora_local_de_" + CLAVE_REF_LEGADO,
+    "el_productor_lo_registro_huerfano": CLAVE_REF_LEGADO + "_lo_registro_huerfano",
+}
 NOT_COLLECTED = "NOT_COLLECTED"
 UNSUPPORTED = "UNSUPPORTED"
 COLLECTION_FAILED = "COLLECTION_FAILED"
 DATOS = Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blackbox"))
 SALIDA = DATOS / "incidentes"
 MUESTRAS_BB = DATOS / "samples"  # `bb sample`, 1 muestra por minuto, con boot_id
-# Bitacora del liberation-watchdog de Atlas: la lee blackbox solo para lectura (relacion de informacion,
-# sin `import` de codigo de Atlas). El job_start trae boot_id; job_done y job_orphaned cierran el job.
-ATLAS_COLA = Path(
-    os.environ.get(
-        "ATLAS_BITACORA_COLA", Path.home() / "projects/Atlas/logs/liberation_watchdog.jsonl"
-    )
-)
+# Bitacora de la cola del consumidor que encola trabajo: la lee blackbox solo para lectura (relacion de
+# informacion, sin `import` de codigo ajeno). El job_start trae boot_id; job_done y job_orphaned cierran el job.
+# Donde esta, por orden: `BB_COLA_BITACORA`; la variable anterior (`ENV_COLA_LEGADO`, misma semantica, se retira
+# con la transicion); el campo `bitacora` que el consumidor declara en `carga_pausable.json`. Sin ninguna:
+# NOT_COLLECTED, nunca una ruta adivinada.
+ENV_COLA = "BB_COLA_BITACORA"
+ENV_COLA_LEGADO = CLAVE_REF_LEGADO.upper() + "_BITACORA_COLA"
+DECLARACION_CARGA = DATOS / "carga_pausable.json"
+
+
+def ruta_bitacora_cola(entorno: dict[str, str] | None = None, declaracion: Path | None = None) -> Path | None:
+    """La ruta de la bitacora de la cola, o None si nadie la declara."""
+    env = os.environ if entorno is None else entorno
+    for var in (ENV_COLA, ENV_COLA_LEGADO):
+        if env.get(var):
+            return Path(env[var])
+    try:
+        d = json.loads((declaracion or DECLARACION_CARGA).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    ruta = d.get("bitacora") if isinstance(d, dict) else None
+    return Path(ruta) if isinstance(ruta, str) and ruta else None
+
 VENTANA_ENGINE_MIN = 5  # minutos antes del ultimo punto en que se mide el progreso del engine
 CAMBIO_GPU_MIB = 256  # variacion de memoria de GPU en la ventana que se lee como carga/descarga de modelo
 UMBRAL_ZONA_C = 94.8  # alarma de atom_gpu_telemetry: trip 104.8 C menos 10 C
@@ -523,7 +560,7 @@ def progreso_del_engine(
     minutos: int = VENTANA_ENGINE_MIN,
 ) -> dict[str, Any]:
     """Tokens por segundo de prompt y de generacion en la ultima ventana, derivados de los contadores de vLLM.
-    Firma S11 (Atlas, catalogo_destilado.md#github:S11): peticiones en curso con prompt y generacion en 0 tok/s.
+    Firma S11 (catalogo_destilado.md#github:S11): peticiones en curso con prompt y generacion en 0 tok/s.
     Un contador que baja es un reinicio del engine: ese par no se mide y se cuenta aparte."""
     pts, fuente = _puntos_engine(tele, bb)
     if not pts:
@@ -698,8 +735,8 @@ def primera_respuesta_de_aplicacion(
     }
 
 
-# ------------------------------------------------------------ carga de Atlas
-def _lee_bitacora_atlas(
+# ------------------------------------------------------------ carga externa (la cola del consumidor)
+def _lee_bitacora_cola(
     ruta: Path, marca: str
 ) -> tuple[dict[str, dict[str, Any]], dict[str, dict[str, Any]], int, int, int]:
     """(abiertos, huerfanos, iniciados, terminados, lineas): un solo recorrido en orden cronologico."""
@@ -733,16 +770,19 @@ def _lee_bitacora_atlas(
     return abiertos, huerfanos, iniciados, terminados, lineas
 
 
-def carga_de_atlas(boot_id: str, ruta: Path | None = None) -> dict[str, Any]:
-    """Jobs de la cola de Atlas que corrian cuando se corto el boot: `job_start` con el boot_id sin `job_done`
-    posterior. Solo lectura de la bitacora que Atlas publica; blackbox no importa codigo de Atlas.
-    Ausente -> NOT_COLLECTED; ilegible -> COLLECTION_FAILED; ningun job -> el cero con su alcance."""
-    ruta = ruta or ATLAS_COLA
+def carga_externa(boot_id: str, ruta: Path | None = None) -> dict[str, Any]:
+    """Jobs de la cola del consumidor que corrian cuando se corto el boot: `job_start` con el boot_id sin
+    `job_done` posterior. Solo lectura de la bitacora que el consumidor publica; blackbox no importa su codigo.
+    Sin ruta declarada o ausente -> NOT_COLLECTED; ilegible -> COLLECTION_FAILED; ningun job -> el cero con su
+    alcance."""
+    ruta = ruta or ruta_bitacora_cola()
+    if ruta is None:
+        return {"estado": f"{NOT_COLLECTED}: ni {ENV_COLA} ni la declaracion de carga nombran una bitacora"}
     if not ruta.is_file():
-        return {"estado": f"{NOT_COLLECTED}: Atlas no publica {ruta}"}
+        return {"estado": f"{NOT_COLLECTED}: el consumidor no publica {ruta}"}
     marca = _boot_con_guiones(boot_id)
     try:
-        abiertos, huerfanos, iniciados, terminados, lineas = _lee_bitacora_atlas(ruta, marca)
+        abiertos, huerfanos, iniciados, terminados, lineas = _lee_bitacora_cola(ruta, marca)
     except (OSError, UnicodeError):
         return {"estado": COLLECTION_FAILED, "fuente": str(ruta)}
     base = {
@@ -763,17 +803,28 @@ def carga_de_atlas(boot_id: str, ruta: Path | None = None) -> dict[str, Any]:
             {
                 "job_file": jf,
                 "name": d.get("name"),
-                "inicio_hora_local_de_atlas": d.get("ts"),
+                "inicio_hora_local_del_productor": d.get("ts"),
                 "memory_max_gb": d.get("memory_max_gb"),
                 "timeout_minutes": d.get("timeout_minutes"),
-                "atlas_lo_registro_huerfano": jf in huerfanos,
+                "el_productor_lo_registro_huerfano": jf in huerfanos,
             }
             for jf, d in abiertos.items()
         ]
         or f"0 jobs sin job_done de {iniciados} job_start del boot",
-        "nota": "job_start sin job_done = corria al cortar; `atlas_lo_registro_huerfano` = el watchdog de Atlas "
-        "lo marco job_orphaned al arrancar el boot siguiente",
+        "nota": "job_start sin job_done = corria al cortar; `el_productor_lo_registro_huerfano` = la cola del "
+        "consumidor lo marco job_orphaned al arrancar el boot siguiente",
     }
+
+
+def con_nombres_legado(carga: dict[str, Any]) -> dict[str, Any]:
+    """La misma carga con los nombres de campo anteriores (formato escrito de compatibilidad)."""
+    jobs = carga.get("jobs_en_ejecucion_al_cortar")
+    if not isinstance(jobs, list):
+        return dict(carga)
+    viejos = [{CAMPOS_JOB_LEGADO.get(k, k): v for k, v in j.items()} for j in jobs]
+    return {**carga, "jobs_en_ejecucion_al_cortar": viejos,
+            "nota": str(carga.get("nota", "")).replace(
+                "el_productor_lo_registro_huerfano", CAMPOS_JOB_LEGADO["el_productor_lo_registro_huerfano"])}
 
 
 def lineas_nvrm(idx: int) -> dict[str, Any]:
@@ -811,7 +862,7 @@ BERT_GUID = rv.BERT_GUID
 def coincidencias_firmas(idx: int) -> dict[str, Any]:
     """Busca en el journal del kernel del boot las firmas de `rules/firmas_gb10.json` (instrumento de bb).
     Separa INCIDENTES de ruido conocido: el ruido se cuenta aparte y no se lee como incidente. El
-    conocimiento que respalda cada firma NO se copia aqui: cada una apunta a su documento en Atlas."""
+    conocimiento que respalda cada firma NO se copia aqui: cada una apunta a su documento en la KB del consumidor."""
     try:
         firmas = json.loads(FIRMAS.read_text(encoding="utf-8"))["firmas"]
     except (OSError, json.JSONDecodeError, KeyError):
@@ -828,19 +879,20 @@ def coincidencias_firmas(idx: int) -> dict[str, Any]:
         else:
             n = len([x for x in r.stdout.splitlines() if x.strip()])
             obs = n if n else f"0 en el journal del kernel del boot {idx}"
+        ref = REF_RAIZ + str(f.get("ref", ""))
         out[f["clase"]].append(
-            {"id": f["id"], "lineas": obs, "atlas": ATLAS_RAIZ + f["atlas"]}
+            {"id": f["id"], "lineas": obs, "ref": ref, CLAVE_REF_LEGADO: ref}
         )
     return {
         "incidente": out["incidente"],
         "ruido_conocido_contado_aparte": out["ruido_conocido"],
         "ambiguo": out["ambiguo"],
-        "nota": "bb solo busca estas firmas; lo que no esta en rules/firmas_gb10.json no se busca (el conocimiento vive en Atlas)",
+        "nota": "bb solo busca estas firmas; lo que no esta en rules/firmas_gb10.json no se busca (el conocimiento vive en la KB del consumidor)",
     }
 
 
 def silencio_del_kernel(idx: int, muestras: list[dict[str, Any]]) -> dict[str, Any]:
-    """Firma S4 (ver Atlas, catalogo_destilado.md#github:S4): el kernel calla mientras el resto sigue vivo. Mide cuanto antes de la
+    """Firma S4 (ver catalogo_destilado.md#github:S4): el kernel calla mientras el resto sigue vivo. Mide cuanto antes de la
     ultima muestra de telemetria escribio por ultima vez el journal del kernel."""
     if not muestras:
         return {"estado": NOT_COLLECTED}
@@ -868,15 +920,12 @@ def estado_mitigaciones(
     muestras: list[dict[str, Any]], cfg: dict[str, Any], cap_boot: dict[str, Any]
 ) -> list[dict[str, Any]]:
     """Estado, en ESTA maquina, de las mitigaciones que bb puede leer. Nivel de evidencia, quien las reporta
-    y su n viven en Atlas: cada entrada apunta a su id en `catalogo_destilado.md`. Las demas (variables del
+    y su n viven en la KB del consumidor: cada entrada apunta a su id en `catalogo_destilado.md`. Las demas (variables del
     contenedor, prompts) NO son observables por bb."""
 
     def ent(i: str, titulo: str) -> dict[str, Any]:
-        return {
-            "id": f"github:{i}",
-            "titulo": titulo,
-            "atlas": f"{ATLAS_RAIZ}catalogo_destilado.md#github:{i}",
-        }
+        ref = f"{REF_RAIZ}catalogo_destilado.md#github:{i}"
+        return {"id": f"github:{i}", "titulo": titulo, "ref": ref, CLAVE_REF_LEGADO: ref}
 
     declarado = re.search(
         r"-lgc \d+,(\d+)", _leer("/etc/systemd/system/atom-clock-lock.service")
@@ -964,7 +1013,7 @@ def adjuntos_y_ruta(
     uid: int | None = None,
 ) -> dict[str, Any]:
     """Que pide NVIDIA, en que orden y con que comando (dossier de foros F1-F3), y el estado de cada
-    uno aqui. La ruta de soporte apunta a Atlas: lo dicho por el personal de NVIDIA es OFICIAL
+    uno aqui. La ruta de soporte apunta a la KB del consumidor: lo dicho por el personal de NVIDIA es OFICIAL
     solo como declaracion en un foro, no como politica verificada con soporte de esta unidad."""
     sb = plat.get("secure_boot")
     salida = salida or SALIDA
@@ -1028,11 +1077,11 @@ def adjuntos_y_ruta(
         "ruta_de_soporte": {
             "oem": plat.get("oem"),
             "donde_leerla": [
-                ATLAS_RAIZ
+                REF_RAIZ
                 + "catalogo_destilado.md (respuestas oficiales: ids forum:E1..E5; patrones forum:G1..G10)",
-                ATLAS_RAIZ + "dossier_foros_primera_pasada.md",
+                REF_RAIZ + "dossier_foros_primera_pasada.md",
             ],
-            "advertencia": "bb no guarda lo que dijo el personal de NVIDIA: se consulta en Atlas, y son declaraciones de foro no confirmadas con soporte de esta unidad",
+            "advertencia": "bb no guarda lo que dijo el personal de NVIDIA: se consulta en la KB del consumidor, y son declaraciones de foro no confirmadas con soporte de esta unidad",
         },
     }
 
@@ -1204,6 +1253,7 @@ def reporte(
     sig_bb, _ = muestras_bb_del_boot(sig_id)
     primera = primera_respuesta_de_aplicacion(sig_tele, sig_bb)
     plat = plataforma()
+    carga = carga_externa(b["boot_id"])
     return {
         "formato": "bb-incident/1",
         "resumen": {
@@ -1232,7 +1282,8 @@ def reporte(
         },
         "progreso_del_engine": progreso,
         "primera_respuesta_de_aplicacion_tras_el_boot_siguiente": primera,
-        "carga_de_atlas": carga_de_atlas(b["boot_id"]),
+        "carga_externa": carga,
+        CLAVE_CARGA_LEGADO: con_nombres_legado(carga),
         "plataforma": plat,
         "configuracion_al_generar_el_reporte": config_vigente(),
         "configuracion_registrada_por_el_journal_de_ese_boot": config_del_boot(
@@ -1283,7 +1334,7 @@ def md(rep: dict[str, Any]) -> str:
     )
     out.append("")
     for k, v in rep.items():
-        if k in ("formato", "resumen", "seis_timestamps"):
+        if k in ("formato", "resumen", "seis_timestamps", CLAVE_CARGA_LEGADO):
             continue
         out.append(bloque(k.replace("_", " ").capitalize(), v))
     return "\n".join(out)

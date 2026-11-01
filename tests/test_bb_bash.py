@@ -794,11 +794,11 @@ def test_control_negativo_sin_ninguna_ventana_NO_dice_armado(datos, tmp_path):
 
 def test_status_ve_la_telemetria_termica_EN_ESTE_REPO(datos):
     """DGX-585 movio el productor de la telemetria termica a blackbox y borro
-    la copia de Atlas. El consumidor dentro de `bin/bb` se quedo apuntando a
+    la copia del consumidor. La lectura dentro de `bin/bb` se quedo apuntando a
     la ruta borrada, y el resultado medido el 2026-09-25 fue que `bb status`
     decia
 
-        FALTA  termica de Atlas (atom_gpu_telemetry, <2 min)
+        FALTA  termica del consumidor (atom_gpu_telemetry, <2 min)
                -- systemctl --user start atom-gpu-telemetry
 
     mientras la unit llevaba horas activa escribiendo 711 muestras por hora.
@@ -2265,12 +2265,12 @@ def test_status_sensor_en_off_no_tiene_fila(datos):
 #
 # Siete unidades corrian sin fila en `bb status`: si dejaban de correr, nada lo
 # decia. Cada fila tiene su caso que DEBE dar FALTA, montado con un systemctl
-# de mentira delante en el PATH que solo contesta por esas siete; todo lo demas
-# va al systemctl real.
+# de mentira delante en el PATH que solo contesta por esas unidades; todo lo demas
+# va al systemctl real. Desde el 2026-11-01 son seis: el detector de caidas es una
+# unidad del consumidor de conocimiento, vive en su repo y bb ya no la vigila.
 
-_SIETE = ("blackbox-drift.service", "bb-reboot-verdict.service", "bb-aviso-termico.service",
-          "bb-portero.service", "bb-dmem-monitor.service", "bb-arranque-forense.service",
-          "atom-crash-detector.service")
+_SEIS = ("blackbox-drift.service", "bb-reboot-verdict.service", "bb-aviso-termico.service",
+         "bb-portero.service", "bb-dmem-monitor.service", "bb-arranque-forense.service")
 
 
 def _btime():
@@ -2297,7 +2297,7 @@ def _unidades(tmp_path, activas=(), corridas=None):
     s = b / "systemctl"
     s.write_text(f"""#!/usr/bin/env bash
 D={d}
-case " {' '.join(_SIETE)} " in *" $3 "*)
+case " {' '.join(_SEIS)} " in *" $3 "*)
   case "$2" in
     is-active) [ -e "$D/$3.activa" ]; exit $? ;;
     show) if [ -e "$D/$3.show" ]; then cat "$D/$3.show"; else printf 'Result=success\\nExecMainExitTimestamp=\\n'; fi; exit 0 ;;
@@ -2315,11 +2315,10 @@ _AVISO = "aviso termico en pantalla"
 _PORTERO = "portero de app.slice"
 _DMEM = "monitor del parche dmem"
 _FORENSE = "arranque forense"
-_DETECTOR = "detector de caidas de Atlas"
 
 
 def _sano(datos, tmp_path):
-    """El estado en que las siete filas dan ARMADO."""
+    """El estado en que las seis filas dan ARMADO."""
     ahora = int(time.time())
     (datos / "reboots.jsonl").write_text(
         json.dumps({"boot_id": "otro", "boot_id_siguiente": _boot_id().replace("-", "")}) + "\n",
@@ -2328,21 +2327,21 @@ def _sano(datos, tmp_path):
     arr = tmp_path / "arranque.jsonl"
     arr.write_text(f'{{"ts":"x","boot_id":"{_boot_id()}","pstore_archivos":0}}\n', encoding="utf-8")
     corridas: dict[str, tuple[str, int | None]] = {u: ("success", ahora - 60) for u in
-                ("blackbox-drift.service", "bb-arranque-forense.service", "atom-crash-detector.service")}
+                ("blackbox-drift.service", "bb-arranque-forense.service")}
     return arr, corridas
 
 
-def _status_siete(datos, tmp_path, activas=("bb-aviso-termico.service", "bb-portero.service"),
+def _status_seis(datos, tmp_path, activas=("bb-aviso-termico.service", "bb-portero.service"),
                   corridas=None, arr=None):
     env = _unidades(tmp_path, activas, corridas)
     env["BB_ARRANQUE_JSONL"] = str(arr or tmp_path / "no-existe.jsonl")
     return correr(["status"], datos, env)
 
 
-def test_status_las_SIETE_filas_nuevas_dan_ARMADO_en_el_estado_sano(datos, tmp_path):
+def test_status_las_SEIS_filas_nuevas_dan_ARMADO_en_el_estado_sano(datos, tmp_path):
     arr, corridas = _sano(datos, tmp_path)
-    r = _status_siete(datos, tmp_path, corridas=corridas, arr=arr)
-    for fila in (_DRIFT, _VEREDICTO, _AVISO, _PORTERO, _DMEM, _FORENSE, _DETECTOR):
+    r = _status_seis(datos, tmp_path, corridas=corridas, arr=arr)
+    for fila in (_DRIFT, _VEREDICTO, _AVISO, _PORTERO, _DMEM, _FORENSE):
         assert "ARMADO" in _fila(r, fila), fila
 
 
@@ -2354,7 +2353,7 @@ def test_status_las_SIETE_filas_nuevas_dan_ARMADO_en_el_estado_sano(datos, tmp_p
 def test_control_negativo_drift_FALTA(datos, tmp_path, res, hace_s, por):
     arr, corridas = _sano(datos, tmp_path)
     corridas["blackbox-drift.service"] = (res, None if hace_s is None else int(time.time()) - hace_s)
-    f = _fila(_status_siete(datos, tmp_path, corridas=corridas, arr=arr), _DRIFT)
+    f = _fila(_status_seis(datos, tmp_path, corridas=corridas, arr=arr), _DRIFT)
     assert "FALTA" in f and por in f, f
 
 
@@ -2362,7 +2361,7 @@ def test_control_negativo_veredicto_sin_fila_de_ESTE_arranque_FALTA(datos, tmp_p
     arr, corridas = _sano(datos, tmp_path)
     (datos / "reboots.jsonl").write_text(
         json.dumps({"boot_id": "a", "boot_id_siguiente": "b" * 32}) + "\n", encoding="utf-8")
-    assert "FALTA" in _fila(_status_siete(datos, tmp_path, corridas=corridas, arr=arr), _VEREDICTO)
+    assert "FALTA" in _fila(_status_seis(datos, tmp_path, corridas=corridas, arr=arr), _VEREDICTO)
 
 
 @pytest.mark.parametrize("fila,unidad", [(_AVISO, "bb-aviso-termico.service"),
@@ -2370,7 +2369,7 @@ def test_control_negativo_veredicto_sin_fila_de_ESTE_arranque_FALTA(datos, tmp_p
 def test_control_negativo_demonio_parado_FALTA(datos, tmp_path, fila, unidad):
     arr, corridas = _sano(datos, tmp_path)
     otras = tuple(u for u in ("bb-aviso-termico.service", "bb-portero.service") if u != unidad)
-    r = _status_siete(datos, tmp_path, activas=otras, corridas=corridas, arr=arr)
+    r = _status_seis(datos, tmp_path, activas=otras, corridas=corridas, arr=arr)
     assert "FALTA" in _fila(r, fila)
 
 
@@ -2378,7 +2377,7 @@ def test_control_negativo_dmem_sin_fila_en_26h_FALTA(datos, tmp_path):
     arr, corridas = _sano(datos, tmp_path)
     viejo = time.time() - 27 * 3600
     os.utime(datos / "dmem_parche.jsonl", (viejo, viejo))
-    assert "FALTA" in _fila(_status_siete(datos, tmp_path, corridas=corridas, arr=arr), _DMEM)
+    assert "FALTA" in _fila(_status_seis(datos, tmp_path, corridas=corridas, arr=arr), _DMEM)
 
 
 @pytest.mark.parametrize("caso", ["fila_de_otro_arranque", "corrida_de_otro_arranque", "corrida_fallida"])
@@ -2393,14 +2392,15 @@ def test_control_negativo_arranque_forense_FALTA(datos, tmp_path, caso):
         corridas["bb-arranque-forense.service"] = ("success", _btime() - 60)
     else:
         corridas["bb-arranque-forense.service"] = ("exit-code", int(time.time()) - 60)
-    assert "FALTA" in _fila(_status_siete(datos, tmp_path, corridas=corridas, arr=arr), _FORENSE)
+    assert "FALTA" in _fila(_status_seis(datos, tmp_path, corridas=corridas, arr=arr), _FORENSE)
 
 
-def test_control_negativo_detector_que_no_corrio_en_ESTE_arranque_FALTA(datos, tmp_path):
+def test_status_ya_no_vigila_el_detector_de_caidas_del_consumidor(datos, tmp_path):
+    """La unidad se mudo al repo del consumidor (`deploy/`): ni fila ni consulta a systemd por ella."""
     arr, corridas = _sano(datos, tmp_path)
-    corridas["atom-crash-detector.service"] = ("success", _btime() - 60)
-    f = _fila(_status_siete(datos, tmp_path, corridas=corridas, arr=arr), _DETECTOR)
-    assert "FALTA" in f and "en este arranque" in f, f
+    r = _status_seis(datos, tmp_path, corridas=corridas, arr=arr)
+    assert "crash-detector" not in r.stdout and "detector de caidas" not in r.stdout
+    assert "crash-detector" not in BB.read_text(encoding="utf-8")
 
 
 # --- retencion de origen/ y escalon/ ---------------------------------------

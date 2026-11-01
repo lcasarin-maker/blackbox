@@ -8,7 +8,7 @@ severity: P1
 origin: asserted
 satd_family: UNCLASSIFIED_DEBT
 created: 2026-10-17
-close_check: {"cmd": "grep -q \"CAUSA DETERMINADA\" /home/lcasarin/projects/Atlas/docs/agent_findings/2026-10-12_atom_causa_de_los_cortes_oct_2026.md", "expect": "exit_zero", "porque": "Mismo patron que DGX-640 (grep sobre el dictamen que queda en Atlas, porque el gate de esquema no admite scripts ni cd), con exit_zero: el original esperaba empty_stdout y el verificador imprime 'OK 1 archivo(s)...' cuando pasa, asi que ese criterio no podia ponerse verde. Hoy rc=1 ('patron requerido CAUSA DETERMINADA ausente'). Control positivo corrido 2026-10-17: un dictamen con '**CAUSA DETERMINADA.**' da rc=0."}
+close_check: {"cmd": "grep -q \"CAUSA DETERMINADA\" tasks/evidence/DEBT-ATOM-CORTES-OCT-2026-CAUSA-NO-DETERMINADA-01/dictamen.md", "expect": "exit_zero", "porque": "Especificacion pendiente: el archivo no existe hoy y el criterio falla. El cierre lo mide una evidencia LOCAL, sin leer el checkout de otro repo (boleta #18 A del 2026-11-01): cuando el dictamen del consumidor de conocimiento sobre los cortes de octubre declare la causa, se copia aqui como `dictamen.md` con su procedencia (repo, ruta, commit y fecha). Cierra solo si contiene `CAUSA DETERMINADA`; con exit_zero, porque el criterio original esperaba empty_stdout y el verificador imprime 'OK 1 archivo(s)...' cuando pasa. Control positivo corrido 2026-10-17 sobre el dictamen de origen: con '**CAUSA DETERMINADA.**' da rc=0."}
 ---
 
 ## Origen

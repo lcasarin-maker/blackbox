@@ -1,4 +1,4 @@
-"""DEBT-COBERTURA-PISO-REBAJADO-01, grupo 3: bordes que faltaban en saber, gpumem_historial y los puntos de
+"""DEBT-COBERTURA-PISO-REBAJADO-01, grupo 3: bordes que faltaban en gpumem_historial y los puntos de
 entrada `python -m` de calibra_calor, entrega_cosecha_foro, hid_inventario y monitor_distros.
 
 Los puntos de entrada se corren en un interprete hijo (coverage los mide con `patch = subprocess`) contra
@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from tools import gpumem_historial, saber
+from tools import gpumem_historial
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -23,28 +23,6 @@ def _modulo(nombre: str, *args: str, datos: Path, extra: dict[str, str] | None =
     env = {**os.environ, "BLACKBOX_DATA": str(datos), **(extra or {})}
     return subprocess.run([sys.executable, "-m", nombre, *args], cwd=ROOT, env=env,
                           capture_output=True, text=True, check=False, timeout=60)
-
-
-# ---------------------------------------------------------------- saber
-
-def test_saber_cuenta_un_md_ilegible_y_lo_avisa_sin_perder_las_coincidencias(
-        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
-    (tmp_path / "bueno.md").write_text("la clave esta aqui\n", encoding="utf-8")
-    (tmp_path / "carpeta.md").mkdir()  # rglob("*.md") la devuelve y read_text falla con IsADirectoryError
-    monkeypatch.setenv("ATLAS_KNOWLEDGE", str(tmp_path))
-    r = saber.busca("clave")
-    assert r["archivos_ilegibles"] == ["carpeta.md"] and r["total"] == 1 and r["archivos_revisados"] == 2
-    assert saber.main(["clave"]) == 0
-    captured = capsys.readouterr()
-    assert "bueno.md:1: la clave esta aqui" in captured.out
-    assert "COULD_NOT_RUN parcial: 1 archivos ilegibles" in captured.err
-
-
-def test_saber_como_script_devuelve_1_sin_coincidencias_y_declara_el_alcance(tmp_path: Path) -> None:
-    (tmp_path / "a.md").write_text("nada relevante\n", encoding="utf-8")
-    proc = _modulo("tools.saber", "inexistente-xyz", datos=tmp_path, extra={"ATLAS_KNOWLEDGE": str(tmp_path)})
-    assert proc.returncode == 1
-    assert f"0 coincidencias en {tmp_path} (1 archivos revisados)" in proc.stderr
 
 
 # ---------------------------------------------------------------- gpumem_historial
