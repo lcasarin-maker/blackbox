@@ -15,17 +15,17 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01.md", "expect": "exit_zero", "porque": "Cerrada por aplicabilidad (void_wontfix, decision de Luis 2026-10-13): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a un test por ficha que se retiro con la deprecacion."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/369446/22
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-8NODE-NCCL-INTERFACE-MTU-01.** En un clúster de ocho GB10 con Ubuntu 24.04.4, kernel 6.17.0-1018-nvidia, driver 580.159.03/CUDA 13.2, NCCL 2.30.6a2 y vLLM eugr dev277/TF5, el dueño reporta que Kimi K2.6 NVFP4 se quedaba en inicialización/warmup: GPU 96% a 22–23W, QP receiver loop creciendo, sin endpoint API ni logs nuevos; `--enforce-eager` y modos CUDAGraph no resolvieron ese síntoma. Después identificó MTU incorrecto en una interfaz de un nodo; al corregirlo reporta que el servicio llegó a ~16 tok/s ([369446, posts 22–24](https://forums.developer.nvidia.com/t/369446/22)). Añadir preflight que compare MTU efectivo por interfaz/nodo con el plan de red del OEM/topología antes de NCCL y valide una operación NCCL más la primera inferencia con endpoint y logs por rank. El hilo usa tanto ejemplos de 1500 como otras topologías jumbo; no codificar valor universal. Resultado/fix de operador, sin reproducción ni logs auditados.
-
-Fuentes: tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md.
 
 ## Criterio de cierre y control negativo
 

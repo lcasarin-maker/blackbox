@@ -15,17 +15,17 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01.md", "expect": "exit_zero", "porque": "Cerrada por aplicabilidad (void_wontfix, decision de Luis 2026-10-13): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a un test por ficha que se retiro con la deprecacion."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/361967/162
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-DUALSPARK-NCCL-GID-TWIN-AND-COLD-RECOVERY-01.** En [361967, posts 158–167 y 190](https://forums.developer.nvidia.com/t/361967/162), un operador de dos ASUS GX10 reportó NCCL allReduce fallando al inicializar Qwen3.5-397B-A17B INT4 AutoRound aunque `ib_write_bw` entre pares alcanzaba 108 Gbit/s y las cuatro interfaces figuraban UP. En el post 190 redujo `IB_IF` de `rocep1s0f1,roceP2p1s0f1` a `rocep1s0f1`; observó que el índice GID 3 del twin sin IPv4 era null, y después NCCL avanzó, aunque la recuperación también incluyó apagar y desconectar ambos suministros. Es evidencia de que `ib_write_bw`, link-up y GID de otra interfaz no validan el HCA/GID efectivo de NCCL; no aísla el cambio causal. Extender el preflight multi-nodo ya existente para registrar por nodo el HCA/RoCE twin seleccionado, IPv4/GID index efectivo, MTU e interfaz usada, y ejecutar collective NCCL y primera inferencia con la misma selección del serving. Incluir control con twin sin IPv4/GID null y conservar el inventario/log antes de recovery. No autoquitar interfaces ni aplicar ciclo de energía; esos cambios requieren canary, evidencia de antes/después y rollback de configuración. Prueba reportada en kernel/red/imagen de marzo 2026, sin reproducción local.
-
-Fuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.
 
 ## Criterio de cierre y control negativo
 
