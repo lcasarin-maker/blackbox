@@ -48,6 +48,19 @@ def test_ultima_respuesta_es_la_ultima_ok_antes_del_corte(tmp_path: Path) -> Non
     assert o.ultima_respuesta(ruta, 1000) is None  # solo silencios: no hay respuesta que reportar
 
 
+def test_primera_falla_es_la_primera_fila_fallida_despues_de_la_ultima_respuesta(tmp_path: Path) -> None:
+    ruta = tmp_path / "p.jsonl"
+    assert o.primera_falla(ruta, 999, 2000) is None  # sin archivo: sin prueba de que el observador siguiera vivo
+    filas = [{"epoch": 998, "ok": False}, {"epoch": 999, "ok": True}, {"epoch": 1002, "ok": False}, {"epoch": 1001, "ok": False},
+             {"epoch": 1003, "ok": True}, {"epoch": 3000, "ok": False}]
+    ruta.write_text("{roto\n" + "\n".join(json.dumps(f) for f in filas) + "\n", encoding="utf-8")
+    assert o.primera_falla(ruta, 999, 2000) == 1001  # la mas temprana aunque llegue desordenada; la de 998 es anterior
+    assert o.primera_falla(ruta, 1003, 2000) is None  # control: despues de 1003 no hay falla dentro del tope
+    assert o.primera_falla(ruta, 999, 1001) == 1001  # el tope es inclusivo
+    u = o.ultima_respuesta(ruta, 1001.5)
+    assert u == 999 and o.primera_falla(ruta, u, 1001.5) == 1001  # juntas acotan la caida en (999, 1001]
+
+
 def test_main_sin_argumentos_sin_config_y_con_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     monkeypatch.setenv("BLACKBOX_DATA", str(tmp_path))
     assert o.main([]) == 2
