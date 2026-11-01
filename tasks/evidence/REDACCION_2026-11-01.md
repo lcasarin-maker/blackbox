@@ -116,3 +116,32 @@ distinguir mayúsculas; la lista vive en el script) se sustituye por el marcador
 | `tasks/evidence/RELEASE-2.1.0/h1-results.json` | 5 | `800b698d094b` | `d1bbaa40d863` |
 | `tasks/evidence/SWARM-OPEN-2026-10-02/capture-commands.json` | 1 | `809b61232c3a` | `a23bd5b56fac` |
 | `tasks/evidence/VENTANA-VLLM-20261015/ventana-20261015T063058.txt` | 1 | `ccb2ac2fa9c5` | `b69f0eb3c1b0` |
+
+## Actualización 2026-11-01 (boleta #26 A): parche redactado y re-sellado
+
+Luis decidió redactar igualmente `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch` y volver a sellar los archivos que citan su hash. Mismo marcador `[externo]`, misma convención que arriba. Esta sección sustituye lo dicho antes sobre ese archivo: ya no queda sin redactar.
+
+- **Alcance de la redacción.** El parche es del proyecto cuyo nombre lleva su propia ruta, así que sus rutas, importaciones y constantes son la estructura del parche y no se tocan. Se sustituyó sólo el comentario de la línea 263 (3 tokens: 2 de un proyecto privado y 1 del nombre del proyecto del parche, en prosa). Quedan 20 menciones del nombre del propio proyecto en 16 líneas de estructura (cabeceras `diff`, rutas, una importación y una constante), pendientes de decisión de Luis si quiere neutralizarlas también (rompería la aplicabilidad del parche).
+- **sha256 del parche.** Antes `f72e4b3faf1d`, después `7307b80d5609` (los 12 primeros hex; el hash completo vive en el repositorio privado).
+- **Hash citado por otros archivos.** Los 14 archivos que citaban el hash viejo del parche se re-sellaron sustituyendo SOLO ese valor (278 líneas cambiadas, todas de hash; ninguna otra). Además, uno de ellos (`publication-privacy-current.json`) tiene su propio sha256 citado por otros dos archivos, y al cambiar su contenido cambió el suyo. Cadena completa: parche → 14 archivos → `publication-privacy-current.json` → `publication-privacy-binary-review.json` y `publication-privacy-provenance-followup-current.json` (este último ya estaba entre los 14). Ningún otro archivo cita los hashes de esos dos y la cadena termina ahí.
+- Los 15 JSON re-sellados se comprobaron con `python3 -m json.tool`.
+- Tras el cambio, el hash viejo del parche no aparece en ningún archivo del repositorio y el nuevo aparece en los 14.
+
+| Archivo re-sellado | sha256 antes | sha256 después |
+|---|---|---|
+| `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/simplecode-producer-validation/reviewed-producer.redacted.patch` | `f72e4b3faf1d` | `7307b80d5609` |
+| `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/publication-producer-redaction-candidate.json` | `e1bf5bc408a5` | `b150a55c556b` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-binary-review.json` | `412db91a5e4c` | `3d863e056116` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-current.json` | `67d330789be4` | `e132362b141d` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-batches/batch_00.json` | `0c96a673fdb8` | `a5e5415672c4` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-batches/batch_01.json` | `45f8ce342670` | `34777829b080` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-batches/batch_02.json` | `0b61d280914e` | `d824e973e2c6` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-batches/batch_03.json` | `7ec25a82a17a` | `ec1b2183805f` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-batches/batch_04.json` | `1c0fd45e09dc` | `88fde58e7cba` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-batches/verdict_00.json` | `f605961f9a04` | `ce2214621c26` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-batches/verdict_01.json` | `6992c97399dd` | `c6483e5137ae` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-batches/verdict_02.json` | `6c9db6e2c5c9` | `aec1e6f89772` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-batches/verdict_03.json` | `c1439401a2b8` | `18c1f64ffd8f` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-batches/verdict_04.json` | `744dd1cef570` | `2aff61c2acef` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-items.json` | `352bba56a368` | `9dd80f0763e6` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-provenance-followup-current.json` | `7ee89c9c7f58` | `1ce0cd63d6a2` |
