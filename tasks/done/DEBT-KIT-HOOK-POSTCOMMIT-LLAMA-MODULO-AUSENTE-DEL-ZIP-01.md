@@ -23,10 +23,10 @@ Cada `git commit` de este repo imprime `ImportError: No module named simplecode.
 El hook termina con `exit 0`, asi que no bloquea nada, pero la atestacion de cobertura en segundo plano no corre despues de ningun commit ni merge: un instrumento caido sin aviso mas alla de la traza.
 
 ## Bloqueador
-Otro repo: el empaquetado del kit (simplecode). Aqui solo se puede re-sincronizar el kit cuando una version nueva traiga el modulo; editar el hook instalado o el zip a mano rompe el sello de `kit.lock`.
+Otro repo: el empaquetado del kit de guardrails. Aqui solo se puede re-sincronizar el kit cuando una version nueva traiga el modulo; editar el hook instalado o el zip a mano rompe el sello de `kit.lock`.
 
 ## Medido (2026-10-16, actualizacion)
-El sync del kit (8441a71e) ya trae `coverage_attestation`: `python .simplecode/run.py simplecode.verification.coverage_attestation --help` sale 0. El mismo hook (`.git/hooks/post-commit:35` y `post-merge:35`) llama ahora a `simplecode.verification.pyright_attestation`, que el runtime.zip tampoco trae: `ImportError: No module named simplecode.verification.pyright_attestation` en cada commit. El defecto es el mismo (modulo que el hook invoca y el zip no empaqueta) con otro modulo, asi que el close_check pasa a ese modulo en vez de cerrar la ficha sobre el primero. Sigue siendo del kit (simplecode): aqui solo se re-sincroniza cuando una version nueva lo traiga.
+El sync del kit (8441a71e) ya trae `coverage_attestation`: `python .simplecode/run.py simplecode.verification.coverage_attestation --help` sale 0. El mismo hook (`.git/hooks/post-commit:35` y `post-merge:35`) llama ahora a `simplecode.verification.pyright_attestation`, que el runtime.zip tampoco trae: `ImportError: No module named simplecode.verification.pyright_attestation` en cada commit. El defecto es el mismo (modulo que el hook invoca y el zip no empaqueta) con otro modulo, asi que el close_check pasa a ese modulo en vez de cerrar la ficha sobre el primero. Sigue siendo del kit de guardrails: aqui solo se re-sincroniza cuando una version nueva lo traiga.
 
 ## Root Cause
 El runtime.zip del kit 10.1.x no incluia `simplecode.verification.pyright_attestation`, que el hook post-commit generado llama en su linea 35.

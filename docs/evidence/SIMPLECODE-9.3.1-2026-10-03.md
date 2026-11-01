@@ -1,4 +1,4 @@
-# Actualización canónica de Simplecode 9.3.1
+# Actualización canónica del kit de guardrails 9.3.1
 
 Se aplicó `PYTHONPATH=/home/lcasarin/projects/simplecode/src /home/lcasarin/projects/simplecode/.venv/bin/python -m simplecode.cli sync-satellites --projects-dir /home/lcasarin/projects --target /home/lcasarin/projects/blackbox --apply`.
 Resultado literal: `UPDATED (canonical config), RUNTIME_INSTALLED (8.9.6 -> 9.3.1), KIT_LOCK_INSTALLED`. El plan posterior devuelve cero desfases; `MAKEFILE_ABSENT` es informativo.

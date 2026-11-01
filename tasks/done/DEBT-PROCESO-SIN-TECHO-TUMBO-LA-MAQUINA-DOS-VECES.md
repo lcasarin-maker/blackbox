@@ -76,7 +76,7 @@ ataca un proceso individual, y no se aplica sola.
 
 Un reinicio de la maquina completa mata TODAS las sesiones activas, no solo la
 culpable -- 7 sesiones de Claude corrian en paralelo en el colapso 1 (`Skill /0`,
-`sesion de otro proyecto`, `Retoma pendiente y limpieza del agente paralelo`, `o2o`, `sesion del consumidor de conocimiento`,
+`sesion de otro proyecto`, `Retoma pendiente y limpieza del agente paralelo`, `otro proyecto`, `sesion del consumidor de conocimiento`,
 `Estado auditoria adversarial`, `Fix ZIP-timestamp flake`), y todas se cayeron
 por la culpa de una sola. Esta misma sesion perdio un `git push` a mitad de
 camino y el usuario tuvo que volver a iniciar sesion en la app.

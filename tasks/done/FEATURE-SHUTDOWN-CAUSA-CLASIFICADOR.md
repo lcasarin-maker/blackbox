@@ -76,6 +76,6 @@ Fixture con una linea de conexion USB en las ultimas 30 del boot: `printf '...\n
 ## Relacion con DEBT-DGX-438-SIN-CAUSA-RAIZ.md
 
 Son deuda de la misma familia (sin causa raiz, con evidencia cruzada) pero
-NO el mismo bug: DEBT-DGX-438 busca quien envia un SIGTERM especifico a
+NO el mismo bug: aquella ficha busca quien envia un SIGTERM especifico a
 procesos python de fondo; este clasificador busca la causa de un
-apagado/reinicio COMPLETO de la maquina. DEBT-DGX-438 sigue abierto.
+apagado/reinicio COMPLETO de la maquina. Aquella ficha sigue abierta.
