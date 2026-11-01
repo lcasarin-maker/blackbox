@@ -3,8 +3,11 @@
 curl y systemctl son falsos: la prueba no toca el motor real ni lo reinicia.
 Control negativo de cada rama que actua: la misma entrada sana NO actua.
 """
+import json
 import os
+import shutil
 import subprocess
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -28,7 +31,7 @@ def falso(tmp_path):
         'case "$*" in\n'
         '  *"show"*ActiveState*) echo "${FAKE_ACTIVE:-active}" ;;\n'
         '  *"show"*ExecMainStartTimestamp*) echo "${FAKE_START-Mon 2020-01-01 00:00:00 UTC}" ;;\n'
-        '  *restart*) echo "$*" >> "$FAKE_LOG" ;;\n'
+        '  *restart*|*" start "*|*" stop "*) echo "$*" >> "$FAKE_LOG" ;;\n'
         '  *is-active*bb-guardia*) exit "${FAKE_GUARDIA_RC:-0}" ;;\n'
         '  *is-active*) exit "${FAKE_TIMER_RC:-0}" ;;\n'
         'esac\n', encoding="utf-8")
@@ -301,3 +304,95 @@ def test_status_guardia_de_procesos_activa_ARMADO_y_parada_FALTA(falso):
     tmp, env = falso
     assert "ARMADO" in _fila(_status(tmp, env), "guardia de procesos")
     assert "FALTA" in _fila(_status(tmp, {**env, "FAKE_GUARDIA_RC": "3"}), "guardia de procesos")
+
+
+# --- unico actor: solicitudes del consumidor y su ventana (contrato bb-motor-solicitud/1) ---
+
+
+def _ventana(tmp, segundos):
+    d = tmp / "d" / "motor"
+    d.mkdir(parents=True, exist_ok=True)
+    hasta = (datetime.now(timezone.utc) + timedelta(seconds=segundos)).isoformat()
+    (d / "ventana.json").write_text(json.dumps({
+        "id": "v1", "origen": "consumidor", "motivo": "experimento", "hasta": hasta,
+        "compensacion": {"accion": "arrancar"}}), encoding="utf-8")
+
+
+def _solicitud(tmp, sol_id, accion):
+    d = tmp / "d" / "motor" / "solicitudes"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / f"{sol_id}.json").write_text(json.dumps({
+        "esquema": "bb-motor-solicitud/1", "id": sol_id, "accion": accion, "origen": "consumidor",
+        "creada": datetime.now(timezone.utc).isoformat(), "plazo_s": 900}), encoding="utf-8")
+
+
+def _respuesta(tmp, sol_id):
+    return json.loads((tmp / "d" / "motor" / "respuestas" / f"{sol_id}.json").read_text(encoding="utf-8"))
+
+
+def test_durante_una_ventana_activa_no_reinicia_aunque_el_chat_calle(falso):
+    tmp, env = falso
+    _ventana(tmp, 3600)
+    _vig({**env, "FAKE_CHAT_CODE": "000"}, 6)
+    assert _reinicios(tmp) == []
+    assert "VENTANA del consumidor vigente (v1 de consumidor" in (tmp / "d" / "vigilante_motor.log").read_text(encoding="utf-8")
+
+
+def test_durante_una_ventana_tampoco_reinicia_por_atasco_ni_gasta_tope(falso):
+    tmp, env = falso
+    _ventana(tmp, 3600)
+    _atasco(env, 4, FAKE_RUN="30")
+    assert _reinicios(tmp) == []
+    assert not (tmp / "d" / "vigilante_motor.presupuesto").exists()
+
+
+def test_control_negativo_ventana_vencida_si_reinicia_tras_compensar(falso):
+    tmp, env = falso
+    _ventana(tmp, -1)
+    _vig({**env, "FAKE_CHAT_CODE": "000"}, 3)
+    assert _reinicios(tmp)[0] == "--user start ai-nemotron.service"      # la compensacion
+    assert _reinicios(tmp)[1:] == ["--user restart ai-nemotron.service"]  # y el chat mudo
+    log = (tmp / "d" / "vigilante_motor.log").read_text(encoding="utf-8")
+    assert "VENTANA v1 vencida o ilegible; compensacion: arrancar rc=0" in log
+    assert "REINICIA ai-nemotron.service (chat sin respuesta) origen=vigilante" in log
+
+
+def test_una_solicitud_se_atiende_con_su_id_y_no_cuenta_como_cuelgue(falso):
+    from tools import motor_caidas as mc
+    tmp, env = falso
+    _solicitud(tmp, "s1", "reiniciar")
+    _vig(env)
+    assert _reinicios(tmp) == ["--user restart ai-nemotron.service"]
+    assert _respuesta(tmp, "s1")["estado"] == "hecha"
+    log = (tmp / "d" / "vigilante_motor.log").read_text(encoding="utf-8").splitlines()
+    assert any("SOLICITUD s1 reiniciar de consumidor: hecha" in ln for ln in log)
+    assert mc.cuelgues(log) == []
+    lat = json.loads((tmp / "d" / "motor" / "manejador.json").read_text(encoding="utf-8"))
+    assert lat["esquema"] == "bb-motor-manejador/1" and lat["ventana"] is None
+
+
+def test_un_arrancar_se_atiende_con_la_unidad_parada(falso):
+    tmp, env = falso
+    _solicitud(tmp, "s1", "arrancar")
+    _vig({**env, "FAKE_ACTIVE": "inactive"})
+    assert _reinicios(tmp) == ["--user start ai-nemotron.service"]
+    assert _respuesta(tmp, "s1")["estado"] == "hecha"
+
+
+def test_mutacion_sin_respeto_a_la_ventana_el_vigilante_reinicia(falso):
+    """Control del control: con la rama `0)` de la ventana quitada, el mismo escenario del
+    test de arriba reinicia. Si este test falla, aquel no discrimina."""
+    tmp, env = falso
+    raiz = tmp / "mutante"
+    (raiz / "bin").mkdir(parents=True)
+    (raiz / "tools").symlink_to(RAIZ / "tools")
+    texto = VIG.read_text(encoding="utf-8")
+    rama = '    0) reg "VENTANA del consumidor vigente ($ventana): no reinicia ($1)"; return ;;\n'
+    assert rama in texto
+    mutante = raiz / "bin" / "bb-vigilante-motor"
+    mutante.write_text(texto.replace(rama, ""), encoding="utf-8")
+    shutil.copymode(VIG, mutante)
+    _ventana(tmp, 3600)
+    for _ in range(3):
+        subprocess.run([str(mutante)], env={**os.environ, **env, "FAKE_CHAT_CODE": "000"}, check=True, timeout=30)
+    assert _reinicios(tmp) == ["--user restart ai-nemotron.service"]

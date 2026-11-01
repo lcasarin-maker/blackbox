@@ -58,8 +58,15 @@ def xid_cerca(kernel: list[str], t: datetime) -> Counter:
     return c
 
 
+# El reinicio PROPIO del vigilante: el mensaje EMPIEZA por la palabra, tras el sello de
+# `reg`. Las solicitudes del consumidor van a la misma bitacora con su id y su texto libre
+# (el motivo de una ventana); buscar la palabra en cualquier sitio contaria como cuelgue
+# un reinicio pedido o un motivo que la nombre.
+REINICIO_PROPIO = re.compile(r"^\[[^\]]*\] REINICIA ")
+
+
 def cuelgues(bitacora: list[str]) -> list[str]:
-    return [ln.strip() for ln in bitacora if "REINICIA" in ln]
+    return [ln.strip() for ln in bitacora if REINICIO_PROPIO.match(ln)]
 
 
 def atascos(muestras: list[str], minimo: int = 3) -> list[tuple[datetime, datetime, int]]:
