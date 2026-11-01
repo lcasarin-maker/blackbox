@@ -57,7 +57,7 @@ $ PATH=/tmp/fakepath_test ./bin/bb scan '5 minutes ago' | grep 'nvidia-smi respo
 (fakepath_test = symlinks a coreutils SIN nvidia-smi -- probar con PATH=/usr/bin:/bin fallo, porque nvidia-smi vive en /usr/bin y seguia encontrandose)
 ```
 
-## Fichas HARVEST de origen (cosecha de Atlas, evaluadas 2026-09-09)
+## Fichas HARVEST de origen (cosecha del consumidor de conocimiento, evaluadas 2026-09-09)
 
 - HARVEST-374016-dgx-spark-gb10-gpu-fails-to-initialize-gsp-fi
 - HARVEST-379959-gb10-spontaneous-reboots-after-july-2026-upda

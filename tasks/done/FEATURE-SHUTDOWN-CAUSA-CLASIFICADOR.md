@@ -61,7 +61,7 @@ El primer patron amplio para PCIe ('AER:|hotplug') contaba tambien el RUIDO de i
 Fixture con una linea de conexion USB en las ultimas 30 del boot: `printf '...\nkernel: usb 1-2: new high-speed USB device...\n...' | tail -30 | grep -icE 'usb|bluetooth|btusb'` -> 1 (dispara la linea de coincidencia). Control negativo real: boot -1 de esta maquina no tiene ningun evento USB/BT en sus ultimas 30 lineas -- la linea de coincidencia NO aparece en el scan real, correctamente.
 ```
 
-## Fichas HARVEST de origen (cosecha de Atlas, evaluadas 2026-09-09)
+## Fichas HARVEST de origen (cosecha del consumidor de conocimiento, evaluadas 2026-09-09)
 
 - HARVEST-354194-my-dgx-system-is-getting-shut-itself-down-whi (firma PCIe
   SlotPowerLimit/mlx5_pcie_event)

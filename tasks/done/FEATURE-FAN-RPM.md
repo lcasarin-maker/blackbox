@@ -62,6 +62,6 @@ internamente sin publicar su velocidad al SO -- mismo patron que la fan
 curve del EC (ya documentado en `FEATURE-KDUMP-PSTORE-PREAPAGADO` y las
 fichas HARVEST-377044/379195 sobre fan curve del EC sin interfaz).
 
-## Fichas HARVEST de origen (cosecha de Atlas, evaluadas 2026-09-09)
+## Fichas HARVEST de origen (cosecha del consumidor de conocimiento, evaluadas 2026-09-09)
 
 - HARVEST-370080-dgx-spark-gb10-fan-not-spinning-80-c-at-idle-

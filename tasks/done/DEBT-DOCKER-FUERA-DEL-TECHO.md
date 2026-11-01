@@ -38,10 +38,10 @@ Y tres de los cinco contenedores no tienen techo propio:
 | contenedor | ahora | pico | techo |
 |---|---|---|---|
 | nemotron-server (vLLM) | 9.9G | 10.0G | 75G |
-| atlas-pgvector | 0.1G | 0.1G | 2G |
+| pgvector externo | 0.1G | 0.1G | 2G |
 | librechat | 0.5G | 0.7G | **SIN TECHO** |
 | mongo-librechat | 0.3G | 0.4G | **SIN TECHO** |
-| aequitas-pg | 0.1G | 0.1G | **SIN TECHO** |
+| pg de otro proyecto | 0.1G | 0.1G | **SIN TECHO** |
 
 Cualquiera de los tres sin techo puede reservar hasta agotar la maquina, y el
 techo de `app.slice` no lo ve. Es el modo de fallo exacto de los cuatro

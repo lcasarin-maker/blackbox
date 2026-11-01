@@ -17,7 +17,7 @@ close_check: {"cmd": "python3 -m pytest -q tests/test_mapa_memoria_al_actuar.py"
 
 ## Idea de origen y hueco propio
 
-Athena's Engine expone `GET /internal/memory`, el mapa de quien tiene que memoria por prioridad (`Atlas/knowledge/references/github_com_xangel82_Athena_Engine.md`, seccion de servicios). El hueco de bb es medido: `DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01` declara que el 2026-10-16 NO se capturo que tarea estaba atascada, ni `memory.stat` (anon, file, shmem), ni el swap de `app.slice`; `bb-usable` actuo (reinicio de la maquina) sin ese dato y la causa quedo como "inferido, no medido".
+Athena's Engine expone `GET /internal/memory`, el mapa de quien tiene que memoria por prioridad (una referencia externa, seccion de servicios). El hueco de bb es medido: `DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01` declara que el 2026-10-16 NO se capturo que tarea estaba atascada, ni `memory.stat` (anon, file, shmem), ni el swap de `app.slice`; `bb-usable` actuo (reinicio de la maquina) sin ese dato y la causa quedo como "inferido, no medido".
 
 ## Adaptacion
 

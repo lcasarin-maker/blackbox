@@ -15,7 +15,7 @@ reason: "El arreglo aterrizo aguas arriba, en simplecode 8.3.1 y 8.3.2, y este r
 
 ## Que pasa
 
-Con `tools/atom_gpu_telemetry.py` vinieron de Atlas sus dos arneses de
+Con `tools/atom_gpu_telemetry.py` vinieron del consumidor de conocimiento sus dos arneses de
 mutacion -- `run_mitigacion_carga_mutation.py` (89 lineas) y
 `run_alarm_mark_mutation.py` (181) -- que rompen el modulo a proposito, una
 mutacion por vez, y exigen que la suite MUERA. Un test que pasa igual con el
@@ -27,7 +27,7 @@ sobre la compuerta de carga y sobre el marcado de alarmas termicas.
 | pieza | que es | de quien |
 | --- | --- | --- |
 | los dos arneses | tienen SUJETO: mutan `atom_gpu_telemetry.py` | **de este repo**, que es donde vive el sujeto |
-| `run_injection_mutation.py` (617 lineas, 49 usuarios en Atlas) | no tiene sujeto: es el METODO -- mutar, `compile()` antes de gastar maquina, correr pytest, exigir `failed` y no `error`, restaurar verificando sha256 | **de ninguno de los dos repos: del kit** |
+| `run_injection_mutation.py` (617 lineas, 49 usuarios en el consumidor de conocimiento) | no tiene sujeto: es el METODO -- mutar, `compile()` antes de gastar maquina, correr pytest, exigir `failed` y no `error`, restaurar verificando sha256 | **de ninguno de los dos repos: del kit** |
 
 Y el kit **ya trae uno**: `simplecode/verification/mutation_verify.py`, 390
 lineas, vendorizado en los dos satelites.
@@ -38,12 +38,12 @@ Medido el 2026-09-25 con su propia funcion `resolve_source_for_test`:
 
 ```
 blackbox:  0 de   9 ficheros de test resuelven su sujeto
-Atlas:     0 de 365
+El consumidor de conocimiento:     0 de 365
 ```
 
 La causa esta en el codigo del kit: el resolutor exige `root/src/` y deriva de
 ahi los nombres de paquete locales. **blackbox no tiene `src/`** -- su codigo
-vive en `tools/` y `bin/` -- y el `src/` de **Atlas solo contiene `images/`**,
+vive en `tools/` y `bin/` -- y el `src/` de **el consumidor de conocimiento solo contiene `images/`**,
 sin un paquete Python dentro. Asi que devuelve `None` siempre, y el llamador lo
 reporta como `COULD_NOT_RUN`.
 
@@ -52,7 +52,7 @@ sospecha: el mismo runner sobre el repo del kit, que SI tiene `src/simplecode/`,
 resuelve sus tests sin problema. O sea funciona donde nacio y no donde se
 vendoriza.
 
-Eso reencuadra los 617 lineas de Atlas: **no eran duplicacion caprichosa**, eran
+Eso reencuadra los 617 lineas del consumidor de conocimiento: **no eran duplicacion caprichosa**, eran
 suplir un instrumento del kit que no llega. Y reencuadra al propio
 `mutation_verify`: un gate vendorizado en dos repos donde no puede capturar nada
 es un defecto del instrumento, nunca evidencia de que el sujeto este limpio.
@@ -65,12 +65,12 @@ cazarian el bug?" sobre la mitigacion. Lo que queda son 137 tests y el 100 % de
 cobertura de lineas, que contesta otra pregunta: que se EJECUTO, no que un
 fallo se cazaria.
 
-Los tres ficheros viven en la historia de Atlas, recuperables:
+Los tres ficheros viven en la historia del consumidor de conocimiento, recuperables:
 
 ```
-git -C ~/projects/Atlas show 82b27781^:tools/run_mitigacion_carga_mutation.py
-git -C ~/projects/Atlas show 82b27781^:tools/run_alarm_mark_mutation.py
-git -C ~/projects/Atlas show HEAD:tools/run_injection_mutation.py
+(comando sobre la historia de otro repositorio, omitido)
+(comando sobre la historia de otro repositorio, omitido)
+(comando sobre la historia de otro repositorio, omitido)
 ```
 
 ## Root Cause
@@ -81,9 +81,9 @@ codigo vive en `tools/` y `bin/`. Devolvia `None` siempre, el llamador lo
 reportaba como COULD_NOT_RUN, y nadie podia correr mutacion aqui.
 
 Medido el 2026-09-25 con la propia funcion del modulo: blackbox **0 de 9**,
-Atlas **0 de 365**, simplecode **158 de 164** -- funcionaba donde nacio y no
+El consumidor de conocimiento **0 de 365**, simplecode **158 de 164** -- funcionaba donde nacio y no
 donde se vendoriza. Eso reencuadra las 617 lineas de
-`run_injection_mutation.py` de Atlas: no eran duplicacion caprichosa, eran
+`run_injection_mutation.py` del consumidor de conocimiento: no eran duplicacion caprichosa, eran
 suplir un instrumento del kit que no llegaba.
 
 ## Regression Test
@@ -131,7 +131,7 @@ dejar de suponer `src/` y derivar los paquetes locales de lo que el proyecto ya
 declara -- `coverage_targets` en `corpus_exempt.yaml`, o los paquetes de
 `pyproject.toml` -- que es como el resto del kit se adapta a cada satelite.
 Copiar el runner a este repo seria duplicar el metodo en vez de arreglarlo, y
-dejaria a Atlas con el mismo agujero.
+dejaria al consumidor de conocimiento con el mismo agujero.
 
 Con eso hecho, los dos arneses vuelven aqui expresados sobre el runner del kit,
 y el `close_check` de arriba deja de dar `COULD_NOT_RUN`.

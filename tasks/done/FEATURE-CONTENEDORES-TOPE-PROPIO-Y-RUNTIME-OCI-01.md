@@ -23,7 +23,7 @@ Todo contenedor lleva tope propio de memoria, swap y procesos desde su creacion,
 | Contenedor | memory.max | swap | pids | Nota |
 |---|---|---|---|---|
 | nemotron-server (vLLM) | 75 GiB | max | max | `gpu_memory_utilization=0.3` declarado en `/srv/ai/gateway/active_engine.json`; pico 12.7 GiB de cgroup |
-| atlas-pgvector | 2 GiB | **max** | max | `docker update --memory-swap` bloqueado por el clasificador de permisos: decision pendiente de Luis |
+| pgvector externo | 2 GiB | **max** | max | `docker update --memory-swap` bloqueado por el clasificador de permisos: decision pendiente de Luis |
 | librechat | 3 GiB | 0 | 2048 | `docker update` en vivo 2026-10-12 (pico medido 753 MiB, 4x redondeado) |
 | mongo-librechat | 2 GiB | 0 | 2048 | idem (pico 407 MiB) |
 | proyecto-A-pg | 2 GiB | 0 | 2048 | idem (pico 418 MiB) |
@@ -62,7 +62,7 @@ Los tres `docker update` se pierden si el contenedor se recrea: ninguno lleva et
 
 ## Entorno de prueba (lo mas importante, voto de Luis)
 
-Nunca se prueba en el daemon de produccion (contiene nemotron-server, atlas-pgvector, librechat, mongo-librechat y proyecto-A-pg).
+Nunca se prueba en el daemon de produccion (contiene nemotron-server, pgvector externo, librechat, mongo-librechat y proyecto-A-pg).
 - Nivel 1, sin root: pruebas dorado sobre `config.json` (generado con `runc spec`) y, si `runc` rootless funciona aqui, un contenedor real con el envoltorio.
 - Nivel 2, con root (lo ejecuta Luis una vez): `sudo bash tools/portero_docker_lab.sh up` levanta un SEGUNDO `dockerd` con otro socket, otro `data-root`, otro `exec-root`, otro puente (o ninguno) y su propio `daemon.json` que apunta al envoltorio; las imagenes se cargan con `docker save | docker -H unix:///run/bb-lab/docker.sock load`; `down` lo borra todo. Cada prueba lleva su control negativo (un contenedor con tope no se toca, uno sin tope se corrige o se rechaza).
 
@@ -70,7 +70,7 @@ Nunca se prueba en el daemon de produccion (contiene nemotron-server, atlas-pgve
 
 1. Envoltorio `bb-oci-runtime`, script de laboratorio y sus pruebas: nivel 1 hecho (2026-10-12); falta el nivel 2, que ejecuta Luis con `sudo bash tools/portero_docker_lab.sh up && sudo bash tools/portero_docker_lab.sh prueba; sudo bash tools/portero_docker_lab.sh down` (detalle en `tasks/evidence/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01/instrucciones-nivel2.txt`).
 2. Persistir los topes de los contenedores existentes en sus creadores.
-3. Decidir `atlas-pgvector` (swap) y la absorcion de `gpu_governance`.
+3. Decidir pgvector externo (swap) y la absorcion de `gpu_governance`.
 
 ## Root Cause
 Los contenedores nacian sin tope propio y el tope de Docker no gobierna la memoria unificada; nada en el punto de creacion del cgroup los obligaba.

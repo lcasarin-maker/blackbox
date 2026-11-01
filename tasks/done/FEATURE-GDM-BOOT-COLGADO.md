@@ -53,7 +53,7 @@ logins=1
 Se revisaron los 5 boots disponibles en el journal (-4 a 0): los 5 tienen gdm.service + 2 sesiones (gdm + usuario real) -- ninguno es un caso de cuelgue, asi que la linea base real de esta maquina es 0 avisos, consistente.
 ```
 
-## Fichas HARVEST de origen (cosecha de Atlas, evaluadas 2026-09-09)
+## Fichas HARVEST de origen (cosecha del consumidor de conocimiento, evaluadas 2026-09-09)
 
 - HARVEST-347951-dgx-spark-boot-failure-after-installing-llm-m (mecanismo 3;
   el mecanismo 1, bug de ruta en un script de macOS, no aplica -- SO

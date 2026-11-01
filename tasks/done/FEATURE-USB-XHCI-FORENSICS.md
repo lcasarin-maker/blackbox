@@ -57,7 +57,7 @@ El patron inicial `xhci_hcd.*(HC died|error|timeout|reset)` NO atrapaba 'xHCI ho
 Se descarto juzgar la velocidad negociada por puerto como 'degradada': verificado en esta maquina que los root hubs a 480M son el par USB2 legitimo de cada controlador xHCI (no un fallback) y el unico dispositivo a 480M es un dongle Bluetooth, 480M por diseno. Marcar eso como fallo habria sido un falso positivo garantizado sin un manifiesto de que velocidad DEBERIA tener cada puerto, que no existe. El inventario de velocidad por puerto (lsusb -t) se agrego a `bb hw` SIN veredicto, solo como dato.
 ```
 
-## Fichas HARVEST de origen (cosecha de Atlas, evaluadas 2026-09-09)
+## Fichas HARVEST de origen (cosecha del consumidor de conocimiento, evaluadas 2026-09-09)
 
 - HARVEST-355453-dgx-spark-xhci-controller-hc-died-crashes-wit
 - HARVEST-362015-all-usb-connections-fall-back-to-480-mbps-usb

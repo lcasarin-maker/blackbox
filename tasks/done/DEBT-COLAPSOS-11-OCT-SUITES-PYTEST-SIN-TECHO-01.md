@@ -2,7 +2,7 @@
 id: DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01
 kind: task
 domain: GPU
-title: "Dos colapsos de memoria el 11-oct coinciden con suites pytest de Atlas sin techo de memoria"
+title: "Dos colapsos de memoria el 11-oct coinciden con suites pytest de la carga externa sin techo de memoria"
 status: done
 closed_at: 2026-10-14
 closure_type: fixed
@@ -12,7 +12,7 @@ severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-12
-close_check: {"cmd": "grep -q suites_pytest_con_techo tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/medicion.txt", "expect": "exit_zero", "porque": "Dos colapsos (boots 5461291a a las 22:02 y 7b217d8b a las 22:44, PSI memory full 98 % con 15-30 GB disponibles, reinicio por watchdog, BERT 0x10) arrancaron con una suite pytest de Atlas corriendo (scopes liberation_job_test_* a las 21:48 y 22:43), vLLM con 33 peticiones y, la primera vez, un pre-push de otro proyecto. En el segundo no corria ningun job de la cola. Cierra cuando haya una medicion con las suites bajo un scope con MemoryMax y el colapso no se reproduzca, escrita en medicion.md con la frase suites_pytest_con_techo."}
+close_check: {"cmd": "grep -q suites_pytest_con_techo tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/medicion.txt", "expect": "exit_zero", "porque": "Dos colapsos (boots 5461291a a las 22:02 y 7b217d8b a las 22:44, PSI memory full 98 % con 15-30 GB disponibles, reinicio por watchdog, BERT 0x10) arrancaron con una suite pytest de la carga externa corriendo (scopes liberation_job_test_* a las 21:48 y 22:43), vLLM con 33 peticiones y, la primera vez, un pre-push de otro proyecto. En el segundo no corria ningun job de la cola. Cierra cuando haya una medicion con las suites bajo un scope con MemoryMax y el colapso no se reproduzca, escrita en medicion.md con la frase suites_pytest_con_techo."}
 ---
 
 ## Diagnostico a fondo (2026-10-12), medido en `samples/` de bb
@@ -20,23 +20,23 @@ close_check: {"cmd": "grep -q suites_pytest_con_techo tasks/evidence/DEBT-COLAPS
 Cadena: enjambre de procesos en `app-com.anthropic.Claude-*.scope` (sesiones de agente y sus pytest-xdist) -> `app.slice` pegado a ~39-40 GiB de su `MemoryMax=42G` -> estancamiento (PSI memory full 98 %) con 18-30 GB libres en el sistema -> `bb-usable` declara COLAPSO a los 300 s y, por diseno, deja de acariciar el watchdog -> reinicio de TODA la maquina. vLLM seguia sirviendo (el journal lo muestra con 200 OK durante el colapso 1): el fallo era local al slice de apps, la maquina entera se reinicio por la politica.
 
 - Colapso 1 (22:02): scope Claude 25-30 GB con 150-193 procesos desde las 21:44 (antes 14-15 GB y ~90-115 procesos); `app.slice` 41.1-41.5 M kiB entre 21:58 y 22:00 (94 % del tope).
-- Colapso 2 (22:44): scope Claude de 23.6 a 34.5 a 38.4 GB en dos minutos, procesos 46 -> 62 -> 136; un `python3` (pid 73493) tomo 26 GB en un minuto; swap out 12 000 paginas/s; `app.slice` 41.1 M kiB; `scope_pressure_alert` encendio a las 22:45:03 (solo observa). Ningun job de la cola de Atlas corria; si la suite de Atlas (22:43:47), 4-5 procesos `claude` reanudando sesiones (+6 GB cada uno) y vLLM.
+- Colapso 2 (22:44): scope Claude de 23.6 a 34.5 a 38.4 GB en dos minutos, procesos 46 -> 62 -> 136; un `python3` (pid 73493) tomo 26 GB en un minuto; swap out 12 000 paginas/s; `app.slice` 41.1 M kiB; `scope_pressure_alert` encendio a las 22:45:03 (solo observa). Ningun job de la cola de la carga externa corria; si la suite de la carga externa (22:43:47), 4-5 procesos `claude` reanudando sesiones (+6 GB cada uno) y vLLM.
 - 05-oct (`DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01`): `app.slice` 40.32 GiB, PSI 49 %: el mismo mecanismo, y dice que el `MemoryMax=42G` no lo freno.
 - Calibracion con 489 muestras que traen scope y PSI: con el scope Claude por debajo de 35 GB, 0 de 439 muestras tuvo PSI full >= 10 (maximo 7.17); con 35-40 GB, 2 de 2 la tuvieron (maximo 64.7). Muestra pequena para el tramo alto.
-- No fue hardware ni el reindexado de Atlas (el colapso 2 ocurrio sin el) ni calor (sin throttle termico).
+- No fue hardware ni el reindexado del consumidor de conocimiento (el colapso 2 ocurrio sin el) ni calor (sin throttle termico).
 
-Dato aportado por la sesion `ae` (proyecto-A, 2026-10-12): lanzo `git push origin main` con pre-push de suite completa (~8.7k tests, ~40 min) hacia las 22:43 del 11-oct, sin tope, y seguia corriendo al reiniciar a las 22:54; sus pushes de las ~19:40, 20:20 y 21:00 no colapsaron nada. Coincide con el `python3` de 26 GB del colapso 2 (no probado que sea ese pid) y deja la hipotesis de trabajo: el colapso aparece cuando DOS o mas suites completas coinciden dentro de `app.slice` (colapso 1: suite de Atlas 21:48 + push de proyecto-D 21:51 + mi pre-push; colapso 2: push de proyecto-A 22:43 + suite de Atlas 22:43:47), no cuando corre una sola. Es correlacion temporal con n=2; el escalon de prevencion no depende de ella.
+Dato aportado por la sesion `ae` (proyecto-A, 2026-10-12): lanzo `git push origin main` con pre-push de suite completa (~8.7k tests, ~40 min) hacia las 22:43 del 11-oct, sin tope, y seguia corriendo al reiniciar a las 22:54; sus pushes de las ~19:40, 20:20 y 21:00 no colapsaron nada. Coincide con el `python3` de 26 GB del colapso 2 (no probado que sea ese pid) y deja la hipotesis de trabajo: el colapso aparece cuando DOS o mas suites completas coinciden dentro de `app.slice` (colapso 1: suite de la carga externa 21:48 + push de proyecto-D 21:51 + mi pre-push; colapso 2: push de proyecto-A 22:43 + suite de la carga externa 22:43:47), no cuando corre una sola. Es correlacion temporal con n=2; el escalon de prevencion no depende de ella.
 
 ## Origen atribuido por las transcripciones de las sesiones (2026-10-12)
 
 Fuente: ordenes `Bash` con hora en `~/.claude/projects/*/*.jsonl` (UTC; CST = UTC-6). Quien lanzo que:
 
 Colapso 2 (~22:44:03): tres `git push` con pre-push (suite completa) en 3 minutos, de tres sesiones distintas:
-- 22:41:25 sesion Atlas: `setsid nohup bash -c "git push origin master"`.
+- 22:41:25 sesion del consumidor de conocimiento: `setsid nohup bash -c "git push origin master"`.
 - 22:44:00 sesion proyecto-A: `git push origin main` con `DATABASE_URL` cargada de `~/secrets/proyecto-A.env`; el `python3` pid 73493 que tomo 26 GB aparece 3 s despues (muestra de 22:44:03). Es la atribucion mas probable, no probada: las muestras no guardaron el cmdline del pid.
 - 22:44:14 sesion proyecto-O: comando en segundo plano de push (`timeout 1200 git push origin main` en la ronda anterior).
 
-Colapso 1 (21:42-21:58, colapso 22:02): al menos seis pushes/suites simultaneos, todos tras el cambio de kit 9.9.0 de la flota: blackbox 21:42:20 (el `git push` de `/clean`), Atlas (varios, uno matado con pkill a las 21:44:56), simple 21:46:06 (migracion_atom) y 21:47:05 (simplecode), proyecto-O 21:49:39 (`timeout 1200 git push origin main`), proyecto-D 21:51:04, y una suite pytest de Twiner a las 21:55:42; proyecto-A esperaba con un vigia a que terminara un push.
+Colapso 1 (21:42-21:58, colapso 22:02): al menos seis pushes/suites simultaneos, todos tras el cambio de kit 9.9.0 de la flota: blackbox 21:42:20 (el `git push` de `/clean`), el consumidor de conocimiento (varios, uno matado con pkill a las 21:44:56), simple 21:46:06 (migracion_atom) y 21:47:05 (simplecode), proyecto-O 21:49:39 (`timeout 1200 git push origin main`), proyecto-D 21:51:04, y una suite pytest de otro proyecto a las 21:55:42; proyecto-A esperaba con un vigia a que terminara un push.
 
 Causa de origen: la orden de sincronizar la flota con el kit 9.9.0 hizo que cada proyecto commiteara y empujara a la vez, y cada pre-push corre su suite completa (pytest-xdist con decenas de workers) sin tope. No fue un proceso de un solo dueno: fue una estampida coordinada por una orden. El `/clean` de esta sesion fue uno de los pushes.
 
@@ -63,8 +63,8 @@ Limite declarado: `memory.events` de `app.slice` (cuantas veces toco `max`, `oom
 ## Medido antes (2026-10-12, primera version de esta ficha)
 
 
-- Colapso 1: PSI full 42 % a las 22:02:07 (boot 5461291a) hasta el reinicio de las 22:12:46. Corria el job 79_00 de Atlas, una suite de Atlas desde las 21:48 y un pre-push de otro proyecto desde las 21:51.
-- Colapso 2: PSI full >= 10 sostenido desde ~22:44:12 (boot 7b217d8b), reinicio a las 22:54:41. Solo corrian jobs pequenos de la cola (terminaron 22:27) y una suite pytest de Atlas desde las 22:43:47.
+- Colapso 1: PSI full 42 % a las 22:02:07 (boot 5461291a) hasta el reinicio de las 22:12:46. Corria el job 79_00 del consumidor de conocimiento, una suite de la carga externa desde las 21:48 y un pre-push de otro proyecto desde las 21:51.
+- Colapso 2: PSI full >= 10 sostenido desde ~22:44:12 (boot 7b217d8b), reinicio a las 22:54:41. Solo corrian jobs pequenos de la cola (terminaron 22:27) y una suite pytest de la carga externa desde las 22:43:47.
 - En ambos, `earlyoom` veia 15-30 GB disponibles: el disponible no predice este colapso.
 - El job de reindexado 79_00 no es causa suficiente: el colapso 2 ocurrio sin el. Otro reindexado igual (68) llego a 15 GB disponibles y termino bien.
 - Las 5 s de telemetria se cortan antes del colapso (el sampler se estrangula): no hay RSS por proceso dentro de la ventana.
