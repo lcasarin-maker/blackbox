@@ -15,21 +15,18 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-15): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_mtp_acceptance_and_semantic_control_01`, un xfail que se retira con el cierre."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/we-unlocked-nvfp4-on-the-dgx-spark-20-faster-than-awq/361163
+- https://forums.developer.nvidia.com/t/introducing-prismaquant/367085/71
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-### DELTA-FORUM-MTP-ACCEPTANCE-AND-SEMANTIC-CONTROL-01
-
-[361163](https://forums.developer.nvidia.com/t/we-unlocked-nvfp4-on-the-dgx-spark-20-faster-than-awq/361163) adds a direct MTP counterexample: one owner reports Qwen3-Coder-Next NVFP4 at about 38 tok/s without MTP and about 26 tok/s with MTP, with zero acceptance; separate reports vary by model/build, and a cold restart reportedly restored speed without rebuilding. Benchmark labels also differ: speculative accepted output rate and target decode rate are distinct. The repository patches, images, scripts, screenshots and raw result files were not audited, and no matched independent correctness run appears in the thread. A later Qwen/PrismaQuant thread [367085, posts 71–74, 139 and 155–160](https://forums.developer.nvidia.com/t/introducing-prismaquant/367085/71) also reports that MTP/DFlash behavior changes with context pressure, concurrency and backend; one 50%-context-pressure test saw little difference between MTP=2 and 4, while other results changed after DFlash/SWA build changes. This supplies no universal speculative-token count.
-
-For each pinned model/image/backend, compare MTP on/off with the same prompts, output limits, concurrency and warm/cold state. Record per-position acceptance, semantic/tool correctness, prefill and decode latency, target decode rate, user-visible rate and memory. Gate zero acceptance or failed output checks and retain the last known-good recipe for rollback; do not infer a universal NVFP4 or MTP setting from this thread.
-
-Fuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.
 
 ## Criterio de cierre y control negativo
 

@@ -15,17 +15,17 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01.md", "expect": "exit_zero", "porque": "Cerrada por aplicabilidad (void_wontfix, decision de Luis 2026-10-13): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a un test por ficha que se retiro con la deprecacion."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/379303
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-CX7-RDMA-ASYMMETRY-RETEST-01.** Un hilo atribuyó una caída direccional RDMA Write (Spark→ASUS GX10 ~13.2 Gbit/s frente a ~111.6 Gbit/s inversa) al kernel ASUS 6.17.0-1029 y reportó vuelta a 6.17.0-1026 ([379303](https://forums.developer.nvidia.com/t/379303)). La atribución pierde fuerza en el propio hilo: tras actualizar/reiniciar el mismo ASUS siguió en 1029 y `ib_write_bw` volvió a ~111.7 Gbit/s; un segundo dueño no reprodujo en Founder Edition. El problema reapareció una vez tras reiniciar y luego se restauró con reinicios de ambos GX10, mientras el propietario sospechó una condición de conectar el DAC con nodos encendidos; esa hipótesis no se controló y otro participante reporta diferencia con cable Amphenol frente a FS.com. No fijar kernel 1026 como workaround. En canary de CX7 compare direcciones en frío, tras reboot individual/secuencial y hotplug, guardando comando/perftest, cable/PN, fw CX7, kernel por OEM, interfaz/IP y estado PCIe/firmware. El resultado de ~13G es reporte temporal de operador; no se leyó issue/bundle externo.
-
-Fuentes: tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md.
 
 ## Criterio de cierre y control negativo
 

@@ -15,17 +15,17 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_nemotron_sm121_prebuilt_kernel_01`, que sin captura real del sujeto no puede pasar; sin sujeto aqui no hay captura posible."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/354771
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-NEMOTRON-SM121-PREBUILT-KERNEL-01.** En DGX Spark GB10/SM121 con kernel 6.14.0-1015 y driver 580.95.05, un operador probó SGLang `:spark` (config Nemotron vieja) y `:latest`: el primer tag no conocía `NemotronHConfig`; el segundo cargó BF16 pero falló en primera inferencia por `sgl_kernel` RMSNorm sin kernel compatible. FP8 falló en quant op por la misma falta de código precompilado SM121. Cambiar `TRITON_PTXAS_PATH` al ptxas del sistema no lo resolvió: el error posterior provenía de extensiones `sgl_kernel`, no del ptxas. `llama.cpp` con Nemotron-H support branch compilada localmente a SM121 respondió; luego el main del repo incorporó soporte y un usuario confirmó que reconstruir desde main corrigió `unknown model architecture` ([354771, posts 4, 9, 40–42](https://forums.developer.nvidia.com/t/354771)). NVIDIA después anunció el playbook llama.cpp y trabajo SGLang/vLLM, pero este hilo no valida los tags posteriores. Gatear por arquitectura cada op requerida para modelo/backend (incluyendo load, primera inferencia y calidad de salida); `cuda available`, modelo cargado y server-ready no bastan. FP8 que genere basura debe bloquearse por salida/reference check. No generalizar el fallback llama.cpp ni recomendar `--enforce-eager` como fix de kernels ausentes.
-
-Fuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.
 
 ## Criterio de cierre y control negativo
 
@@ -36,6 +36,7 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El test selector del close_check es una especificación pendiente, no una prueba existente ni un resultado ejecutado. Implementarlo exige comprobar el sujeto y su control negativo; la existencia de archivos o esta ficha no basta para cerrar.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
+
 ## Evaluación de instrumentos 2026-10-03
 
 Reuso disponible: perfiles de runtime/host existentes no asocian una arquitectura SM121 con kernels compilados por operación y salida correcta. No hay evidencia local de builds/tags del hilo ni control de logits/salida. Estado `deferred_lab`: fijar modelo/backend/build y operaciones requeridas; canario de load, primera inferencia y referencia de salida contra build/control SM121, preservando el resultado. “CUDA available” o ready no son admisión.
