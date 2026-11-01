@@ -2,7 +2,7 @@
 id: DEBT-ATOM-DEGRADACION-ACELERADA-DE-BOOTS-01
 kind: task
 domain: HARDWARE
-title: "La ATOM se sigue cayendo: ningun boot bate el record de 146.566 h (de Atlas DGX-464)"
+title: "La ATOM se sigue cayendo: ningun boot bate el record de 146.566 h (de una referencia externa)"
 status: open
 severity: P1
 origin: asserted
@@ -13,22 +13,22 @@ close_check: {"cmd": "bash tools/check_atom_degradacion_atlas.sh", "expect": "ex
 
 ## Origen
 
-Trasladada el 2026-10-17 por pedido de Luis desde Atlas `tasks/backlog/DGX-464` (la causa fisica de las caidas de la ATOM es de blackbox: la propia DGX-464 lo declara tras DGX-585). La historia completa, incluido el cierre en falso del 2026-09-16 y la reapertura del 2026-09-25, queda en la ficha de Atlas (`tasks/done/DGX-464.md` con `closure_type: relocated`). **No se cierra aqui por la suite del instrumento: solo por el comando de abajo.**
+Trasladada el 2026-10-17 por pedido de Luis desde una referencia externa (la causa fisica de las caidas de la ATOM es de blackbox: la propia una referencia externa lo declara tras una referencia externa). La historia completa, incluido el cierre en falso del 2026-09-16 y la reapertura del 2026-09-25, queda en la ficha del consumidor de conocimiento (una referencia externa con `closure_type: relocated`). **No se cierra aqui por la suite del instrumento: solo por el comando de abajo.**
 
 ## Medido al trasladar (2026-10-17)
 
 ```
-$ bash tools/check_atom_degradacion_atlas.sh   # rc=2
+$ bash una referencia externa   # rc=2
 [atom_degradacion_resuelta] COULD_NOT_RUN  hay eventos sin señal demostrable de crash o líneas corruptas; no se puede declarar resuelta la espiral
 ```
 
-Control negativo del propio comando: el `NO` (rc=1) esta documentado en la ficha de Atlas el 2026-09-28; el estado verde exige un boot > 146.566 h.
+Control negativo del propio comando: el `NO` (rc=1) esta documentado en la ficha del consumidor de conocimiento el 2026-09-28; el estado verde exige un boot > 146.566 h.
 
-Hallazgo que viaja con la ficha (corregido el 2026-10-17 tras verificarlo en el codigo de Atlas): Atlas exige dano de journal o una linea de panic para confirmar un crash (`detect_atom_crash.crash_confirmado()` solo acepta `diagnostico` = `journal_danado` o `panic`); la fila `92a1de3d` tiene `diagnostico: sin_senal` (journal intacto, sin panic) mientras el dictamen de blackbox la clasifica CORTE_ABRUPTO, asi que el criterio devuelve rc=2 hasta que Luis decida si el veredicto CORTE_ABRUPTO de blackbox basta como prueba. No es un error de ninguno de los dos instrumentos: Atlas decide no adivinar.
+Hallazgo que viaja con la ficha (corregido el 2026-10-17 tras verificarlo en el codigo del consumidor de conocimiento): el consumidor de conocimiento exige dano de journal o una linea de panic para confirmar un crash (`detect_atom_crash.crash_confirmado()` solo acepta `diagnostico` = `journal_danado` o `panic`); la fila `92a1de3d` tiene `diagnostico: sin_senal` (journal intacto, sin panic) mientras el dictamen de blackbox la clasifica CORTE_ABRUPTO, asi que el criterio devuelve rc=2 hasta que Luis decida si el veredicto CORTE_ABRUPTO de blackbox basta como prueba. No es un error de ninguno de los dos instrumentos: el consumidor de conocimiento decide no adivinar.
 
 ## Relacionadas
 
 `DEBT-ATOM-CORTES-OCT-2026-CAUSA-NO-DETERMINADA-01` (la causa), `DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01`, `DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01`.
 
-## Voto de Luis 2026-10-17: el criterio de Atlas se mantiene estricto
+## Voto de Luis 2026-10-17: el criterio del consumidor de conocimiento se mantiene estricto
 El veredicto CORTE_ABRUPTO de blackbox NO basta como prueba de crash para esta ficha: el evento `92a1de3d` (diagnostico `sin_senal`, sin journal danado ni linea de panic) sigue fuera de la serie y el criterio devuelve rc=2 hasta que una caida traiga evidencia real. Descartado: aceptar CORTE_ABRUPTO como prueba (baja la vara de la serie de record; se deduce de que el journal calla sin cierre, no de una señal de la caida). Costo aceptado: la ficha no se puede cerrar con lo que hay hoy.

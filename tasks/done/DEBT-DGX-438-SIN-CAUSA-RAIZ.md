@@ -21,7 +21,7 @@ reason: "CERRADO como void_wontfix 2026-09-27, por decision del dueno con la obj
 
 ### Que pasa
 
-Atlas registro en DGX-438 muertes de procesos python de fondo con `rc=143`
+El consumidor de conocimiento registro en una referencia externa muertes de procesos python de fondo con `rc=143`
 (SIGTERM) a intervalos irregulares (10-15 min), con o sin `setsid`, con o sin
 `disown`. Sin causa raiz.
 
@@ -161,7 +161,7 @@ Medido el 2026-09-23:
 | senales capturadas desde que se armo (~1 h) | 4 |
 | de ellas con emisor DEMONIO, que es la forma del sujeto | **0** |
 | muertes `code=killed, signal=TERM` en el journal, ultimos 10 dias | **2** (sep 16, sep 20) |
-| `Atlas/uvicorn` en pie | 16 h 24 min |
+| uvicorn de la carga externa en pie | 16 h 24 min |
 | `simplecode.daemon` en pie | 16 h 24 min |
 | `bb-usable` en pie | 11 h 45 min |
 
@@ -254,7 +254,7 @@ por emisor y victima (primera acumulacion de ~3 h):
     3  humano   python / pytest        -> pytest, python3
   203  humano   varios                 -> (ninguna muestra lo vio vivo)
 
-SUJETO DE DGX-438 (emisor demonio, victima ajena, atribuible y nombrada): 0
+SUJETO DE una referencia externa (emisor demonio, victima ajena, atribuible y nombrada): 0
 ```
 
 **Las 12 capturas de demonio son `rustdesk` limpiando sus propios hijos.** Y esa

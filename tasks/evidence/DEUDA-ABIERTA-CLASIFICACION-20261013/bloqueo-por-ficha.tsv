@@ -10,12 +10,12 @@ DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01	no	hardware_externo	El verificador exi
 DEBT-COBERTURA-PISO-REBAJADO-01	no	hardware_externo	`python3 -m pytest -q --runxfail tests/test_cobertura_piso.py` -> 1 failed, "assert '97.15' == '100.00'" (.coverage_watermark). El test solo lee ese archivo; su
 DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01	no	incidente_real	close_check `grep -q . tasks/evidence/DEBT-COLAPSO-05-OCT-ENJAMBRE-DE-PROCESOS-SIN-TECHO-01/quien-lanzo.txt`: el directorio no existe (ls -> no such file). La f
 DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01	no	incidente_real	close_check exige la frase suites_pytest_con_techo en tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/medicion.txt; la ficha dice 'Cierra cuando 
-DEBT-CONTRATO-ATLAS-SONDAS-DE-MEMORIA-01	no	otro_repo	el cambio vive en tools/ de Atlas (liberation_watchdog.py, dgx401_...); otro repo con sesiones propias
+DEBT-CONTRATO-[externo]-SONDAS-DE-MEMORIA-01	no	otro_repo	el cambio vive en tools/ de [externo] (liberation_watchdog.py, dgx401_...); otro repo con sesiones propias
 DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01	no	hardware_externo	close_check `grep -q . tasks/evidence/DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01/clasificacion.md` pasa con cualquier archivo no vacio (instrumento sin control negati
 DEBT-DESPLIEGUES-PENDIENTES-DE-LUIS-01	no	sudo	close_check exige despliegues_hechos en tasks/evidence/DEBT-DESPLIEGUES-PENDIENTES-DE-LUIS-01/despliegue.txt, tras `sudo cp ... /etc/systemd/system/` y `restart
 DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01	no	sudo	close_check exige recarga_probada en tasks/evidence/DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01/prueba.txt, que requiere un `systemctl daemon-reload` del ho
 DEBT-DOCKER-SLICE-TOPE-VS-TOPES-DE-CONTENEDORES-01	no	sudo	close_check exige docker_slice_dimensionado en medicion.txt, y esa linea 'se escribe tras comprobar el techo en la maquina'; medicion.txt dice 'Pendiente de Lui
-DEBT-ESTAMPIDA-DE-SYNC-DE-FLOTA-SIN-ESCALONAR-01	no	otro_repo	la regla necesita confirmacion escrita de twiner, 020 y atlas y que `simple` escalone el sync del kit; el portero que la hace cumplir espera despliegue de Luis
+DEBT-ESTAMPIDA-DE-SYNC-DE-FLOTA-SIN-ESCALONAR-01	no	otro_repo	la regla necesita confirmacion escrita de [externo], 020 y [externo] y que `simple` escalone el sync del kit; el portero que la hace cumplir espera despliegue de Luis
 DEBT-GPU-ACCOUNTING-MODE-APAGADO-01	no	reinicio	unidad construida en adopted/pendiente-de-despliegue; falta desplegarla (systemctl enable = recarga, riesgo P1) y verificar Enabled tras reiniciar
 DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01	no	decision_de_luis	close_check exige linea '^CUDA Exception: Warp' en cuda-gdb-kernel.txt, salida literal de cuda-gdb sobre un volcado real. La ficha (analisis 2026-10-13): los 28
 DEBT-MOTOR-VLLM-ATASCO-CON-32-PETICIONES-01	no	reinicio	Falta atribuir clientes (requiere registro de gateway/bb origen de un atasco que ya paso; tools/origen_proceso.py solo ve procesos vivos) y medir tope de concur
@@ -98,10 +98,10 @@ FORUM-02-GX10-READ-INTEGRITY	no	hardware_externo	tools/forum_hardware_subjects.p
 FORUM-02-PSTORE-KERNEL-REGRESSION	no	incidente_real	tools/verify_forum_pstore.py _pstore exige raw_records de pstore con hash cuyo contenido contenga FPAC/PSCI/NMI del boot_id objetivo ('raw pstore bytes lack a t
 FORUM-02-USB-UVC-EP0	no	captura_de_otro_caso	tools/forum_hardware_subjects.py _check_uvc (l.1424+): exige failing xhci_resets>0 (reproduccion del cuelgue en pila afectada, MT8901/RealSense) y corrected xhc
 FORUM-REALTEK-DRIVER-BINDING-01	no	reinicio	tools/forum_hardware_subjects.py l.879 exige casos warm_after y cold_after (warm/cold reboot A/B) mas rollback de GRUB (requiere sudo); la ficha ya registra la 
-FEATURE-ATLAS-REMEDIR-EVAL-TRAS-REINDEXADO-01	no	otro_repo	eval de Atlas con la ATOM fria (ventana de Luis) y 11 archivos sin entidad; vive en Atlas
+FEATURE-[externo]-REMEDIR-EVAL-TRAS-REINDEXADO-01	no	otro_repo	eval de [externo] con la ATOM fria (ventana de Luis) y 11 archivos sin entidad; vive en [externo]
 DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01	no	sudo	cambiar /etc/default/earlyoom exige un script sellado nuevo aprobado con el sudo de Luis (el --avoid solo resta 300 al oom_score y no cubre la lista unica)
 DEBT-EARLYOOM-MOTOR-SIGUE-ELEGIBLE-01	no	otro	el close_check devuelve 2 hasta 14 dias despues del cambio de earlyoom (2026-10-14) sin muertes del motor; no se adelanta
 DEBT-PORTERO-ADOPCION-CHOCA-CON-PIDS-QUE-SALEN-01	no	otro	su close_check exige 14 dias desde 2026-10-14 sin reinicio por COLAPSO de bb-usable con el portero adoptando suites
-DEBT-TERMICO-PREDICTIVO-SIN-DISCRIMINACION-01	no	otro_repo	el freno termico se prueba en el siguiente trabajo nocturno de Atlas (voto de Luis 2026-10-14); sin esa corrida no hay discriminacion que medir
+DEBT-TERMICO-PREDICTIVO-SIN-DISCRIMINACION-01	no	otro_repo	el freno termico se prueba en el siguiente trabajo nocturno de [externo] (voto de Luis 2026-10-14); sin esa corrida no hay discriminacion que medir
 DEBT-TEST-ESCALON-REAL-MATADO-POR-OTRO-PROCESO-01	no	otro	el emisor del SIGKILL ajeno no esta identificado; reproducirlo exige un pre-push completo con el poller de procesos durante un fallo
 DEBT-KIT-HOOK-POSTCOMMIT-LLAMA-MODULO-AUSENTE-DEL-ZIP-01	no	otro_repo	el modulo falta en el runtime.zip que empaqueta simplecode; aqui solo se re-sincroniza el kit cuando una version nueva lo traiga

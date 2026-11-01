@@ -139,7 +139,7 @@ verdad pide un cuarto colapso, que no se provoca a proposito.
 
 Tampoco dice nada de la CAUSA del colapso -- un herd de workers de
 `pytest-xdist` sin techo a nivel de maquina, que es `DEBT-DGX-438` y la
-sugerencia que llego de office2office. Este arreglo acota el DANO de un
+sugerencia que llego de otro proyecto. Este arreglo acota el DANO de un
 colapso; no evita ninguno.
 
 ## Verification Evidence

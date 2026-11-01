@@ -2,9 +2,9 @@ Inventario de propiedad de la maquina -- FEATURE-OWNEAR-EN-BB-LO-QUE-ACTUA-SOBRE
 Fecha: 2026-10-12. Metodo: solo lectura, sin sudo, sin tocar nada vivo (ls, cat, dpkg -S,
 dpkg --verify, systemctl list-timers, crontab -l). Ningun original se edito ni se movio.
 
-Regla de ubicacion (estudio bb/Atlas, decision de Luis 2026-10-12):
-  bb          = mide o actua sobre la maquina sin necesitar a Atlas
-  Atlas       = conocimiento y cola de trabajos
+Regla de ubicacion (estudio bb/[externo], decision de Luis 2026-10-12):
+  bb          = mide o actua sobre la maquina sin necesitar a [externo]
+  [externo]       = conocimiento y cola de trabajos
   pila-IA     = motores, modelos, imagenes, datos de la pila de IA (NO es de bb)
   SO-base     = paquete del SO o del fabricante (dpkg lo reclama) o instalador del SO
   otro-repo   = unidad de otro proyecto del dueno, versionada en ese proyecto
@@ -43,8 +43,8 @@ Por eso este fichero NO lleva la marca que cierra la ficha.
 2.4  ai-nemotron.service (+ .bak-pre-admission-fix) | <usuario> | lanza el motor via main.py; su ExecStartPre es el wrapper 1.4 | NO | pila-IA (bb lo vigila y reinicia por systemctl)
 2.5  ai-ollama.service | <usuario> | motor de modelos pequenos (no habilitado) | NO | pila-IA
 2.6  ai-memory-monitor.timer.bak-2026-08-28 | <usuario> | copia vieja | NO | basura de bb; no se adopta un .bak
-2.7  atlas-api.service, atlas-api.service.d/memoria-acotada.conf (MemoryMax=8G) | <usuario> | API de Atlas y su techo | NO | Atlas
-2.8  kb-nightly-investigator.{service,timer}, liberation-watchdog.{service,timer}, liberation-watchdog.timer.d/cuanto-5min.conf, overnight-judge-watchdog.{service,timer} | <usuario> | cola y consolidacion de Atlas | NO | Atlas
+2.7  [externo]-api.service, [externo]-api.service.d/memoria-acotada.conf (MemoryMax=8G) | <usuario> | API de [externo] y su techo | NO | [externo]
+2.8  kb-nightly-investigator.{service,timer}, liberation-watchdog.{service,timer}, liberation-watchdog.timer.d/cuanto-5min.conf, overnight-judge-watchdog.{service,timer} | <usuario> | cola y consolidacion de [externo] | NO | [externo]
 2.9  <proyecto-privado-1>-{fichas,guardian,monitor} (.service/.timer, 4 ficheros) | <usuario> | cadena de trabajo de otro proyecto | NO | otro-repo
 2.10 <proyecto-privado-2>-* (10 symlinks a su repo) | <usuario> | sincronizacion de otro proyecto, ya versionada alli | NO | otro-repo
 2.11 simplecode-daemon.service | <usuario> | demonio del kit simplecode | NO | otro-repo (simplecode)
@@ -92,7 +92,7 @@ Por eso este fichero NO lleva la marca que cierra la ficha.
 8.2  /etc/modprobe.d/{sbsa_gwdt,cppc_cpufreq,zz-nvidia-drm-override,nvidia-spark-r8169,nvidia-graphics-drivers-kms,disable-algif_aead,dkms,blacklist*,alsa-base,iwlwifi,mdadm}.conf | root | dpkg los reclama (nvidia-*, kmod, dkms, ...) | NO | SO-base
 8.3  /etc/udev/rules.d/70-snap.*.rules | root | snapd | NO | SO-base
 8.4  /etc/udev/rules.d/osdisk.rules | root | "Written by curtin": enlace by-dname del disco del SO (lleva el serial del disco) | NO | SO-base (instalador)
-8.5  /etc/udev/rules.d/99-nvme-disk-group.rules | root | GROUP=disk MODE=0640 en nvme*n* (2026-08-31). Sin paquete; ningun repo revisado (bb, Atlas tools/docs, simplecode src) lo cita | NO | SO-base, ORIGEN SIN ATRIBUIR (endurece permisos de disco; no mide ni actua sobre cuelgue/memoria)
+8.5  /etc/udev/rules.d/99-nvme-disk-group.rules | root | GROUP=disk MODE=0640 en nvme*n* (2026-08-31). Sin paquete; ningun repo revisado (bb, [externo] tools/docs, simplecode src) lo cita | NO | SO-base, ORIGEN SIN ATRIBUIR (endurece permisos de disco; no mide ni actua sobre cuelgue/memoria)
 
 == 9. cron y timers ====================================================================
 9.1  timers de usuario de bb (blackbox-sample, blackbox-drift, ai-memory-monitor, ai-nemotron-vigilante, atom-crash-detector, bb-reboot-verdict) | -- | -- | YA | bb

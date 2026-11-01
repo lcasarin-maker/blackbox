@@ -208,7 +208,7 @@ Así que el remedio que esta ficha imagina — elegir una víctima y matarla —
 no ser alcanzable aquí. Ningún proceso es el culpable; el culpable es cuántos hay.
 
 Lo que sí apunta a algo es un techo **agregado** sobre el herd, que es
-`DEBT-TECHOS-SIN-CALIBRAR` y es también lo que la sesión office2office sugirió por
+`DEBT-TECHOS-SIN-CALIBRAR` y es también lo que la sesion de otro proyecto sugirió por
 su cuenta el mismo día. Dos caminos independientes al mismo sitio.
 
 **Esto no cierra la ficha**, porque «no alcanzable» es una conclusión con

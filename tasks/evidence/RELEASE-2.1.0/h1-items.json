@@ -1,21 +1,21 @@
 [
   {
     "id": "SPEC-L94",
-    "section": "Contrato con Atlas",
-    "text": "Atlas no importa codigo de blackbox, ni al reves. Consume su salida:",
+    "section": "Contrato con [externo]",
+    "text": "[externo] no importa codigo de blackbox, ni al reves. Consume su salida:",
     "why": "changed: tools/atom_gpu_telemetry.py",
     "cited": []
   },
   {
     "id": "SPEC-L98",
-    "section": "Contrato con Atlas",
+    "section": "Contrato con [externo]",
     "text": "Lo que decide sobre el hardware vive aqui, aunque su salida acabe en la",
     "why": "changed: enable-privileged.sh",
     "cited": []
   },
   {
     "id": "SPEC-L110",
-    "section": "Contrato con Atlas",
+    "section": "Contrato con [externo]",
     "text": "Ninguna pieza fisica depende de que alguien inicie sesion. Es lo que",
     "why": "changed: enable-privileged.sh",
     "cited": []
@@ -23,7 +23,7 @@
   {
     "id": "SPEC-L269",
     "section": "Risks",
-    "text": "Un instrumento deja de escribir en silencio | Alta | `bb status` mira la antigüedad de los datos sólo donde hay un artefacto que revisar (sar, memory-monitor, telemetría térmica de este repo: \"por sus datos, no por la unit\" — y el 2026-09-25 ese mismo chequeo se midió mintiendo al revés, declarando FALTA sobre un instrumento activo porque leía la ruta que Atlas ya había borrado); los cuatro que quedaban leyendo `systemctl is-active` se cerraron —tres el 2026-09-25, el de bb-usable el 2026-09-28— y ahora leen también su artefacto: la muestra más fresca del día, la confirmación que el driver imprimió al aplicar el clock lock contrastada con los argumentos que la unit declara, las dos regex de puntería que earlyoom imprimió al arrancar, y el latido que el bucle de `bin/bb-usable` imprime en cada vuelta de 30 s (\"latencia del escritorio\"), exigido dentro de los últimos 120 s (`bin/bb`, `journalctl -S`). Los cuatro pueden ahora salir mal por el motivo que vigilan, con cinco controles negativos corridos de los tres originales en `tests/test_bb_bash.py` -- `test_control_negativo_sin_muestra_fresca_el_muestreo_esta_FALTA`, `test_control_negativo_clock_lock_con_OTRO_rango_que_el_declarado`, `test_control_negativo_clock_lock_sin_confirmacion_del_driver`, `test_control_negativo_earlyoom_de_serie_no_cuenta_como_armado`, `test_control_negativo_earlyoom_con_UNA_sola_regex_no_basta` (citados por nombre, no por línea, porque el fichero se mueve con cada test que se añade -- la cifra de \"cuatro\" venía mal desde el commit `37ccd7d`, corregida el 2026-09-28) -- más tres del latido de bb-usable (rancio, journal vacío, sólo la línea de arranque). Queda declarado lo que sigue sin comprobarse: que el contenido sea correcto, no sólo fresco",
+    "text": "Un instrumento deja de escribir en silencio | Alta | `bb status` mira la antigüedad de los datos sólo donde hay un artefacto que revisar (sar, memory-monitor, telemetría térmica de este repo: \"por sus datos, no por la unit\" — y el 2026-09-25 ese mismo chequeo se midió mintiendo al revés, declarando FALTA sobre un instrumento activo porque leía la ruta que [externo] ya había borrado); los cuatro que quedaban leyendo `systemctl is-active` se cerraron —tres el 2026-09-25, el de bb-usable el 2026-09-28— y ahora leen también su artefacto: la muestra más fresca del día, la confirmación que el driver imprimió al aplicar el clock lock contrastada con los argumentos que la unit declara, las dos regex de puntería que earlyoom imprimió al arrancar, y el latido que el bucle de `bin/bb-usable` imprime en cada vuelta de 30 s (\"latencia del escritorio\"), exigido dentro de los últimos 120 s (`bin/bb`, `journalctl -S`). Los cuatro pueden ahora salir mal por el motivo que vigilan, con cinco controles negativos corridos de los tres originales en `tests/test_bb_bash.py` -- `test_control_negativo_sin_muestra_fresca_el_muestreo_esta_FALTA`, `test_control_negativo_clock_lock_con_OTRO_rango_que_el_declarado`, `test_control_negativo_clock_lock_sin_confirmacion_del_driver`, `test_control_negativo_earlyoom_de_serie_no_cuenta_como_armado`, `test_control_negativo_earlyoom_con_UNA_sola_regex_no_basta` (citados por nombre, no por línea, porque el fichero se mueve con cada test que se añade -- la cifra de \"cuatro\" venía mal desde el commit `37ccd7d`, corregida el 2026-09-28) -- más tres del latido de bb-usable (rancio, journal vacío, sólo la línea de arranque). Queda declarado lo que sigue sin comprobarse: que el contenido sea correcto, no sólo fresco",
     "why": "changed: tests/test_bb_bash.py",
     "cited": [
       "tests/test_bb_bash.py"
@@ -43,7 +43,7 @@
   {
     "id": "SPEC-L271",
     "section": "Risks",
-    "text": "El propio muestreo compite por la memoria unificada | Media | La adquisición de muestras lee `/proc`, sysfs, el journal, `nvidia-smi` y endpoints existentes. El muestreador térmico también escribe telemetría, persiste su estado y puede pausar y reanudar procesos mediante `SIGSTOP`/`SIGCONT` bajo sus condiciones de alarma y carga; `Nice=19` e `IOSchedulingClass=idle` en los dos muestreadores que blackbox escribe y gobierna (`blackbox-sample`, `atom-gpu-telemetry` -- corregido el 2026-09-28, corría en `Nice=10`, ver `adopted/systemd-user/atom-gpu-telemetry.service`; ambos confirmados en vivo con `systemctl --user show ... -p Nice`). La auditoría H1 del 2026-09-28 encontró que la fila decía \"los tres\" sin nombrar un tercero: `ai-memory-monitor` (activo, cada 5 min, `Nice=0`) y `ai-gpu-telemetry` (deshabilitado, `Nice=10`) también muestrean, pero son instrumentos adoptados de `/srv/ai/gpu_governance/`, no escritos ni gobernados por blackbox -- misma frontera que Atlas: se les hace custodia de deriva, no se les impone la convención de prioridad de blackbox. `bb-guardia-proceso` queda fuera a propósito: no muestrea, sólo lee lo que ya existe (y escribe su propio `guardia_proceso.jsonl`), y corre a `Nice=10` (no 19, corregido el 2026-09-28 tras la verificación H1: \"prioridad normal\" era impreciso) -- más alto que los DOS muestreadores de blackbox (`Nice=19`), pero no que `ai-memory-monitor` (`Nice=0`, la auditoría H1 del 2026-09-28 encontró la frase anterior contradiciendo la fila que la precede) -- para poder actuar bajo presión de memoria en vez de esperar su turno",
+    "text": "El propio muestreo compite por la memoria unificada | Media | La adquisición de muestras lee `/proc`, sysfs, el journal, `nvidia-smi` y endpoints existentes. El muestreador térmico también escribe telemetría, persiste su estado y puede pausar y reanudar procesos mediante `SIGSTOP`/`SIGCONT` bajo sus condiciones de alarma y carga; `Nice=19` e `IOSchedulingClass=idle` en los dos muestreadores que blackbox escribe y gobierna (`blackbox-sample`, `atom-gpu-telemetry` -- corregido el 2026-09-28, corría en `Nice=10`, ver `adopted/systemd-user/atom-gpu-telemetry.service`; ambos confirmados en vivo con `systemctl --user show ... -p Nice`). La auditoría H1 del 2026-09-28 encontró que la fila decía \"los tres\" sin nombrar un tercero: `ai-memory-monitor` (activo, cada 5 min, `Nice=0`) y `ai-gpu-telemetry` (deshabilitado, `Nice=10`) también muestrean, pero son instrumentos adoptados de `/srv/ai/gpu_governance/`, no escritos ni gobernados por blackbox -- misma frontera que [externo]: se les hace custodia de deriva, no se les impone la convención de prioridad de blackbox. `bb-guardia-proceso` queda fuera a propósito: no muestrea, sólo lee lo que ya existe (y escribe su propio `guardia_proceso.jsonl`), y corre a `Nice=10` (no 19, corregido el 2026-09-28 tras la verificación H1: \"prioridad normal\" era impreciso) -- más alto que los DOS muestreadores de blackbox (`Nice=19`), pero no que `ai-memory-monitor` (`Nice=0`, la auditoría H1 del 2026-09-28 encontró la frase anterior contradiciendo la fila que la precede) -- para poder actuar bajo presión de memoria en vez de esperar su turno",
     "why": "claim text changed",
     "cited": []
   },

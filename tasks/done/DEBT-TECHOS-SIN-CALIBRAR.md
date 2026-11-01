@@ -28,7 +28,7 @@ No es que los numeros sean flojos: es que **no caben**. Medido hoy en ATOM,
 | `app.slice` `MemoryMax` | 48G | criterio, "holgado sobre el uso observado" |
 | `app.slice` `MemorySwapMax` | 4G | criterio |
 | `nemotron-server --memory` | 75G | preexistente, no de este repo |
-| `atlas-pgvector --memory` | 2G | preexistente |
+| pgvector externo | 2G | preexistente |
 | **suma** | **125G** | **contra 121.1 GiB de maquina** |
 
 Y eso ignorando los tres contenedores sin techo, el resto de `system.slice`
@@ -100,7 +100,7 @@ El pico de 85.4 GiB del 2026-09-21T00:33, abierto:
    4815 MiB =  4.7 GiB   cov-solo.scope
    4631 MiB =  4.5 GiB   cov-solo.scope
    4587 MiB =  4.5 GiB   cov-solo.scope           <- OCHO, 48 GiB entre todos
-   4522 MiB =  4.4 GiB   atlas-api.service
+   4522 MiB =  4.4 GiB   servicio externo
   mem_avail en esa muestra: 0.2 GB   load1: 18.38
 ```
 
@@ -171,7 +171,7 @@ Se abrio el pico del 2026-09-21T00:33 y los ocho procesos tienen nombre:
  5703 MiB  pid 3540464  test_scjn_delta_refresh_service.py::...
  5431 MiB  pid 3540544  [pytest-xdist idle]
  5273 MiB  pid 3540467  test_ingestion_router_complementary_merge.py::...
- 4817 MiB  pid 3540498  test_debt_canibal_atlas_hyde.py::...
+ 4817 MiB  pid 3540498  una prueba de la carga externa
  4631 MiB  pid 3540444  test_tfja_jurisprudence.py::...
 ```
 
@@ -322,7 +322,7 @@ el tope correcto, y esta ficha existe para que esa afirmacion no se cuele.
 
 ### Una firma reconocible del abanico, aportada de fuera (2026-09-27)
 
-La sesion `office2office` analizo por su cuenta el kernel panic del 2026-09-26 y
+La sesion otro proyecto analizo por su cuenta el kernel panic del 2026-09-26 y
 aporto un dato que aqui no estaba: el herd deja una **firma de PIDs
 consecutivos**. En el journal del arranque muerto, ~20 tareas `python` con PIDs
 de 3047709 a 3047812 mas un `bash`, todas bloqueadas mas de 123 s.
