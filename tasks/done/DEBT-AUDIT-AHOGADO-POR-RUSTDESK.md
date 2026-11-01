@@ -51,7 +51,7 @@ eventos de syscall y 4724 eran `loginctl`. El resto del dia entero: 12632
 
 **El anillo se encoge.** Los 5 x 8 MiB cubrian 248 min al medir. Mientras el
 hijo `--server` vive, a 18 KiB/s, el mismo anillo cubre **37 min**. Eso es lo
-que convierte esto de molestia en defecto: DEBT-DGX-438 necesita cazar un
+que convierte esto de molestia en defecto: la ficha de SIGTERM sin causa raiz necesita cazar un
 SIGTERM que llega cada 10-15 min, y con 37 min de retencion la captura
 envejece antes de que nadie la lea.
 
@@ -122,7 +122,7 @@ El 99.8 % del registro de auditoria y la retencion cayendo de 248 min a 37 min.
 Eso lo tapo la regla `auid=unset` de `enable-privileged.sh` seccion 7, y esta
 medido: **0 execve de loginctl con auid=unset en los ultimos 60 s**, frente a
 los ~114 a 876 que caian antes en esa misma ventana. Era la condicion para que
-DGX-438 pudiera cazar algo, y se cumplio.
+la ficha de SIGTERM sin causa raiz pudiera cazar algo, y se cumplio.
 
 ## Regression Test
 

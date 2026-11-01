@@ -128,7 +128,7 @@ explicarse. Se cambio antes de publicarla.
 
 Lo que se pierde diciendolo: este criterio depende de que alguien escriba, no
 de una medida automatica. Esa es su debilidad y esta aqui a proposito, igual
-que en DGX-438 -- porque la alternativa mecanica exige que la maquina vuelva a
+que en la ficha de SIGTERM sin causa raiz -- porque la alternativa mecanica exige que la maquina vuelva a
 ponerse lenta, y un gate no puede provocar eso. La caducidad de la linea base
 es lo que impide que envejezca callada.
 
