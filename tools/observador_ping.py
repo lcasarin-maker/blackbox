@@ -4,7 +4,8 @@
 Una lectura por ejecucion (la repeticion de 1 s es de `systemd/bb-observador-ping.timer`, sin bucles ni `sleep`): un ping a la ATOM
 desde OTRO equipo, con una fila en `$BLACKBOX_DATA/externo/ping.jsonl`. Un ping que corre en la ATOM muere con ella y no prueba nada.
 Aporta la hora de la ULTIMA respuesta de la maquina con precision de ~1 s, independiente del journal (que se corta sin cierre), y separa
-"la maquina murio" de "el journal calla pero la red responde". `ultima_respuesta` la lee quien cruce el hueco de un corte.
+"la maquina murio" de "el journal calla pero la red responde". `ultima_respuesta` y `primera_falla` las lee `reboot_verdict`
+al cruzar el hueco de un corte: entre las dos queda acotada la hora en que la ATOM dejo de responder.
 Configuracion: `$BLACKBOX_DATA/externo/observador.json` = {"destino": "<ip o nombre de la ATOM>"}.
 
 Variante NAS (`--sync`): el observador es `adopted/nas/bb-ping-atom.sh` en el QNAP (una linea `<epoch> ok|fail` por segundo). `sync` TRAE ese
@@ -73,6 +74,24 @@ def ultima_respuesta(ruta: Path, hasta: float) -> float | None:
             continue
         if isinstance(f, dict) and f.get("ok") is True and isinstance(f.get("epoch"), (int, float)) and f["epoch"] <= hasta:
             mejor = max(mejor or 0.0, float(f["epoch"]))
+    return mejor
+
+
+def primera_falla(ruta: Path, desde: float, hasta: float) -> float | None:
+    """Epoch de la primera fila con `ok` false en (desde, hasta]; None si no hay ninguna. Es la prueba de que el observador
+    seguia vivo despues de `desde`: sin ella, la ausencia de respuestas es ausencia de filas, no un corte medido."""
+    try:
+        lineas = ruta.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    mejor: float | None = None
+    for ln in lineas:
+        try:
+            f = json.loads(ln)
+        except ValueError:
+            continue
+        if isinstance(f, dict) and f.get("ok") is False and isinstance(f.get("epoch"), (int, float)) and desde < f["epoch"] <= hasta:
+            mejor = float(f["epoch"]) if mejor is None else min(mejor, float(f["epoch"]))
     return mejor
 
 
