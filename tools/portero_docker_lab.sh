@@ -10,7 +10,7 @@
 #
 # POR QUE UN SEGUNDO DAEMON Y NO EL DE PRODUCCION. El dockerd de produccion
 # (pid de /run/docker.pid, socket /var/run/docker.sock) sirve nemotron-server,
-# atlas-pgvector, librechat, mongo-librechat y proyecto-A-pg a otras sesiones.
+# proyecto-B-pg, librechat, mongo-librechat y proyecto-A-pg a otras sesiones.
 # Cambiarle el runtime exige reiniciarlo. Aqui todo es propio: socket, data-root,
 # exec-root, pidfile, daemon.json, containerd (con su socket, root y state), el
 # namespace de containerd y el slice de cgroup.
@@ -183,7 +183,7 @@ cmd_up() {
         >"$RUN_DIR/dockerd.log" 2>&1 &
     espera_socket "$LAB_SOCK" "$RUN_DIR/dockerd.log"
     # GUARDA: el laboratorio NO puede tocar el puente de produccion (2026-10-12 07:55:30: `--bridge=none` borro docker0 del host y
-    # atlas-pgvector quedo sin red 5 h hasta que Luis reinicio Docker a las 13:16). Si docker0 existia antes de `up` y ya no, se aborta.
+    # proyecto-B-pg quedo sin red 5 h hasta que Luis reinicio Docker a las 13:16). Si docker0 existia antes de `up` y ya no, se aborta.
     if [ "$DOCKER0_ANTES" = 1 ] && ! ip link show docker0 >/dev/null 2>&1; then
         log "ERROR: docker0 de PRODUCCION desaparecio al arrancar el laboratorio; apagando el laboratorio"
         kill -TERM "$(cat "$PIDFILE")" 2>/dev/null || true

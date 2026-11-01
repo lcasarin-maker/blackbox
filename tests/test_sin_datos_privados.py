@@ -1,6 +1,6 @@
 """Guarda del repo publico: ningun archivo versionado gana datos de la maquina ni de proyectos privados.
 
-Medido el 2026-10-11 (analisis bb/Atlas): el arbol ya publicaba MACs, IPs de LAN, el hostname y nombres de
+Medido el 2026-10-11 (analisis de la frontera entre bb y su consumidor): el arbol ya publicaba MACs, IPs de LAN, el hostname y nombres de
 proyectos privados dentro de evidencias historicas. Esas evidencias llevan hashes de procedencia y NO se
 reescriben; quedan en `datos_privados_baseline.json` con su cuenta. La guarda falla si un archivo nuevo
 contiene estos datos o si uno de la lista sube su cuenta. La lista solo puede encogerse.

@@ -241,7 +241,7 @@ class Estado:
     tope_app_kb: int | None
     uso_app_kb: int | None
     alternos: tuple[SliceAlterno, ...] = ()
-    consumo_con_tope_propio_kb: int = 0  # memory.current de los scopes de app.slice con tope propio (jobs de Atlas, bb cap)
+    consumo_con_tope_propio_kb: int = 0  # memory.current de los scopes de app.slice con tope propio (cargas externas, bb cap)
     admision: str = "off"  # interruptor `portero_admision`
     no_recuperable_app_kb: int | None = None  # anon + shmem de app.slice (memory.stat); None = NOT_COLLECTED
 
@@ -328,19 +328,52 @@ def en_app_slice(cgroup: str) -> bool:
     return "/app.slice/" in cgroup and "/user@" in cgroup
 
 
-# Exclusion explicita (regla del coordinador, 2026-10-12, por choque confirmado con la cola de Atlas): cada job de
-# Atlas corre en su propio `systemd-run --scope` con MemoryMax (`liberation_job.scope` y variantes). Moverlo lo
-# sacaria de ese tope. Docker no se cerca: crea su propio cgroup y queda fuera de app.slice.
-EXCLUIDOS_CGROUP = re.compile(r"/(liberation_job[^/]*\.scope|docker[^/]*\.scope|bb-cap-[^/]*\.scope)(/|$)")
-EXCLUIDOS_ANCESTRO = ("liberation_watchdog",)
+# Exclusion explicita (regla del coordinador, 2026-10-12, por choque confirmado con la cola de un consumidor): cada
+# job de una carga externa corre en su propio `systemd-run --scope` con MemoryMax; moverlo lo sacaria de ese tope.
+# Los nombres de esas cargas son DATO (`data/cargas_externas.json`), no codigo: bb no nombra a sus consumidores.
+# Docker no se cerca: crea su propio cgroup y queda fuera de app.slice. `bb cap` es propio.
+CARGAS_EXTERNAS_RUTA = Path(__file__).resolve().parent.parent / "data" / "cargas_externas.json"
+EXCLUIDOS_CGROUP_PROPIOS = (r"docker[^/]*\.scope", r"bb-cap-[^/]*\.scope")
+CONTENEDORES_EXCLUIDOS_PROPIOS = ("nemotron-server",)  # ya tiene tope propio (regla del coordinador)
+
+
+@dataclass(frozen=True)
+class CargasExternas:
+    cgroup: re.Pattern[str]
+    ancestros: tuple[str, ...]
+    contenedores: tuple[str, ...]
+    error: str | None  # None = leido; si no, por que el portero no actua (fallo cerrado)
+
+
+def cargar_cargas_externas(ruta: Path = CARGAS_EXTERNAS_RUTA) -> CargasExternas:
+    """Exclusiones de `data/cargas_externas.json` mas las propias de bb. Nunca lanza: con el archivo ausente o
+    mal formado devuelve solo las propias y `error` poblado, y `excluido` lo convierte en 'no actua'."""
+    try:
+        d = json.loads(ruta.read_text(encoding="utf-8"))
+        if not isinstance(d, dict) or d.get("esquema") != "bb-cargas-externas/1":
+            raise ValueError("esquema distinto de bb-cargas-externas/1")
+        listas = {k: d[k] for k in ("cgroups_excluidos", "ancestros_excluidos", "contenedores_excluidos")}
+        if not all(isinstance(v, list) and all(isinstance(x, str) and x for x in v) for v in listas.values()):
+            raise ValueError("listas mal formadas")
+        patrones = (*EXCLUIDOS_CGROUP_PROPIOS, *listas["cgroups_excluidos"])
+        return CargasExternas(re.compile(r"/(" + "|".join(patrones) + r")(/|$)"), tuple(listas["ancestros_excluidos"]),
+                              (*CONTENEDORES_EXCLUIDOS_PROPIOS, *listas["contenedores_excluidos"]), None)
+    except (OSError, ValueError, KeyError, re.error) as e:
+        return CargasExternas(re.compile(r"/(" + "|".join(EXCLUIDOS_CGROUP_PROPIOS) + r")(/|$)"), (),
+                              CONTENEDORES_EXCLUIDOS_PROPIOS, f"{ruta.name}: {e}")
+
+
+CARGAS_EXTERNAS = cargar_cargas_externas()
 
 
 def excluido(a: "Arbol", c: "Clase") -> str:
     """Motivo por el que el portero NO toca este arbol aunque sea pesado; '' si es candidato."""
-    if EXCLUIDOS_CGROUP.search(a.cgroup):
+    if CARGAS_EXTERNAS.error:
+        return f"no actua: exclusiones de cargas externas ilegibles ({CARGAS_EXTERNAS.error})"
+    if CARGAS_EXTERNAS.cgroup.search(a.cgroup):
         return f"excluido: cgroup con dueno propio ({a.cgroup})"
-    if any(x in linea for linea in a.ancestros for x in EXCLUIDOS_ANCESTRO):
-        return "excluido: ancestro del watchdog de Atlas"
+    if any(x in linea for linea in a.ancestros for x in CARGAS_EXTERNAS.ancestros):
+        return "excluido: ancestro de una carga externa declarada"
     if a.tope_propio_kb is not None and a.tope_propio_kb <= c.memory_max_kb:
         return f"no actua: ya tiene tope propio (memory.max {a.tope_propio_kb} kB <= {c.memory_max_kb} kB de la clase)"
     return ""
@@ -560,7 +593,7 @@ def tope_propio_kb(cg: str, cg_raiz: Path = CGROUP_RAIZ) -> int | None:
 
 def consumo_con_tope_propio_kb(app: Path) -> int | None:
     """Suma de memory.current de los cgroups de app.slice con memory.max finito (el mas alto de cada rama), sin los
-    scopes del portero. Es lo que ya esta comprometido fuera de su cola: jobs de Atlas, `bb cap`. None si no se lee."""
+    scopes del portero. Es lo que ya esta comprometido fuera de su cola: cargas externas, `bb cap`. None si no se lee."""
     total = 0
     try:
         pila = [d for d in app.iterdir() if d.is_dir()]
@@ -585,7 +618,7 @@ def freno_termico() -> str | None:
     """'' si admite carga; el motivo si frena; None si no se sabe (archivo ausente, viejo o `desconocido`).
 
     Consulta lo mismo que `atom_gpu_telemetry.py --gate-termico` (una sola fuente para los umbrales), pero separa
-    'no se sabe' de 'frena': el gate de Atlas bloquea ante la duda; el portero, ante la duda, no actua.
+    'no se sabe' de 'frena': el gate del consumidor bloquea ante la duda; el portero, ante la duda, no actua.
     """
     # Como modulo (`tools.`) o como script de `bb portero` (tools/ en sys.path).
     for modulo in ("tools.atom_gpu_telemetry", "atom_gpu_telemetry"):
@@ -1198,7 +1231,6 @@ def aplica(
 # debajo de su propio pico, no se acota (lo mataria) y se registra. No lo corre el demonio por defecto: solo
 # `bb portero contenedores --aplicar` (o `demonio --contenedores`), porque es una politica sobre servicios.
 
-CONTENEDORES_EXCLUIDOS = ("nemotron-server", "atlas-pgvector")  # ya tienen tope propio (regla del coordinador)
 
 
 @dataclass(frozen=True)
@@ -1215,7 +1247,11 @@ def decide_contenedores(conts: list[Contenedor] | None, tope_slice_kb: int | Non
     acciones = []
     estrictos = sum(c.tope_kb for c in conts if c.tope_kb is not None and c.tope_kb < tope_slice_kb)
     for c in conts:
-        if c.nombre in CONTENEDORES_EXCLUIDOS or c.tope_kb is not None:
+        if CARGAS_EXTERNAS.error:
+            acciones.append(Accion("no_actua", f"exclusiones de cargas externas ilegibles ({CARGAS_EXTERNAS.error})",
+                                   objetivo=c.nombre))
+            continue
+        if c.nombre in CARGAS_EXTERNAS.contenedores or c.tope_kb is not None:
             acciones.append(Accion("no_actua", f"ya tiene tope propio ({c.tope_kb} kB) o esta excluido", objetivo=c.nombre))
             continue
         # Los demas cuyo tope no es mas estricto que el slice (sin tope, o con uno mayor, como nemotron-server): su pico

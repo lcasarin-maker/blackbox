@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
-"""Hallazgo `bb-hallazgo/1`: la unica forma en que blackbox deja conocimiento para Atlas.
+"""Hallazgo `bb-hallazgo/2`: la unica forma en que blackbox deja conocimiento para quien lo consume.
 
-Relacion de INFORMACION, no de codigo (SPEC.md, "Contrato con Atlas", enmienda del 2026-10-11):
-blackbox publica un archivo en su propia bandeja (`$BLACKBOX_DATA/hallazgos/`) y Atlas lo recoge con
-su flujo. blackbox nunca escribe dentro del repo de Atlas: sus tests exigen que cada dictamen de
-`docs/agent_findings/` este indexado, y un hallazgo por reinicio meteria corpus sin que Atlas lo decida.
+Relacion de INFORMACION, no de codigo (SPEC.md, "Contrato con el consumidor de conocimiento"): blackbox
+publica un archivo en su propia bandeja (`$BLACKBOX_DATA/hallazgos/`) y el consumidor lo recoge con su
+flujo. blackbox nunca escribe dentro del repo de otro: un hallazgo por reinicio meteria corpus ajeno sin
+que su dueno lo decida.
 
-El cuerpo reusa los dos encabezados LITERALES del contrato de hallazgos de Atlas
-(`tools/kb_investigator.py`, REQUIRED_SOURCES_HEADING y REQUIRED_INFERENCE_HEADING) y exige una cita a
-un archivo, para que Atlas lo valide con su propio `_contract_violations`. Aqui se copian como constantes
-de instrumento; si Atlas los cambia, `test_hallazgo_cumple_el_contrato_de_atlas` lo avisa (se omite si
-Atlas no esta).
+El cuerpo lleva dos encabezados LITERALES (`H_FUENTES`, `H_INFERENCIA`) y exige una cita a un archivo: es
+el contrato de hallazgos que el consumidor valida con su propio validador. Aqui son constantes de
+instrumento, y el fixture DORADO `tests/fixtures/contrato/bb_hallazgo_2.md` (mismo sha256 en los dos
+repos) fija la forma entera, byte a byte.
+
+`/2` es `/1` con la lista de referencias en `refs` en vez de la clave que nombraba al consumidor (boleta
+#18 A, 2026-11-01). Se emite `/2` porque el consumidor ya acepta las dos versiones.
 
 Frontmatter: todo valor de texto va ENTRE COMILLAS. Sin comillas YAML lo convierte en fecha o entero y
-rompe la serializacion JSON del indice de Atlas (medido el 2026-10-11: 1276 fechas sin citar en el primer
-envio de un paquete).
+rompe la serializacion JSON del indice del consumidor (medido el 2026-10-11: 1276 fechas sin citar en el
+primer envio de un paquete).
 """
 
 from __future__ import annotations
@@ -27,7 +29,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
-ESQUEMA = "bb-hallazgo/1"
+ESQUEMA = "bb-hallazgo/2"
 H_FUENTES = "## Lo que dicen las fuentes"
 H_INFERENCIA = "## Conexión nueva (inferencia de este agente)"
 TIPOS = {"corte_abrupto", "reinicio", "medicion", "firma_nueva", "mitigacion_probada"}
@@ -42,7 +44,7 @@ CLAVES = (
     "confianza",
     "nodo",
     "datos",
-    "atlas_refs",
+    "refs",
 )
 CITA_ARCHIVO = re.compile(r"[\w/._-]+\.(md|json|py|pdf|jsonl|txt)")
 ID_VALIDO = re.compile(r"^bb-[0-9]{4}-[0-9]{2}-[0-9]{2}-[a-z0-9-]{1,60}$")
@@ -59,7 +61,7 @@ def _leer_machine_id(ruta: str) -> str:
 
 def nodo_anonimo(leer: Callable[[str], str] | None = None) -> str:
     """Identificador estable del nodo sin hostname ni serie: hash del machine-id. Lo comparten el reporte
-    por incidente y el hallazgo, para que Atlas pueda cruzarlos."""
+    por incidente y el hallazgo, para que el consumidor pueda cruzarlos."""
     mid = (leer or _leer_machine_id)("/etc/machine-id")
     if mid in ("UNSUPPORTED", "COLLECTION_FAILED"):
         return "COLLECTION_FAILED"
@@ -86,7 +88,7 @@ class Hallazgo:
     por: str
     nodo: str
     datos: str
-    atlas_refs: tuple[str, ...]
+    refs: tuple[str, ...]
     fuentes: str
     inferencia: str
 
@@ -103,7 +105,7 @@ def construye(h: Hallazgo) -> str:
         f"confianza: {_q(h.confianza)}",
         f"nodo: {_q(h.nodo)}",
         f"datos: {_q(h.datos)}",
-        "atlas_refs: [" + ", ".join(_q(r) for r in h.atlas_refs) + "]",
+        "refs: [" + ", ".join(_q(r) for r in h.refs) + "]",
         "---",
         "",
     ]
@@ -143,7 +145,7 @@ def valida(texto: str) -> list[str]:
     faltas += [
         f"'{k}' sin comillas"
         for k, v in fm.items()
-        if k != "atlas_refs" and not (v.startswith('"') and v.endswith('"'))
+        if k != "refs" and not (v.startswith('"') and v.endswith('"'))
     ]
     if _v(fm, "esquema") not in (None, ESQUEMA):
         faltas.append(f"esquema distinto de {ESQUEMA}")
@@ -221,7 +223,7 @@ def desde_veredicto(
             por="bb reboots",
             nodo=nodo,
             datos=datos,
-            atlas_refs=(
+            refs=(
                 "knowledge/investigations/gb10_cortes_2026-10-11/00_INDICE.md",
             ),
             fuentes="\n".join(fuentes),

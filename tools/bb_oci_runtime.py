@@ -36,7 +36,7 @@ intacto al runtime real y lo registra (`NO_ACTUAR` con `NOT_COLLECTED` o
 `UNSUPPORTED`). Nunca bloquea un contenedor por una averia suya: solo rechaza
 por politica (GPU sin reclamo, reclamo ilegible, suma desbordada).
 
-Sin imports de Atlas: solo stdlib.
+Sin imports de otros repos: solo stdlib.
 """
 
 from __future__ import annotations
@@ -56,7 +56,7 @@ GIB = 1024**3
 # Origen, medido 2026-10-12 en /sys/fs/cgroup/docker.slice/docker-<id>.scope:
 #   general: 3 GiB = el mayor tope aplicado en vivo ese dia (librechat, 4x su
 #     pico de 753 MiB); los picos de los demas contenedores sin GPU fueron
-#     atlas-pgvector 1.34 GiB, proyecto-A-pg 419 MiB, mongo-librechat 408 MiB.
+#     proyecto-B-pg 1.34 GiB, proyecto-A-pg 419 MiB, mongo-librechat 408 MiB.
 #     pids 2048 = el valor aplicado en vivo; el mayor pids.peak fue 71 (mongo).
 #   gpu: 14 GiB = MemoryMax de docker.slice (15032385536; 16 GiB votado el 2026-10-13 y pendiente de desplegar), el padre que ya acota
 #     a todo contenedor de produccion: un tope por encima no compraria nada.

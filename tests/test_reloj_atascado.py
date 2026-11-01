@@ -561,11 +561,11 @@ def test_inicio_episodio_main_arranque_recorre_la_telemetria_aunque_salga_sano(m
 
 # --- DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01: con ocupantes la carga corre y se juzga por reloj ---
 MOTOR = [{"pid": 100762, "nombre": "VLLM::EngineCor", "mib": 30953}]
-ATLAS = [{"pid": 3382, "nombre": "python3", "mib": 4522}]
+CONSUMIDOR = [{"pid": 3382, "nombre": "python3", "mib": 4522}]
 
 
 def test_motor_a_gpu_ocupada_y_reloj_sano_es_sano_con_tflops_no_valido(monkeypatch: pytest.MonkeyPatch) -> None:
-    n_sync = _prepara_prueba(monkeypatch, "2080, 67.0, 96, 0x0000000000000000", ocupantes=[ATLAS, ATLAS + MOTOR])
+    n_sync = _prepara_prueba(monkeypatch, "2080, 67.0, 96, 0x0000000000000000", ocupantes=[CONSUMIDOR, CONSUMIDOR + MOTOR])
     v = r.prueba(segundos=15)
     assert 0 < v["tflops"] < r.UMBRAL_TFLOPS  # los TFLOP/s del falso estan bajo el umbral: el segundo eje los veria bajos...
     assert v["estado"] == "SANO" and v["reloj_mediano_mhz"] == 2080.0 and v["tflops_valido"] is False  # ...y no se aplica
@@ -574,8 +574,8 @@ def test_motor_a_gpu_ocupada_y_reloj_sano_es_sano_con_tflops_no_valido(monkeypat
 
 
 def test_motor_b_gpu_ocupada_y_reloj_atascado_es_atascado(monkeypatch: pytest.MonkeyPatch) -> None:
-    # la firma medida el 2026-10-12 (663 MHz, 16 W, util alta, cero throttle) con el motor y Atlas en la GPU: hoy imposible
-    _prepara_prueba(monkeypatch, "663, 16.0, 97, 0x0000000000000000", ocupantes=[ATLAS + MOTOR, ATLAS + MOTOR])
+    # la firma medida el 2026-10-12 (663 MHz, 16 W, util alta, cero throttle) con el motor y el consumidor en la GPU: hoy imposible
+    _prepara_prueba(monkeypatch, "663, 16.0, 97, 0x0000000000000000", ocupantes=[CONSUMIDOR + MOTOR, CONSUMIDOR + MOTOR])
     v = r.prueba(segundos=15)
     assert v["estado"] == "ATASCADO" and v["reloj_mediano_mhz"] == 663.0 and v["potencia_mediana_w"] == 16.0
     assert v["sin_throttle"] is True and v["tflops_valido"] is False
@@ -664,9 +664,9 @@ def test_motor_la_fila_de_arranque_registra_ocupantes_y_tflops_valido(monkeypatc
     # la fila real del 2026-10-27T02:04:46Z (boot 56a1942a) no pasa el close_check: control negativo de la condicion
     real = tmp_path / "real" / "reloj_arranque.jsonl"
     real.parent.mkdir()
-    real.write_text(json.dumps({"ts": "2026-10-27T02:04:46.825766+00:00", "estado": "INDETERMINADO", "motivo": "GPU_OCUPADA: pid 3382 (python3, 4522 MiB); los TFLOP/s saldrian bajos por competencia, no por el estado de energia", "ocupantes": ATLAS}) + "\n", encoding="utf-8")
+    real.write_text(json.dumps({"ts": "2026-10-27T02:04:46.825766+00:00", "estado": "INDETERMINADO", "motivo": "GPU_OCUPADA: pid 3382 (python3, 4522 MiB); los TFLOP/s saldrian bajos por competencia, no por el estado de energia", "ocupantes": CONSUMIDOR}) + "\n", encoding="utf-8")
     assert not _pasa_el_close_check(real)
-    _prepara_prueba(monkeypatch, "2080, 67.0, 96, 0x0000000000000000", ocupantes=[ATLAS, ATLAS + MOTOR])
+    _prepara_prueba(monkeypatch, "2080, 67.0, 96, 0x0000000000000000", ocupantes=[CONSUMIDOR, CONSUMIDOR + MOTOR])
     ev = r.arranque("observar", r.prueba(segundos=15), "b-motor", tmp_path, avisa=lambda a: pytest.fail("SANO no avisa"))
     assert ev is not None and ev["estado"] == "SANO" and ev["tflops_valido"] is False and ev["tflops_motivo"].startswith("COMPETENCIA")
     fila = json.loads((tmp_path / "reloj_arranque.jsonl").read_text(encoding="utf-8").splitlines()[-1])

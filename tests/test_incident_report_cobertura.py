@@ -199,7 +199,7 @@ def test_fase_con_metrics_sin_par_de_contadores_y_sin_avance():
     assert ir._fase_con_metrics({"run": 2}, prog, {}).startswith("prefill")
 
 
-def test_carga_de_atlas_salta_la_linea_truncada_del_boot(tmp_path):
+def test_carga_externa_salta_la_linea_truncada_del_boot(tmp_path):
     marca = "01234567-89ab-cdef-0123-456789abcdef"
     ruta = tmp_path / "cola.jsonl"
     ruta.write_text(
@@ -207,7 +207,7 @@ def test_carga_de_atlas_salta_la_linea_truncada_del_boot(tmp_path):
         f'{{"event": "job_start", "boot_id": "{marca}", "job_fi\n',
         encoding="utf-8",
     )
-    r = ir.carga_de_atlas(marca.replace("-", ""), ruta)
+    r = ir.carga_externa(marca.replace("-", ""), ruta)
     assert r["estado"] == "ok" and r["jobs_iniciados_en_el_boot"] == 1
     assert [j["job_file"] for j in r["jobs_en_ejecucion_al_cortar"]] == ["a.md"]
 
@@ -304,7 +304,7 @@ def _entorno_reporte(monkeypatch, tmp_path, journal=None):
     monkeypatch.setattr(ir.rv, "_journal", journal or jf)
     monkeypatch.setattr(ir.rv, "TELEMETRIA", tmp_path / "tele.jsonl")
     monkeypatch.setattr(ir, "MUESTRAS_BB", tmp_path / "bb")
-    monkeypatch.setattr(ir, "ATLAS_COLA", tmp_path / "cola.jsonl")
+    monkeypatch.setenv(ir.ENV_COLA, str(tmp_path / "cola.jsonl"))
     monkeypatch.setattr(ir, "SALIDA", tmp_path / "salida")
     monkeypatch.setattr(ir, "plataforma", lambda: {"secure_boot": "disabled", "serie_y_uuid": "REDACTED"})
     monkeypatch.setattr(
@@ -323,7 +323,8 @@ def test_reporte_arma_el_incidente_del_ultimo_boot_terminado_y_anota_al_operador
     op = rep["resumen"]["observacion_fisica_del_operador"]
     assert op["quedo_apagado_hasta_pulsar_boton"] == "si" and op["led_de_encendido"] == "apagado"
     assert op["ventiladores"] == ir.NOT_COLLECTED
-    assert rep["carga_de_atlas"]["estado"].startswith(ir.NOT_COLLECTED)  # Atlas no publica: se declara
+    assert rep["carga_externa"]["estado"].startswith(ir.NOT_COLLECTED)  # el consumidor no publica: se declara
+    assert rep[ir.CLAVE_CARGA_LEGADO] == rep["carga_externa"]  # la clave anterior se sigue escribiendo
     assert len(rep["seis_timestamps"]) == 6
     assert ir.reporte(-1)["resumen"]["boot_id"] == rep["resumen"]["boot_id"]
 
