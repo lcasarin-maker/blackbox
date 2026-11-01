@@ -28,6 +28,14 @@
 #
 # Cada reinicio queda en vigilante_motor.log con la palabra REINICIA: `bb scan`
 # (tools/motor_caidas.py) cuenta esas lineas como cuelgues del motor.
+#
+# UNICO actor de la unidad, desde 2026-11-01 (voto de Luis): el consumidor ya no la
+# arranca, reinicia ni para; lo PIDE por archivo (contrato bb-motor-solicitud/1) y cada
+# vuelta empieza atendiendo esas solicitudes (tools/motor_solicitudes.py), antes de mirar
+# si la unidad esta activa: un `arrancar` es justo para cuando no lo esta. Sus lineas
+# llevan SOLICITUD y el id, nunca la palabra de los cuelgues. Mientras el consumidor
+# tenga una VENTANA vigente (su experimento cambia la imagen o los flags), este script
+# no reinicia por su cuenta: lo registra y espera a que cierre o venza.
 DATA="${BLACKBOX_DATA:-$HOME/.local/share/blackbox}"
 URL=${VIGILANTE_URL:-http://localhost:8000/v1}
 UNIDAD=${VIGILANTE_UNIDAD:-ai-nemotron.service}
@@ -48,6 +56,9 @@ PRESUPUESTO=$S/vigilante_motor.presupuesto
 ALERTA=$S/motor_alerta.json
 LOG=$S/vigilante_motor.log
 reg() { echo "[$(date '+%F %T')] $*" >> "$LOG"; }
+SOLICITUDES=(python3 "$RAIZ/tools/motor_solicitudes.py" --dir "$DATA/motor" --unidad "$UNIDAD")
+
+"${SOLICITUDES[@]}" atender 2>&1 | while IFS= read -r linea; do reg "$linea"; done
 
 arranque=$(systemctl --user show "$UNIDAD" -p ExecMainStartTimestamp --value)
 if [ "$(systemctl --user show "$UNIDAD" -p ActiveState --value)" != active ] || [ -z "$arranque" ]; then
@@ -58,7 +69,15 @@ edad=$(( $(date +%s) - $(date -d "$arranque" +%s) ))
 
 reinicia() { # motivo
   if [ -n "$VIGILANTE_SIMULA" ]; then reg "SIMULACRO: reiniciaria $UNIDAD ($1)"; return; fi
-  local decision rc
+  local decision rc ventana
+  # Antes del presupuesto: un reinicio que no se hace no gasta tope. Si la consulta misma
+  # falla (rc>1) reinicia igual y lo registra, como con la politica de abajo.
+  ventana=$("${SOLICITUDES[@]}" ventana 2>&1); rc=$?
+  case $rc in
+    0) reg "VENTANA del consumidor vigente ($ventana): no reinicia ($1)"; return ;;
+    1) ;;
+    *) reg "ventana ilegible (rc=$rc): reinicia igual -- $ventana" ;;
+  esac
   decision=$(python3 "$RAIZ/tools/workload_restart_policy.py" --state "$PRESUPUESTO" \
     --workload-id "$UNIDAD" --limit "$TOPE" --window-seconds 3600); rc=$?
   case $rc in
@@ -66,7 +85,7 @@ reinicia() { # motivo
     0) ;;
     *) reg "presupuesto de reinicios ilegible (rc=$rc): reinicia igual -- $decision" ;;
   esac
-  reg "REINICIA $UNIDAD ($1)"; systemctl --user restart "$UNIDAD"
+  reg "REINICIA $UNIDAD ($1) origen=vigilante"; systemctl --user restart "$UNIDAD"
 }
 
 tope_agotado() { # motivo
