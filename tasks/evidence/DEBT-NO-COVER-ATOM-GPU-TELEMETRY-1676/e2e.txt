@@ -5,7 +5,7 @@ usage: atom_gpu_telemetry.py [-h] [--interval-seconds INTERVAL_SECONDS]
                              [--gate-termico]
 
 Sampler de vida larga que deja telemetría de GPU y térmica de la ATOM en
-disco, para que el próximo crash tenga los segundos previos escritos (DGX-334,
+disco, para que el próximo crash tenga los segundos previos escritos ([externo],
 2026-08-31). Por qué existe: el tercer crash del 2026-08-31 (boot `f1998ed9`)
 murió **sin ninguna señal de kernel** — ni OOM, ni Xid, ni térmico, ni panic —
 con vLLM sirviendo, un job de re-minado por LLM y una sesión remota
@@ -36,7 +36,7 @@ devuelve `[N/A]`, la línea lo dice en `gpu_ausente` en vez de callar el campo
 o tumbar el sampler; si no hay zonas térmicas, lo dice en `zonas_ausentes`.
 Mismo principio que `_vmcore_para()` en `tools/detect_atom_crash.py`: un
 instrumento que no puede hablar no es evidencia de que no pasó nada. 5. **La
-misma iteración vigila el journal (DGX-336).** No hay un tercer proceso: el
+misma iteración vigila el journal ([externo]).** No hay un tercer proceso: el
 sampler ya despierta cada 5 s y ya es el log de eventos de hardware de esta
 máquina. Lo que busca son las señales de *pérdida de video sin caída completa
 del sistema*, que por definición NO deja rastro en `detect_atom_crash.py` —
@@ -52,11 +52,11 @@ options:
   --dry-run             imprime los eventos, no escribe el jsonl
   --procesos-gpu        imprime quien tiene memoria de GPU ahora mismo, en
                         JSON. Es el HECHO fisico; la politica de quien puede
-                        usarla es de quien encola trabajo (DGX-585).
+                        usarla es de quien encola trabajo ([externo]).
   --gate-termico        imprime {bloquea, motivo} y sale 1 si NO se le debe
                         sumar carga a la maquina. Es la via por la que [externo]
                         consulta esta decision sin importar codigo de aqui
-                        (contrato de los dos repos, DGX-585).
+                        (contrato de los dos repos, [externo]).
 
 $ /opt/miniforge3/bin/python3 tools/atom_gpu_telemetry.py --codex-invalid-argument
 exit=2

@@ -145,3 +145,41 @@ Luis decidió redactar igualmente `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/si
 | `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-batches/verdict_04.json` | `744dd1cef570` | `2aff61c2acef` |
 | `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-followup-items.json` | `352bba56a368` | `9dd80f0763e6` |
 | `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-privacy-provenance-followup-current.json` | `7ee89c9c7f58` | `1ce0cd63d6a2` |
+
+
+## Actualización 2026-11-01 (boletas #27 A y #28 B): ids de tickets ajenos, rutas de la base de conocimiento y alias de proyecto
+
+Luis decidió neutralizar en este repositorio los identificadores de tickets del consumidor de conocimiento (`DGX-nnn`), las rutas `knowledge/(references|investigations|identity)/` y el alias de otro proyecto. Mismo marcador `[externo]` y misma convención que arriba: en evidencia no se reescribe prosa, se sustituye el token. Sustitución textual con expresiones regulares (`knowledge/(references|investigations|identity)/` pasa a `[externo]/`; `DGX-[0-9]+` y el alias, a `[externo]`), sin tocar nada más del archivo.
+
+- Archivos de evidencia redactados en esta pasada: 23. Tokens sustituidos: 84 (46 rutas de la base de conocimiento, 38 ids de tickets, 0 alias).
+- Los 14 JSON redactados se comprobaron con `python3 -m json.tool` y sin claves duplicadas (antes y después).
+- Hash citado por otros archivos: se hizo `grep` del sha256 (completo y de 12 hex, y de cualquier prefijo de 12 o más hex) de cada candidato contra todo el repositorio. Ningún archivo editado tenía su hash citado por otro archivo de procedencia. 10 de los 23 ya figuraban en la tabla de arriba y su hash "después" sólo lo citaba esa tabla: para ellos, "antes" aquí es el "después" de la fila anterior, y esa fila queda superada por ésta.
+- **No se editó** `tasks/evidence/ZERO-2026-10-02/prepush-before-final.txt`: su sha256 lo cita `tasks/evidence/RELEASE-SUNSET-2-2-01/source.json`. Sus únicas menciones son el identificador de la ficha `DEBT-DGX-438-SIN-CAUSA-RAIZ` dentro de una salida literal, que de todos modos se conserva (ver abajo).
+- **Se conserva a propósito** el número de ticket cuando forma parte del identificador de una ficha de este repositorio (`DEBT-DGX-438-SIN-CAUSA-RAIZ`, `DEBT-VERIFICAR-DGX-30-OOM-LLAMADORES-CONCURRENTES-01`, la forma corta `DEBT-DGX-438` de la ficha) y de sus rutas: son el nombre real de un archivo y de un directorio de evidencia, y aparecen en salidas literales de herramientas (`AVISO <ficha>.md: ...`, el `--help` de `bb`). Renombrar esas dos fichas toca `bin/`, `tools/` y `tests/` y queda como decisión aparte. Tampoco se tocó ningún `close_check`.
+- Los `.json` que citan una línea de código (el comentario `-- <id de ticket>  # sunset-reviewed...`) ya no coinciden en ese token con el archivo fuente actual: es la misma limitación de la redacción anterior.
+
+| Archivo | rutas | ids | alias | sha256 antes | sha256 después |
+|---|---|---|---|---|---|
+| `docs/evidence/INCIDENTES/bb-2026-10-11-54b71618.json` | 23 | 0 | 0 | `d636c6350b71` | `46112c3af7bf` |
+| `docs/evidence/INCIDENTES/bb-2026-10-11-54b71618.md` | 23 | 0 | 0 | `30d5c9e5bf67` | `4cd561a8ecf9` |
+| `tasks/evidence/CLASIFICACION-FICHAS-APLICABILIDAD-20261013/clasificacion.json` | 0 | 1 | 0 | `801ae0f8b775` | `ed64adeb330e` |
+| `tasks/evidence/CLEAN-2026-10-03/renew-source.json` | 0 | 1 | 0 | `276092e2e9d2` | `020d904fd4ed` |
+| `tasks/evidence/DEBT-DGX-438-SIN-CAUSA-RAIZ/instrumento-2026-09-27.txt` | 0 | 3 | 0 | `33ee19ec3f49` | `936b90352893` |
+| `tasks/evidence/DEBT-DGX-438-SIN-CAUSA-RAIZ/pass.txt` | 0 | 1 | 0 | `bdf9b2625d87` | `5b4f0ca04b60` |
+| `tasks/evidence/DEBT-NO-COVER-ATOM-GPU-TELEMETRY-1676/e2e.txt` | 0 | 4 | 0 | `78a3fc7931f1` | `ea50c7cf1fdf` |
+| `tasks/evidence/DEBT-NO-COVER-NOMBRA-VICTIMAS-271/e2e.txt` | 0 | 1 | 0 | `96bdeecd3073` | `fa9151a6fd6c` |
+| `tasks/evidence/DEBT-REGISTRATION-2026-10-02/manifest.json` | 0 | 1 | 0 | `e16e671bd379` | `a06d371a9b61` |
+| `tasks/evidence/DEBT-TRES-CHEQUEOS-POR-IS-ACTIVE/fail.txt` | 0 | 2 | 0 | `29b209b7b33d` | `bc0e37240654` |
+| `tasks/evidence/DEBT-VERIFICAR-DGX-30-OOM-LLAMADORES-CONCURRENTES-01/e2e.txt` | 0 | 1 | 0 | `8a0469b0a2f0` | `48d85a09824f` |
+| `tasks/evidence/DEBT-VERIFICAR-DGX-30-OOM-LLAMADORES-CONCURRENTES-01/verificacion.txt` | 0 | 8 | 0 | `fb76264c7cad` | `034efa413afc` |
+| `tasks/evidence/DEUDA-ABIERTA-CLASIFICACION-20261013/construible.tsv` | 0 | 2 | 0 | `f3368b3c13bc` | `ff1080d2d609` |
+| `tasks/evidence/DEUDA-ABIERTA-CLASIFICACION-20261013/construible/revision-020.json` | 0 | 2 | 0 | `5a965e7f98f1` | `b2dd8d8d752e` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/batch_00.json` | 0 | 1 | 0 | `5bea48bd585f` | `efd74bf70d4a` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/current-target-2.4.json` | 0 | 2 | 0 | `f0d478e11817` | `3713e81c1d43` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/renewed-17-root.json` | 0 | 2 | 0 | `6af11cbf0fa5` | `98283e1f236c` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/source.json` | 0 | 1 | 0 | `9c1b7745dfbf` | `d8cafe821987` |
+| `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/publication-sunset/target-2.4-final-root.json` | 0 | 1 | 0 | `c1838b46f404` | `9e800b6b3613` |
+| `tasks/evidence/RELEASE-2.1.0/h1-batches/verdict_01.json` | 0 | 1 | 0 | `0f245dd41560` | `4f8b16e0ac74` |
+| `tasks/evidence/RELEASE-2.1.0/h1-results.json` | 0 | 1 | 0 | `d1bbaa40d863` | `c1901693b7e7` |
+| `tasks/evidence/RELEASE-2.1.0/sunset-review.json` | 0 | 1 | 0 | `3f5d145caf55` | `d0bec5fed745` |
+| `tasks/evidence/RELEASE-SUNSET-2-2-01/source.json` | 0 | 1 | 0 | `6bdabd9b641a` | `abffdd6198eb` |

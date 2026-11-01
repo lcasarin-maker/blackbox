@@ -363,7 +363,7 @@ camino es el que se toma, aunque cueste más pasos.
 ## 2026-10-15 — Ultima boleta de la revision de lo instalado: todo lo grande se queda por uso medido
 Luis votó conservar `dgx-spark-fieldiag` (795 MB, el diagnóstico que el soporte pide para una RMA). Con uso medido ese día se conservan además cursor (config tocada 2026-10-14), antigravity (2026-10-12), chatgpt (app de OpenAI usada con Codex) y dcgm (`bin/bb` y `tools/incident_report.py` llaman `dcgmi`); los timers de otros proyectos corrieron en el último día y se quedan. Descartado: quitar fieldiag (reinstalarlo con la máquina ya inestable cuesta más que 795 MB) y retirar editores sin medir su uso. Cierra DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01.
 
-## 2026-10-15 — Kit de simplecode 10.0.2 -> 10.1.2 integrado desde la sincronizacion de flota (orden de Luis)
+## 2026-10-15 — Kit de guardrails 10.0.2 -> 10.1.2 integrado desde la sincronizacion de flota (orden de Luis)
 - **Hecho:** `.simplecode/kit.lock` pasa a `simplecode_version 10.1.2` (artefacto `6817563c...`, el `runtime.zip` local coincide). Medido antes de integrarlo: `version_bump --gate` OK, `sunset-audit` PASS, `telemetry-disposition` OK, ledger H1 verde; control negativo: con el hash del lock alterado el runner da `COULD_NOT_RUN: no runtime.zip matches kit.lock`.
 - **Lo que el kit nuevo destapo:** `backlog_verifier` marco un FRAUDE real, `DEBT-DOCKER-FUERA-DEL-TECHO` (su close_check fijaba 14 GiB y la maquina esta en 16 desde la ventana del motor del 2026-10-15); el criterio se movio al valor votado con su medicion y control negativo. Y un `COULD_NOT_RUN` (`DEBT-COVERAGE-TARGETS-BIN-USABLE-01`: el kit nuevo rechaza un comando que deja un grupo de procesos vivo); ese test pasa solo (`1 passed`).
 - **Limite:** `runtime.zip` esta en `.gitignore`; quien clone necesita traerlo de la flota. Esto solo fija el hash esperado.
@@ -386,11 +386,11 @@ Luis votó conservar `dgx-spark-fieldiag` (795 MB, el diagnóstico que el soport
 - **Caduca la suspension:** 2026-10-23.
 
 ## 2026-10-16 — `sync_de_flota_escalonado`: un sync de flota no lanza a todos los proyectos a la vez (voto de Luis)
-- **Decision (voto de Luis):** regla durable `sync_de_flota_escalonado`. Un sync de flota (orden del kit de simplecode u otro) se escalona: a lo mas un proyecto empuja con `pre-push` (suite completa) a la vez. En este repo lo hace cumplir el portero (`tools/portero.py`, `bb-portero.service` en `actuar`, cola FIFO, una suite por turno; `tests/test_portero.py::test_turno_ocupado_congela_al_nuevo_y_al_liberarse_descongela_al_mas_antiguo`) con `memavail` sobre `bb-portero-suite-*.scope`.
+- **Decision (voto de Luis):** regla durable `sync_de_flota_escalonado`. Un sync de flota (orden del kit de guardrails u otro) se escalona: a lo mas un proyecto empuja con `pre-push` (suite completa) a la vez. En este repo lo hace cumplir el portero (`tools/portero.py`, `bb-portero.service` en `actuar`, cola FIFO, una suite por turno; `tests/test_portero.py::test_turno_ocupado_congela_al_nuevo_y_al_liberarse_descongela_al_mas_antiguo`) con `memavail` sobre `bb-portero-suite-*.scope`.
 - **Por que:** la orden de sync del kit 9.9.0 provoco al menos seis `pre-push` simultaneos en el colapso 1 del 11-oct (`DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01`).
 - **Descarta:** dejar el sync simultaneo (la estampida repite el atasco que ya reinicio la maquina); confiar solo en la regla provisional escrita por los workers (sin mecanismo, depende de que cada sesion la lea).
 - **Costo aceptado:** un sync de flota tarda mas en completarse.
-- **Limite declarado:** el portero ordena las suites de ESTA maquina. Que el comando de sync del kit escalone el reparto vive en simplecode (otro repo) y queda en `DEBT-KIT-SYNC-DE-FLOTA-NO-ESCALONA-LOS-PROYECTOS-01`.
+- **Limite declarado:** el portero ordena las suites de ESTA maquina. Que el comando de sync del kit escalone el reparto vive en el kit de guardrails (otro repo) y queda en `DEBT-KIT-SYNC-DE-FLOTA-NO-ESCALONA-LOS-PROYECTOS-01`.
 
 ## 2026-10-16 — `antigravity` queda solo en el `--avoid` de earlyoom, fuera de la lista compartida de protegidos (voto de Luis)
 - **Decision:** el editor `antigravity` se mantiene en el `--avoid` de earlyoom como diferencia declarada (igual que `journal`) y NO entra en `data/procesos_protegidos.json`. El archivo pendiente `adopted/pendiente-de-despliegue/etc_default_earlyoom` ya lo contempla; no hay que re-sellar el script.
@@ -429,26 +429,43 @@ Luis votó conservar `dgx-spark-fieldiag` (795 MB, el diagnóstico que el soport
 - **Costo aceptado:** unos dias mas con el tope actual y la posible lentitud asociada.
 - **Hecho aparte, sin voto:** el portero medía la holgura sobre `memory.current` con la cache inactiva incluida (veia 3.3 GiB donde habia 19) y congelaba suites sin necesidad; ahora usa la memoria de trabajo.
 
-## 2026-10-17 — El kit de Simplecode anterior se retira entero; los controles son nativos y no conviven dos generaciones (instruccion de Luis)
+## 2026-10-17 — El kit de guardrails anterior se retira entero; los controles son nativos y no conviven dos generaciones (instruccion de Luis)
 - **Decision:** se eliminan `.simplecode/` (lanzador `run.py`, `runtime.zip`, `kit.lock`, ledger H1, baselines, hooks locales) y todas sus llamadas activas. Quedan Ruff, Pyright, Gitleaks (staged e historia), `pytest` del producto, `bash -n`, `bb-cobertura-piso`, `inventario-spec` y dos guardias nativas con pruebas negativas y legitimas: `tools/guardia_integridad.py` (NUL, BOM, CRLF, UTF-8 invalido, mojibake) y `tools/guardia_pii.py` (RFC, CURP, correos, telefonos; solo se exime lo que su forma prueba que no es de nadie).
 - **Retirado por ser proceso y no producto:** version-bump, ledger-schema, gate-effectiveness, zero-debt, ship-freeze, telemetry-disposition y telemetry-bound, hook-receipts (y sus recibos), backlog-verifier, genuine-task-closure, close-check-discrimina, clean-worktree, spec-check, no-perder-lineas, staged-mode-guard, staged-parity, sunset-audit y sus etiquetas, angry-path, adversarial-judge, la atestacion de cobertura y de pyright por SHA, y la auditoria H1 con su ledger. Telemetria historica del 2026-09-08 al 2026-10-18 (20 126 filas): `coverage-100` y `pre-push` sumaron 2 894 min de los hooks y `bb-cobertura-piso` 518 min; los bloqueos de `version-bump` (105) eran bumps pendientes, no defectos del producto.
-- **Descarta:** dejar las dos generaciones en paralelo (esconde huecos y mantiene viva la pila lenta); pinnear el Simplecode nuevo a un commit (el repo madre estaba en reestructuracion con 417 archivos sin commitear, sin un commit estable que fijar); conservar el proceso de fichas como compuerta (las fichas siguen como registro de trabajo, ya no las verifica un gate).
+- **Descarta:** dejar las dos generaciones en paralelo (esconde huecos y mantiene viva la pila lenta); pinnear el kit de guardrails nuevo a un commit (el repo madre estaba en reestructuracion con 417 archivos sin commitear, sin un commit estable que fijar); conservar el proceso de fichas como compuerta (las fichas siguen como registro de trabajo, ya no las verifica un gate).
 - **Costo aceptado:** un cierre de ficha ya no se re-comprueba solo; el limite del telefono de `guardia_pii` (solo con `-` o `.`, `+52` o parentesis); y la CI de GitHub no corre (error de facturacion de la cuenta), asi que su resultado es `COULD_NOT_RUN`.
 
-## 2026-10-18 — Simplecode 11.1.0 vuelve a ser el motor único de integridad y PII
+## 2026-10-18 — El kit de guardrails 11.1.0 vuelve a ser el motor único de integridad y PII
 
 La elección nativa del 2026-10-17 fue una transición, no un ideal permanente. Tras comparar
-ambos detectores sobre el mismo árbol, Simplecode incorporó el alcance completo de BB,
+ambos detectores sobre el mismo árbol, el kit de guardrails incorporó el alcance completo de BB,
 los dominios reservados y una regla contextual para teléfonos con espacios. Se retiraron
 `tools/guardia_integridad.py`, `tools/guardia_pii.py` y sus tests locales; el paquete
 fijado en `.pre-commit-config.yaml` ejecuta staged y árbol completo. Los cinco contactos
 institucionales adicionales del fixture APT están en `tasks/pii_allow.txt`, como excepciones
 exactas y versionadas. Se conserva el resto de controles nativos de producto.
 
-## 2026-10-20 — La rama de Codex que enrolaba el kit de Simplecode se archiva como etiqueta, no vive como rama (voto de Luis)
+## 2026-10-20 — La rama de Codex que enrolaba el kit de guardrails se archiva como etiqueta, no vive como rama (voto de Luis)
 
 - **Decisión:** `codex/simplecode-local-a8853293` (2 commits del 2026-10-18: `dd80df30` y `b970e330`, que enrolan el kit como submódulo `.simplecode/kit` con un lanzador `.simplecode/simplecode`) se conserva como la etiqueta `archive/codex-simplecode-kit` en la misma punta, y la rama se borra de `origin`.
 - **Por qué:** la decisión del 2026-10-17 retiró ese lanzador y la del 2026-10-18 dejó el motor fijado en `.pre-commit-config.yaml`; una rama viva con los 2 commits sin aterrizar hace que cada `/clean` la vuelva a encontrar como trabajo pendiente. La etiqueta conserva el historial sin ese ruido. Luis había restaurado la rama el mismo día; el motivo de conservarla no se declaró.
 - **Descarta:** dejar la rama viva exceptuada de la poda (mantiene a la vista una segunda generación del kit); borrarla sin etiqueta (los 2 commits solo se recuperarían por SHA mientras GitHub los conserve).
 - **Reabrir si:** se retoma el enrolamiento por submódulo; `git checkout archive/codex-simplecode-kit` trae los 2 commits.
 
+
+## 2026-11-01 — Diez decisiones de Luis que tocan a bb: frontera por direccion del dato, un solo actor, mudanza, datos personales, captura externa, historial publico, residuos, testigo y enchufe (votos de Luis)
+
+El repositorio es publico y debe quedar limpio de temas ajenos. Estas son las decisiones del dia que cambian lo que bb hace, escribe o conserva; el otro lado de cada una (lo que corresponde al consumidor de conocimiento) vive en el repositorio de ese consumidor y no se repite aqui.
+
+- **Frontera por direccion del dato (boleta #18 A):** cada dato se declara por quien lo escribe y quien lo lee. bb escribe sus hechos en archivos con sello de frescura (el estado de la maquina, las filas por arranque) y el consumidor de conocimiento los lee; bb no corre codigo ajeno ni nombra el checkout del otro repositorio, y una evidencia que dependia de ejecutarlo se sustituye por una corrida en su repositorio cuya salida se guarda aqui.
+- **bb es el unico actor del motor (#19 A):** las acciones sobre la maquina y sobre el motor de inferencia (limitar, congelar, detener) las ejecuta bb, con sus guardas, su interruptor `observar`/`actuar` y su registro. El consumidor de conocimiento observa y pide por los canales que bb expone; no actua sobre el motor.
+- **Mudanza documental y de foros fuera de bb (#22 A):** el conocimiento (cosechas de foros, dictamenes, catalogos) vive en el consumidor; en `tasks/` solo se queda el trabajo de maquina de cada ficha. Los documentos que citan esa base la nombran como «una referencia externa», sin su ruta.
+- **Datos personales fuera del repositorio (#23 A):** ningun dato de una persona (contactos, identificadores, rutas personales) se versiona; el escaner de datos personales sigue como compuerta y las excepciones exactas viven en `tasks/pii_allow.txt`.
+- **Preventivos nuevos congelados; primero la captura externa (#24 A):** no se escriben guardias o preventivos nuevos para los cortes de la maquina hasta tener captura desde fuera de ella. Lo que se construye mientras tanto es lo que deja rastro que sobrevive a un corte duro (`tools/ultimo_aliento.py`, las marcas de etapa de arranque, las capas opt-in de `tools/opt_in_captura.sh`).
+- **Reescribir el historial publico, con respaldo previo (#21 B y #25 A), todavia sin ejecutar:** la reescritura del historial para sacar lo ajeno y lo personal solo corre despues de un respaldo completo del repositorio; hasta entonces el historial no se toca y esta entrada no la da por hecha.
+- **Re-sellado del parche (#26 A):** el parche derivado del productor se redacta y los archivos que citan su hash se re-sellan con el hash nuevo; el antes y el despues quedan en `tasks/evidence/REDACCION_2026-11-01.md`. Queda pendiente (#32) la decision sobre las menciones estructurales del propio parche.
+- **Residuos (#27 A y #28 B):** los identificadores de tickets del consumidor, las rutas de su base de conocimiento, el alias de otro proyecto y las menciones del kit de guardrails retirado se neutralizan: en prosa por «una referencia externa», «un ticket del consumidor de conocimiento» o «el kit de guardrails»; en evidencia por el marcador `[externo]`. No se tocan los `close_check`, los nombres funcionales (modulos en comandos, rutas `.simplecode/`, salidas literales de herramientas) ni los archivos cuyo hash cita otro archivo. Dos fichas conservan en su identificador el numero de un ticket ajeno; renombrarlas es otra decision porque toca `bin/`, `tools/` y `tests/`.
+- **Testigo en un equipo externo (#29 A):** el receptor de la telemetria de ultimo aliento (UDP, `BB_ULTIMO_ALIENTO_UDP`) vive en otro equipo y no en la maquina que se vigila: un corte duro se lleva el disco local, y solo lo que ya salio por la red sobrevive.
+- **Enchufe con medidor (#30 A):** la maquina cuelga de un enchufe con medidor de energia que registra su consumo desde fuera; es la fuente independiente de cuando la maquina se apago y con que carga.
+- **Descarta:** guardar los datos ajenos «por historia» en un repositorio publico; que el consumidor actue sobre el motor; apilar guardias nuevas sin tener captura externa que las valide.
+- **Reabrir si:** el respaldo previo falla o el historial ya reescrito rompe un hash citado.

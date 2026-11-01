@@ -32,7 +32,7 @@ en segundos distintos. Entre procesos separados no hay condition variable que
 compartir, y cambiar el `sleep` por un bucle que sondea `/proc/<pid>/status`
 seria cambiar un sleep por otro, con mas codigo.
 
-Es la misma clase que `DEBT-SLOT-WAIT-SLEEP` en simplecode, resuelta igual.
+Es la misma clase que `DEBT-SLOT-WAIT-SLEEP` en el kit de guardrails, resuelta igual.
 
 ## Regression Test
 
