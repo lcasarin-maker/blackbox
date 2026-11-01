@@ -7,7 +7,8 @@ generacion en `.1`). En el primer arranque SANO (el actual llego a `multi-user`)
 en `$BLACKBOX_DATA/etapas_arranque.jsonl` con hasta donde llego el arranque previo y el contexto del
 actual: bootstatus y estado sysfs de cada watchdog (sin abrir /dev/watchdog), la linea de comandos
 del kernel, srcversion y firmante del modulo nvidia y dmem.capacity. Una fila por arranque: correrlo
-otra vez en el mismo arranque no escribe nada.
+otra vez en el mismo arranque no escribe nada. Lo corre `systemd/bb-reboot-verdict.service` como
+`ExecStartPre` (a los 3 min del arranque, cuando ya llego a multi-user); su rc no frena el veredicto.
 
 Esquema de la fila (lo lee otro paquete; `esquema` sube si cambia):
   esquema, ts, boot_id_actual, etapas_actual, boot_id_anterior, ultima_etapa_anterior,

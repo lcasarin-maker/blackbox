@@ -18,6 +18,11 @@ Wi-Fi del enchufe).
   voltaje_perdido False  antes del corte la ATOM consumia (>= CARGA_W) y despues el enchufe sigue midiendo voltaje normal con
                          consumo ~0 (< APAGADA_W): la pared dio corriente y la maquina se apago.
   None                   cualquier otra cosa (sin filas, enchufe mudo, datos parciales): no concluyente.
+Sin voltaje medido (`voltaje_v: null`, lo que da un Shelly Gen1 del testigo, `tools/testigo/bb_testigo.py`) la ventana se decide
+por POTENCIA y lo declara en `decidido_por: "potencia"`: `potencia_cayo` True si la ATOM consumia (>= CARGA_W) antes del corte y
+despues el enchufe contesta con consumo ~0 (< APAGADA_W). `voltaje_perdido` queda None: un enchufe que contesta tiene pared, pero
+un bajon de voltaje que tumba al adaptador y no al enchufe da la misma lectura; sin voltaje no se distingue pared de ATOM.
+`ruta` puede ser una serie o varias (la del medidor y las del testigo); las filas se mezclan por `epoch`.
 """
 
 from __future__ import annotations
@@ -29,7 +34,7 @@ import sys
 import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Sequence
 
 from tools import interruptores
 
@@ -88,34 +93,51 @@ def paso(modo_actual: str, cfg: dict[str, Any], ruta: Path, abre: Abre = _abre, 
     return fila
 
 
-def _filas(ruta: Path) -> list[dict[str, Any]]:
-    try:
-        lineas = ruta.read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return []
+def _filas(rutas: Path | Sequence[Path]) -> list[dict[str, Any]]:
     out = []
-    for ln in lineas:
+    for ruta in [rutas] if isinstance(rutas, Path) else rutas:
         try:
-            f = json.loads(ln)
-        except ValueError:
+            lineas = ruta.read_text(encoding="utf-8").splitlines()
+        except OSError:
             continue
-        if isinstance(f, dict) and isinstance(f.get("epoch"), (int, float)):
-            out.append(f)
-    return out
+        for ln in lineas:
+            try:
+                f = json.loads(ln)
+            except ValueError:
+                continue
+            if isinstance(f, dict) and isinstance(f.get("epoch"), (int, float)):
+                out.append(f)
+    return sorted(out, key=lambda f: f["epoch"])
 
 
-def ventana_de_corte(ruta: Path, fin_epoch: float, hueco_s: float) -> dict[str, Any] | None:
+def _num_o_none(v: Any) -> float | None:
+    return float(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+
+
+def ventana_de_corte(ruta: Path | Sequence[Path], fin_epoch: float, hueco_s: float) -> dict[str, Any] | None:
     """Evidencia externa de un corte que ocurrio en `fin_epoch` y duro `hueco_s`. None si no hay filas que cubran la ventana."""
     filas = [f for f in _filas(ruta) if fin_epoch - MARGEN_ANTES_S <= f["epoch"] <= fin_epoch + max(hueco_s, 0.0)]
     if not filas:
         return None
-    medidas = [f for f in filas if f.get("ok") is True]
-    if any(f["voltaje_v"] < VOLTAJE_CAIDO_V for f in medidas):
+    # una fila `ok` sin potencia no es una medicion: el testigo nunca la escribe asi, y otra fuente no se adivina
+    medidas = [f for f in filas if f.get("ok") is True and _num_o_none(f.get("potencia_w")) is not None]
+    if any((v := _num_o_none(f.get("voltaje_v"))) is not None and v < VOLTAJE_CAIDO_V for f in medidas):
         return {"voltaje_perdido": True, "motivo": f"una fila de la ventana mide menos de {VOLTAJE_CAIDO_V:g} V"}
     antes = [f for f in medidas if f["epoch"] <= fin_epoch]
-    despues = [f for f in medidas if f["epoch"] > fin_epoch]
-    if antes and despues and antes[-1]["potencia_w"] >= CARGA_W and all(f["voltaje_v"] >= VOLTAJE_NORMAL_V and f["potencia_w"] < APAGADA_W for f in despues[:3]):
-        return {"voltaje_perdido": False, "motivo": "el enchufe siguio midiendo voltaje normal con la ATOM sin consumo despues del corte"}
+    despues = [f for f in medidas if f["epoch"] > fin_epoch][:3]
+    consumia = bool(antes) and antes[-1]["potencia_w"] >= CARGA_W
+    sin_consumo = bool(despues) and all(f["potencia_w"] < APAGADA_W for f in despues)
+    sin_voltaje = [f for f in antes[-1:] + despues if _num_o_none(f.get("voltaje_v")) is None]
+    if consumia and sin_consumo and not sin_voltaje:
+        if all(f["voltaje_v"] >= VOLTAJE_NORMAL_V for f in despues):
+            return {"voltaje_perdido": False, "motivo": "el enchufe siguio midiendo voltaje normal con la ATOM sin consumo despues del corte"}
+    elif consumia and sin_consumo:
+        return {"voltaje_perdido": None, "decidido_por": "potencia", "potencia_cayo": True,
+                "motivo": f"sin voltaje medido ({len(sin_voltaje)} lecturas con voltaje_v null): la ATOM consumia "
+                          f"{antes[-1]['potencia_w']:g} W y despues el enchufe midio < {APAGADA_W:g} W; no distingue pared de ATOM"}
+    elif medidas and all(_num_o_none(f.get("voltaje_v")) is None for f in medidas):
+        return {"voltaje_perdido": None, "decidido_por": "potencia", "potencia_cayo": False,
+                "motivo": f"{len(filas)} filas en la ventana, {len(medidas)} con potencia y ninguna con voltaje: la potencia no cayo a ~0"}
     return {"voltaje_perdido": None, "motivo": f"{len(filas)} filas en la ventana, {len(medidas)} con medicion: no concluyente"}
 
 

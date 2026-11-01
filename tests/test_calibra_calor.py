@@ -30,8 +30,8 @@ def _muestra(boot: str, i: int, temp: float, pw: float = 10.0) -> dict:
                                          {"zona": "thermal_zone1", "type": "acpitz", "temp_c": temp - 20}]}
 
 
-def _corpus(tmp_path: Path, boots: dict[str, tuple[str, list[float]]]) -> tuple[Path, Path]:
-    """boots: boot_id -> (etiqueta, temperaturas de zona0 cada 5 s). Escribe telemetria y veredictos."""
+def _corpus(tmp_path: Path, boots: dict[str, tuple[str, list[float]]], causas: dict[str, str] | None = None) -> tuple[Path, Path]:
+    """boots: boot_id -> (etiqueta, temperaturas de zona0 cada 5 s); causas: boot_id -> `causa` de bb-reboot/1."""
     tele, ver = tmp_path / "tele.jsonl", tmp_path / "reboots.jsonl"
     lineas, filas, i = [], [], 0
     for bid, (etiqueta, temps) in boots.items():
@@ -39,7 +39,10 @@ def _corpus(tmp_path: Path, boots: dict[str, tuple[str, list[float]]]) -> tuple[
         for t in temps:
             lineas.append(json.dumps(_muestra(bid, i, t)))
             i += 1
-        filas.append(json.dumps({"boot_id": bid.replace("-", ""), "etiqueta": etiqueta}))
+        fila = {"boot_id": bid.replace("-", ""), "etiqueta": etiqueta}
+        if causas and bid in causas:
+            fila["causa"] = causas[bid]
+        filas.append(json.dumps(fila))
     tele.write_text("\n".join(lineas) + "\n", encoding="utf-8")
     ver.write_text("\n".join(filas) + "\n", encoding="utf-8")
     return tele, ver
@@ -77,6 +80,23 @@ def test_control_negativo_corte_sintetico_caliente_se_detecta(tmp_path):
     # con la banda a umbral-2 C (92.8) las lecturas de 93.0 tambien entran; con banda 1 C (93.8) no: no detectado
     sin_banda = cc.calibra(cc.leer_telemetria(tele, []), cc.leer_veredictos([ver], []), UMBRALES, (1.0,), (0.8,))
     assert sin_banda["configs"][0]["no_detectados"] == ["cccc3"]
+
+
+def test_causa_rescata_un_indeterminado_y_aparta_un_fallo_de_arranque(tmp_path):
+    """`causa` de bb-reboot/1: un INDETERMINADO con causa CUELGUE es un corte (caliente: acierto); un CORTE_ABRUPTO
+    que murio arrancando no castiga al detector como no detectado."""
+    tele, ver = _corpus(tmp_path, {"iiii-1": ("INDETERMINADO", CALIENTE_AL_FINAL), "jjjj-2": ("CORTE_ABRUPTO", FRIO),
+                                   "kkkk-3": ("INDETERMINADO", FRIO)},
+                        causas={"iiii-1": "CUELGUE", "jjjj-2": "FALLO_DE_ARRANQUE_EN_BASIC", "kkkk-3": "INDETERMINADO"})
+    r = _calibra(tele, ver)
+    vigente = next(c for c in r["configs"] if c["actual"])
+    assert vigente["aciertos"] == ["iiii1"] and vigente["no_detectados"] == []
+    assert {f["boot_id"]: (f["clase"], f["causa"]) for f in r["boots"]} == {
+        "iiii1": ("corte", "CUELGUE"), "jjjj2": ("arranque", "FALLO_DE_ARRANQUE_EN_BASIC"), "kkkk3": ("sin_etiqueta", "INDETERMINADO")}
+    # control: la causa INDETERMINADO no rescata nada, y sin campo `causa` manda la etiqueta como antes
+    assert r["could_not_run"] == ["kkkk3: sin veredicto de reboot_verdict (vivo o fuera de rango)"]
+    assert cc.clase("CORTE_ABRUPTO") == "corte" and cc.clase("INDETERMINADO", "CORTE_DE_ENERGIA") == "corte"
+    assert cc.clase("CIERRE_ORDENADO_REBOOT", "CIERRE_ORDENADO_REBOOT") == "sano"
 
 
 def test_corte_frio_es_no_detectado_y_sano_caliente_es_falso_positivo(tmp_path):
@@ -160,7 +180,7 @@ def test_lecturas_ilegibles_se_anotan(tmp_path):
     v1.write_text('{"boot_id": "x1", "etiqueta": "CORTE_ABRUPTO"}\n\n{"roto": 1}\n', encoding="utf-8")
     v2.write_text('{"boot_id": "x-1", "etiqueta": "CIERRE_ORDENADO_REBOOT"}\n', encoding="utf-8")
     av = []
-    assert cc.leer_veredictos([v1, v2, tmp_path / "no.jsonl"], av) == {"x1": "CIERRE_ORDENADO_REBOOT"}
+    assert cc.leer_veredictos([v1, v2, tmp_path / "no.jsonl"], av) == {"x1": ("CIERRE_ORDENADO_REBOOT", None)}
     assert av[0].startswith("a.jsonl:3 ilegible") and av[1].startswith("veredictos no existe")
 
 

@@ -44,12 +44,24 @@ cinco puntos ciegos, y cada uno tiene ahora su lector:
                y su fila de `arranque.jsonl` (la del arranque SIGUIENTE: el registro
                lo dejo el boot que murio). Una copia identica a otra anterior es un
                registro viejo que nadie borro y no se atribuye.
-  externo      `externo/ping.jsonl` (via `observador_ping.ultima_respuesta`),
-               `energia.jsonl`, `netconsole.jsonl` y `latido.jsonl` del testigo.
-  etapas       /var/lib/blackbox/arranque/etapas.jsonl: hasta que etapa llego cada
-               arranque, y los arranques FANTASMA (con etapas o fila de arranque.jsonl
-               pero sin boot en `journalctl --list-boots`), que salen como fila propia.
-  aliento      el anillo de ultimo aliento (250 ms): hora de muerte y curva termica.
+  externo      `externo/ping.jsonl` y `externo/energia.jsonl` (observador_ping, NAS y
+               medidor_energia en la ATOM) MAS `externo/testigo/` (las series de
+               `tools/testigo/bb_testigo.py` tal cual las escribe, con sus rotaciones,
+               traidas por `observador_ping --trae-testigo`): ping y energia se mezclan
+               (`ok` significa lo mismo en todas); netconsole (`texto`, o `b64`) y latido
+               (`evento: latido`; `parada` es el testigo detenido) solo los da el testigo.
+               Un enchufe sin voltaje (`voltaje_v: null`, Shelly Gen1) se lee por potencia,
+               y la causa lo declara.
+  etapas       /var/lib/blackbox/arranque/etapas.jsonl (y su rotacion `.1`), tal cual la
+               escribe adopted/system-units/etapa-marca.sh: `realtime` epoch en segundos
+               ($EPOCHREALTIME, puede ser null) y `monotonic` segundos desde el arranque
+               (/proc/uptime). La cadena y las ramas son las de `tools/etapas_arranque.py`
+               (`sesion-<uid>` incluido): hasta que etapa llego cada arranque, y los
+               arranques FANTASMA (con etapas o fila de arranque.jsonl pero sin boot en
+               `journalctl --list-boots`), que salen como fila propia.
+  aliento      el anillo de ultimo aliento (`tools/ultimo_aliento.py`, 250 ms), leido con
+               su propio `leer_anillo` y filtrado por `boot`: hora de muerte y curva termica
+               (`temp_c` por zona).
   bootstatus   de los arranques que ya no son el vivo se lee del journal de kernel
                (linea de sbsa_gwdt), no solo de sysfs del arranque vivo.
 
@@ -59,7 +71,8 @@ medidor de voltaje), con una sola correccion: un boot cuyo journal no devolvio
 NINGUNA linea sale INDETERMINADO y no CORTE_ABRUPTO (no hay silencio que leer donde
 no hubo lectura). La causa que cruza todas las fuentes va en el campo nuevo `causa`
 (PANICO_KDUMP, PANICO_PSTORE, PANICO_NETCONSOLE, CORTE_DE_ENERGIA, CUELGUE,
-FALLO_DE_ARRANQUE_EN_<ETAPA>, o la etiqueta misma; INDETERMINADO sin evidencia) con
+FALLO_DE_ARRANQUE_EN_<ETAPA> -- la ULTIMA etapa de la cadena que alcanzo, donde se quedo --,
+o la etiqueta misma; INDETERMINADO sin evidencia) con
 su cita en `causa_fuente`. Las filas de arranques fantasma traen `boot_idx: null` y
 `arranque_fantasma: true`; un consumidor que solo espera boots del journal las
 distingue por ese campo.
@@ -69,6 +82,8 @@ from __future__ import annotations
 
 import os
 import argparse
+import base64
+import binascii
 import json
 from datetime import datetime, timezone
 import re
@@ -78,18 +93,20 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from tools import hallazgo, medidor_energia, observador_ping
+from tools import etapas_arranque, hallazgo, medidor_energia, observador_ping, ultimo_aliento
 
 DATOS = Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blackbox"))
 TELEMETRIA = DATOS / "atom_gpu_telemetry.jsonl"
 # Lo escriben otros paquetes; aqui solo se leen. Las rutas de root las fija arranque-forense.sh.
 PSTORE_DIR = Path("/var/lib/blackbox/pstore")  # copias de /sys/fs/pstore y BERT + arranque.jsonl
-ETAPAS = Path("/var/lib/blackbox/arranque/etapas.jsonl")  # {boot_id, etapa, monotonic, realtime}
-ANILLO = DATOS / "ultimo_aliento.jsonl"  # {ts, lecturas de PSI, memoria, termica y potencia} cada 250 ms
+ETAPAS = etapas_arranque.ETAPAS  # {boot_id, etapa, monotonic, realtime} de etapa-marca.sh, y `.1`
+ANILLO = Path(ultimo_aliento.ANILLO_RUTA)  # anillo binario de 250 ms; se lee con ultimo_aliento.leer_anillo
 EXTERNO: Path | None = None  # None: `$BLACKBOX_DATA/externo` leido en cada llamada, como medidor_energia
-ETAPAS_ORDEN = ("local-fs", "basic", "network-online", "multi-user", "graphical", "gdm", "gpu-lista", "sesion")
-# `sesion` depende de que alguien entre: un boot sin ella no fallo al arrancar.
-ETAPA_ARRANQUE_COMPLETO = "gpu-lista"
+TESTIGO = "testigo"  # subdirectorio de EXTERNO donde `observador_ping --trae-testigo` deja las series del testigo
+# La cadena de etapa-marca.sh (etapas_arranque.CADENA). `sesion-usuario` depende de que alguien entre y `gpu-lista` y
+# `network-online` son ramas en paralelo: un boot sin ellas no fallo al arrancar.
+ETAPAS_ORDEN = etapas_arranque.CADENA
+ETAPA_ARRANQUE_COMPLETO = "graphical"
 # Un boot que vivio mas que esto tras su ultima etapa no murio arrancando: una etapa ausente
 # ahi es un escritor que fallo, no un arranque que fallo.
 VENTANA_FALLO_ARRANQUE_S = 900.0
@@ -181,39 +198,50 @@ def _causa_interna(ev: dict[str, Any]) -> tuple[str, str, str] | None:
 
 def _causa_por_tiempos(t: dict[str, Any]) -> tuple[str, str, str] | None:
     """CORTE_DE_ENERGIA o CUELGUE comparando cuando cayo el TCP y que hizo el enchufe. Sin una
-    falla de ping que cierre la ultima respuesta (el observador vivo y cubriendo) no concluye."""
+    falla de ping que cierre la ultima respuesta (el observador vivo y cubriendo) no concluye.
+    Un enchufe sin voltaje (`voltaje_v: null`) se lee por potencia, y la razon lo dice."""
     ping, enc = t.get("ping") or {}, t.get("enchufe") or {}
     u, f = ping.get("ultima_respuesta"), ping.get("primera_falla")
     if u is None or f is None or f - u > SEGUIDO_S:
         return None
     eu, ef = enc.get("ultima_ok"), enc.get("primera_falla")
     if eu is not None and ef is not None and eu >= u - SIMULTANEO_S and ef <= f + SIMULTANEO_S:
+        por_potencia = enc.get("falla_por") == "potencia"
         return (
             "CORTE_DE_ENERGIA",
             f"{enc['fuente']}:{enc['linea_falla']} + {ping['fuente']} (ultima respuesta {u}, primera falla {f})",
             f"el enchufe cayo (ultima lectura {eu}, primera falla {ef}) antes o a la vez que el TCP "
-            f"(ultima respuesta {u}, primera falla {f}): se fue la energia",
+            f"(ultima respuesta {u}, primera falla {f}): se fue la energia"
+            + (
+                f"; sin voltaje medido, la caida es de potencia (< {medidor_energia.APAGADA_W:g} W): no distingue "
+                "la pared (un bajon que tumba al adaptador) de la ATOM o su adaptador"
+                if por_potencia
+                else ""
+            ),
         )
     tras = enc.get("tras_caida_tcp") or []
     if tras and all(
         r.get("ok") is True
-        and isinstance(r.get("voltaje_v"), (int, float))
-        and isinstance(r.get("potencia_w"), (int, float))
-        and r["voltaje_v"] >= medidor_energia.VOLTAJE_NORMAL_V
+        and (r.get("voltaje_v") is None or _es_num(r["voltaje_v"]) and r["voltaje_v"] >= medidor_energia.VOLTAJE_NORMAL_V)
+        and _es_num(r.get("potencia_w"))
         and r["potencia_w"] >= medidor_energia.CARGA_W
         for r in tras
     ):
+        sin_v = sum(1 for r in tras if r.get("voltaje_v") is None)
         return (
             "CUELGUE",
             f"{ping['fuente']} (primera falla {f}) + {enc['fuente']} ({len(tras)} lecturas con consumo despues)",
             f"el TCP cayo en {f} y el enchufe siguio midiendo consumo (>= {medidor_energia.CARGA_W:g} W): "
-            "la maquina quedo energizada sin responder (cuelgue, o panic que no dejo rastro)",
+            "la maquina quedo energizada sin responder (cuelgue, o panic que no dejo rastro)"
+            + (f"; {sin_v} de {len(tras)} lecturas sin voltaje: decide la potencia" if sin_v else ""),
         )
     return None
 
 
 def _causa_por_etapas(ev: dict[str, Any]) -> tuple[str, str, str] | None:
-    """FALLO_DE_ARRANQUE_EN_<etapa> si murio sin completar el arranque y poco despues de su ultima etapa."""
+    """FALLO_DE_ARRANQUE_EN_<etapa> si murio sin completar el arranque y poco despues de su ultima etapa. La
+    etapa del nombre es la ULTIMA de la cadena que alcanzo: el arranque se quedo ahi (marcas hasta `basic`
+    dan FALLO_DE_ARRANQUE_EN_BASIC, y la razon nombra la que nunca llego)."""
     et = ev.get("etapas") or {}
     if not et.get("maxima") or not et.get("faltante") or et.get("ultima_epoch") is None:
         return None
@@ -222,7 +250,7 @@ def _causa_por_etapas(ev: dict[str, Any]) -> tuple[str, str, str] | None:
         return None
     falta = et["faltante"]
     return (
-        f"FALLO_DE_ARRANQUE_EN_{falta.upper().replace('-', '_')}",
+        f"FALLO_DE_ARRANQUE_EN_{et['maxima'].upper().replace('-', '_')}",
         f"{et['fuente']} (ultima etapa '{et['maxima']}')",
         f"el arranque llego hasta '{et['maxima']}' y nunca a '{falta}'",
     )
@@ -344,10 +372,14 @@ def veredicto(ev: dict[str, Any]) -> dict[str, Any]:
             razones.append(refinada[2])
     et = ev.get("etapas") or {}
     if et.get("maxima"):
+        sin_rama = [r for r, m in (et.get("ramas") or {}).items() if m is None]
         razones.append(
             f"etapas de arranque: hasta '{et['maxima']}'"
             + (f", sin '{et['faltante']}'" if et.get("faltante") else ", arranque completo")
+            + (f"; ramas sin marca: {', '.join(sin_rama)}" if sin_rama else "")
         )
+    if (ev.get("externo") or {}).get("decidido_por") == "potencia":
+        razones.append(f"medidor externo sin voltaje, decidido por potencia: {ev['externo']['motivo']}")
     if str((ev.get("bert") or {}).get("estado", "")).startswith("no atribuido"):
         razones.append(f"BERT y bootstatus del arranque siguiente {ev['bert']['estado']}: son de ese arranque, no de este")
     latido = (ev.get("tiempos_externos") or {}).get("latido") or {}
@@ -356,6 +388,8 @@ def veredicto(ev: dict[str, Any]) -> dict[str, Any]:
             f"el testigo externo callo junto con la ATOM (ultimo latido {latido.get('ultimo_hasta_la_muerte')}): "
             "lo que no registro en el hueco no es prueba de nada"
         )
+    if latido.get("paradas_en_el_hueco"):
+        razones.append("al testigo lo detuvieron (evento parada) dentro del hueco: su silencio despues no es de la ATOM")
     if ev.get("bootstatus_siguiente") not in (None, 0):
         razones.append(
             f"watchdog bootstatus={ev['bootstatus_siguiente']} en el arranque siguiente"
@@ -545,6 +579,10 @@ def _norm(boot_id: str) -> str:
     return str(boot_id).replace("-", "").lower()
 
 
+def _es_num(v: Any) -> bool:
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
 def _epoch(valor: Any) -> float | None:
     """Segundos epoch de un numero (microsegundos si pasa de 1e12, como `__REALTIME_TIMESTAMP`) o
     de un ISO 8601 CON zona; None para todo lo demas (una hora sin zona no se adivina)."""
@@ -634,36 +672,50 @@ def pstore_de(boot_id_siguiente: str, boot_id: str | None = None) -> dict[str, A
     return r
 
 
-def etapas_de() -> dict[str, dict[str, tuple[float, Any, int]]] | None:
-    """boot_id normalizado -> {etapa: (realtime epoch, monotonic tal cual, linea)} de etapas.jsonl,
-    con la PRIMERA vez que se registro cada etapa. None si el archivo no se pudo leer."""
-    filas = _jsonl(ETAPAS)
-    if filas is None:
+def etapas_de() -> dict[str, dict[str, tuple[float | None, Any, str]]] | None:
+    """boot_id normalizado -> {etapa: (realtime epoch o None, monotonic tal cual, "archivo:linea")} de
+    etapas.jsonl y su rotacion `.1` (la vieja primero), con la PRIMERA vez que se registro cada etapa. Una
+    marca con `realtime: null` (bash sin $EPOCHREALTIME) cuenta como etapa alcanzada pero no da hora.
+    Las filas que no son {boot_id, etapa, monotonic, realtime} numericos o null se descartan, como en
+    `etapas_arranque.leer_marcas`. None si la generacion vigente no se pudo leer."""
+    viejo = ETAPAS.with_name(ETAPAS.name + ".1")
+    vigente = _jsonl(ETAPAS)
+    if vigente is None:
         return None
-    out: dict[str, dict[str, tuple[float, Any, int]]] = {}
-    for n, f in filas:
-        bid, etapa, t = f.get("boot_id"), f.get("etapa"), _epoch(f.get("realtime"))
-        if isinstance(bid, str) and isinstance(etapa, str) and t is not None:
-            out.setdefault(_norm(bid), {}).setdefault(etapa, (t, f.get("monotonic"), n))
+    out: dict[str, dict[str, tuple[float | None, Any, str]]] = {}
+    for ruta, filas in ((viejo, _jsonl(viejo) or []), (ETAPAS, vigente)):
+        for n, f in filas:
+            bid, etapa, real, mono = f.get("boot_id"), f.get("etapa"), f.get("realtime"), f.get("monotonic")
+            if not (isinstance(bid, str) and isinstance(etapa, str) and (real is None or _es_num(real))
+                    and (mono is None or _es_num(mono))):
+                continue
+            out.setdefault(_norm(bid), {}).setdefault(etapa, (_epoch(real), mono, f"{ruta}:{n}"))
     return out
 
 
-def resumen_etapas(vistas: dict[str, tuple[float, Any, int]]) -> dict[str, Any]:
-    """Hasta donde llego el arranque. `faltante` es la etapa que sigue a la mas avanzada mientras el
-    arranque no llego a ETAPA_ARRANQUE_COMPLETO; una intermedia ausente (network-online sin red) va a
-    `saltadas` y no cuenta como fallo, porque el arranque siguio despues de ella."""
-    alcanzadas = [e for e in ETAPAS_ORDEN if e in vistas]
+def resumen_etapas(vistas: dict[str, tuple[float | None, Any, str]]) -> dict[str, Any]:
+    """Hasta donde llego el arranque por la cadena de etapa-marca.sh. `faltante` es la etapa de la cadena
+    que sigue a la mas avanzada mientras no llego a ETAPA_ARRANQUE_COMPLETO; una intermedia ausente (gdm en
+    un arranque sin pantalla) va a `saltadas` y no cuenta como fallo. Las ramas (network-online, gpu-lista)
+    se informan con su monotonic o None, y nunca deciden el fallo."""
+    canon: dict[str, tuple[float | None, Any, str]] = {}
+    for e, v in vistas.items():
+        canon.setdefault(etapas_arranque.canonica(e), v)
+    alcanzadas = [e for e in ETAPAS_ORDEN if e in canon]
     maxima = alcanzadas[-1] if alcanzadas else None
     i = ETAPAS_ORDEN.index(maxima) if maxima else -1
+    horas = [v[0] for v in vistas.values() if v[0] is not None]
     return {
         "alcanzadas": alcanzadas,
         "maxima": maxima,
         "faltante": ETAPAS_ORDEN[i + 1] if i < ETAPAS_ORDEN.index(ETAPA_ARRANQUE_COMPLETO) else None,
-        "saltadas": [e for e in ETAPAS_ORDEN[: max(i, 0)] if e not in vistas],
-        "desconocidas": sorted(set(vistas) - set(ETAPAS_ORDEN)),
-        "monotonic": {e: vistas[e][1] for e in alcanzadas},
-        "ultima_epoch": max(v[0] for v in vistas.values()),
-        "fuente": f"{ETAPAS}:{vistas[maxima][2]}" if maxima else str(ETAPAS),
+        "saltadas": [e for e in ETAPAS_ORDEN[: max(i, 0)] if e not in canon],
+        "ramas": {r: canon[r][1] if r in canon else None for r in etapas_arranque.RAMAS},
+        "desconocidas": sorted(e for e in vistas if etapas_arranque.canonica(e) not in
+                               (*ETAPAS_ORDEN, *etapas_arranque.RAMAS, "sesion-sistema")),
+        "monotonic": {e: canon[e][1] for e in alcanzadas},
+        "ultima_epoch": max(horas) if horas else None,
+        "fuente": canon[maxima][2] if maxima else str(ETAPAS),
     }
 
 
@@ -680,12 +732,15 @@ def arranques_fantasma(
     desde, hasta = boots[0]["first_entry"] / 1e6, boots[-1]["first_entry"] / 1e6
     vistos: dict[str, dict[str, Any]] = {}
     for bid, vistas in (etapas or {}).items():
-        primera = min(vistas.values(), key=lambda v: v[0])
+        con_hora = [v for v in vistas.values() if v[0] is not None]
+        if not con_hora:
+            continue  # sin ninguna hora no se puede ubicar en el tramo del journal
+        primera = min(con_hora, key=lambda v: v[0])
         vistos[bid] = {
             "boot_id": bid,
             "inicio_epoch": primera[0],
-            "fin_epoch": max(v[0] for v in vistas.values()),
-            "fuente": f"{ETAPAS}:{primera[2]}",
+            "fin_epoch": max(v[0] for v in con_hora),
+            "fuente": primera[2],
         }
     for n, f in _jsonl(PSTORE_DIR / "arranque.jsonl") or []:
         t = _epoch(f.get("ts"))
@@ -707,28 +762,49 @@ def _externo() -> Path:
     return EXTERNO if EXTERNO is not None else medidor_energia._datos()
 
 
-def _en_ventana(ruta: Path, desde: float, hasta: float, clave: str = "epoch") -> list[tuple[int, dict[str, Any], float]]:
-    """(linea, fila, epoch) de las filas con hora en [desde, hasta], ordenadas por hora."""
+def _serie(nombre: str, *, en_la_atom: bool) -> list[Path]:
+    """Archivos de una serie externa, del mas viejo al mas nuevo: las rotaciones del testigo (`<nombre>.jsonl.N`
+    ... `.1`, como las deja bb_testigo.Diario), su vigente y, si `en_la_atom`, `externo/<nombre>.jsonl` (lo
+    que escriben observador_ping, su sync del NAS y medidor_energia). Solo los que existen."""
+    d = _externo() / TESTIGO
+    rotadas = sorted(
+        (p for p in d.glob(f"{nombre}.jsonl.*") if p.name.rsplit(".", 1)[-1].isdigit()),
+        key=lambda p: -int(p.name.rsplit(".", 1)[-1]),
+    )
+    candidatas = [*rotadas, d / f"{nombre}.jsonl"] + ([_externo() / f"{nombre}.jsonl"] if en_la_atom else [])
+    return [p for p in candidatas if p.is_file()]
+
+
+def _en_ventana(
+    rutas: list[Path], desde: float, hasta: float, clave: str = "epoch"
+) -> list[tuple[str, int, dict[str, Any], float]]:
+    """(archivo, linea, fila, epoch) de las filas con hora en [desde, hasta] de todas las `rutas`, por hora."""
     out = []
-    for n, f in _jsonl(ruta) or []:
-        e = _epoch(f.get(clave))
-        if e is not None and desde <= e <= hasta:
-            out.append((n, f, e))
-    return sorted(out, key=lambda x: x[2])
+    for ruta in rutas:
+        for n, f in _jsonl(ruta) or []:
+            e = _epoch(f.get(clave))
+            if e is not None and desde <= e <= hasta:
+                out.append((str(ruta), n, f, e))
+    return sorted(out, key=lambda x: x[3])
 
 
 def _lectura_buena(f: dict[str, Any]) -> bool:
-    v = f.get("voltaje_v")
-    return f.get("ok") is True and isinstance(v, (int, float)) and v >= medidor_energia.VOLTAJE_CAIDO_V
+    """El enchufe contesto y la ATOM tenia energia: voltaje medido >= VOLTAJE_CAIDO_V o, sin voltaje
+    (Shelly Gen1 del testigo), potencia >= APAGADA_W. Con voltaje medido la potencia no decide: voltaje normal
+    y 0 W es la ATOM apagada con pared, y eso lo concluye medidor_energia (APAGADO_INTERNO), no esta regla."""
+    if f.get("ok") is not True:
+        return False
+    v, w = f.get("voltaje_v"), f.get("potencia_w")
+    if v is None:
+        return _es_num(w) and w >= medidor_energia.APAGADA_W
+    return _es_num(v) and v >= medidor_energia.VOLTAJE_CAIDO_V
 
 
 def tiempos_externos(inicio: float, fin: float, siguiente_inicio: float) -> dict[str, Any]:
-    """Cuando dejo de responder la ATOM por TCP y que hacia el enchufe en ese momento, de
-    `externo/ping.jsonl` y `externo/energia.jsonl` (los del observador y los del testigo, mismo
-    esquema), mas el latido del testigo (`externo/latido.jsonl`: filas con `epoch` o `ts`). Lee y
-    resume; la conclusion la saca `_causa_por_tiempos`, que es pura."""
-    d = _externo()
-    ping, energia, latido = d / "ping.jsonl", d / "energia.jsonl", d / "latido.jsonl"
+    """Cuando dejo de responder la ATOM por TCP y que hacia el enchufe en ese momento, de las series de
+    ping y energia de la ATOM y del testigo (mismo `ok`: «la ATOM contesto»), mas el latido del testigo
+    (`evento: latido`). Lee y resume; la conclusion la saca `_causa_por_tiempos`, que es pura."""
+    ping, energia, latido = _serie("ping", en_la_atom=True), _serie("energia", en_la_atom=True), _serie("latido", en_la_atom=False)
     u = observador_ping.ultima_respuesta(ping, siguiente_inicio)
     if u is not None and u < inicio:
         u = None  # la ultima respuesta es de un boot anterior: este no tiene cobertura
@@ -736,86 +812,108 @@ def tiempos_externos(inicio: float, fin: float, siguiente_inicio: float) -> dict
     filas_p = _en_ventana(ping, inicio, siguiente_inicio)
     filas_e = _en_ventana(energia, inicio, siguiente_inicio)
     enchufe: dict[str, Any] = {
-        "fuente": str(energia), "ultima_ok": None, "primera_falla": None, "linea_falla": None, "tras_caida_tcp": [],
+        "fuente": ", ".join(map(str, energia)) or str(_externo() / "energia.jsonl"),
+        "ultima_ok": None, "primera_falla": None, "linea_falla": None, "falla_por": None, "tras_caida_tcp": [],
     }
     if u is not None:
-        falla = next(((n, e) for n, r, e in filas_e if e > u - SIMULTANEO_S and not _lectura_buena(r)), None)
+        falla = next(((a, n, r, e) for a, n, r, e in filas_e if e > u - SIMULTANEO_S and not _lectura_buena(r)), None)
         if falla:
-            enchufe["primera_falla"], enchufe["linea_falla"] = falla[1], falla[0]
-            antes = [e for _, r, e in filas_e if e < falla[1] and _lectura_buena(r)]
+            a, n, r, e = falla
+            enchufe.update(fuente=a, primera_falla=e, linea_falla=n)
+            enchufe["falla_por"] = (
+                "potencia" if r.get("ok") is True and r.get("voltaje_v") is None else
+                "voltaje" if r.get("ok") is True else "enchufe_mudo"
+            )
+            antes = [x[3] for x in filas_e if x[3] < e and _lectura_buena(x[2])]
             enchufe["ultima_ok"] = max(antes) if antes else None
     if f is not None:
         enchufe["tras_caida_tcp"] = [
             {k: r.get(k) for k in ("epoch", "ok", "voltaje_v", "potencia_w")}
-            for _, r, e in filas_e
+            for _, _, r, e in filas_e
             if f < e <= min(f + SEGUIDO_S, siguiente_inicio)
         ]
     r: dict[str, Any] = {
         "filas": len(filas_p) + len(filas_e),
-        "ping": {"fuente": str(ping), "ultima_respuesta": u, "primera_falla": f, "filas_en_ventana": len(filas_p)},
+        "ping": {"fuente": ", ".join(map(str, ping)) or str(_externo() / "ping.jsonl"),
+                 "ultima_respuesta": u, "primera_falla": f, "filas_en_ventana": len(filas_p)},
         "enchufe": enchufe,
         "latido": None,
     }
-    filas_l = _jsonl(latido)
-    if filas_l is not None:
-        horas = sorted(e for _, x in filas_l if (e := _epoch(x.get("epoch", x.get("ts")))) is not None)
+    if latido:
+        filas_l = [(x[2], x[3]) for x in _en_ventana(latido, float("-inf"), float("inf"))]
+        horas = [e for x, e in filas_l if x.get("evento") == "latido"]
         muerte = max(fin, u or fin)
         r["latido"] = {
-            "fuente": str(latido),
+            "fuente": ", ".join(map(str, latido)),
             "ultimo_hasta_la_muerte": max((e for e in horas if e <= muerte), default=None),
             "en_el_hueco": sum(1 for e in horas if muerte < e <= siguiente_inicio),
+            # `parada`: alguien detuvo al testigo; si cae en el hueco, su silencio despues no es de la ATOM
+            "paradas_en_el_hueco": sum(1 for x, e in filas_l if x.get("evento") == "parada" and muerte < e <= siguiente_inicio),
         }
     return r
 
 
+def _texto_udp(f: dict[str, Any]) -> str:
+    """El texto de una fila de netconsole del testigo: `texto`, o `b64` (datagrama que no era UTF-8) decodificado."""
+    if isinstance(f.get("texto"), str):
+        return f["texto"]
+    if isinstance(f.get("b64"), str):
+        try:
+            return base64.b64decode(f["b64"], validate=True).decode("utf-8", errors="replace")
+        except (ValueError, binascii.Error):
+            return ""
+    return ""
+
+
 def netconsole_en(inicio: float, siguiente_inicio: float) -> dict[str, Any] | None:
-    """Lineas de kernel que el receptor de netconsole (`externo/netconsole.jsonl`: `epoch` y el texto
-    en `linea`, `mensaje` o `msg`) recibio durante el boot; None si no hay ninguna."""
-    ruta = _externo() / "netconsole.jsonl"
-    filas = [x for x in _en_ventana(ruta, inicio, siguiente_inicio) if x[2] < siguiente_inicio]
+    """Lineas que el testigo recibio por UDP (`externo/testigo/netconsole.jsonl`: `epoch` de recepcion y el
+    texto en `texto` o `b64`) durante el boot; None si no hay ninguna."""
+    filas = [x for x in _en_ventana(_serie("netconsole", en_la_atom=False), inicio, siguiente_inicio) if x[3] < siguiente_inicio]
     if not filas:
         return None
-
-    def texto(f: dict[str, Any]) -> str:
-        return next((str(f[k]) for k in ("linea", "mensaje", "msg") if isinstance(f.get(k), str)), "")
-
-    panico = next(((n, texto(f)) for n, f, _ in filas if PANIC_TEXTO in texto(f)), None)
+    panico = next(((a, n, _texto_udp(f)) for a, n, f, _ in filas if PANIC_TEXTO in _texto_udp(f)), None)
     return {
         "lineas_en_ventana": len(filas),
-        "ultima_epoch": filas[-1][2],
-        "ultima_linea": texto(filas[-1][1])[:300],
-        "linea_panico": panico[1].strip()[:300] if panico else None,
-        "fuente_panico": f"{ruta}:{panico[0]}" if panico else None,
+        "ultima_epoch": filas[-1][3],
+        "ultima_linea": _texto_udp(filas[-1][2])[:300],
+        "linea_panico": panico[2].strip()[:300] if panico else None,
+        "fuente_panico": f"{panico[0]}:{panico[1]}" if panico else None,
     }
 
 
-def _termica(f: dict[str, Any]) -> Any:
-    if "termica" in f:
-        return f["termica"]
-    claves = {k: v for k, v in f.items() if re.search(r"temp|termic", k, re.IGNORECASE)}
-    return claves or None
-
-
-def aliento_en(inicio: float, siguiente_inicio: float) -> dict[str, Any] | None:
-    """Ultima fila del anillo de ultimo aliento (250 ms) dentro del boot, su periodo medido y la
-    curva termica de los CURVA_TERMICA_S previos, una lectura por segundo. El anillo no lleva
-    boot_id: la fila es del boot si su `ts` cae en [inicio, siguiente_inicio). None si no se pudo leer."""
-    if _jsonl(ANILLO) is None:
+def aliento_en(boot_id: str, inicio: float, siguiente_inicio: float) -> dict[str, Any] | None:
+    """Ultima `muestra` del anillo de ultimo aliento (250 ms) de ESTE boot, su periodo medido y la curva
+    termica (`temp_c` por zona) de los CURVA_TERMICA_S previos, una lectura por segundo. Cada registro lleva
+    `boot` (boot_id sin guiones): se filtra por el; uno con `boot: desconocido` (el demonio no pudo leer
+    /proc) se atribuye por hora, si cae en [inicio, siguiente_inicio). None si el anillo no se pudo leer."""
+    try:
+        anillo = ultimo_aliento.leer_anillo(str(ANILLO))
+    except (OSError, ValueError, KeyError):
         return None
-    filas = [x for x in _en_ventana(ANILLO, inicio, siguiente_inicio, clave="ts") if x[2] < siguiente_inicio]
+    propio = _norm(boot_id)
+    filas = [
+        (r, float(r["ts"]))
+        for r in anillo["registros"]
+        if r.get("tipo") == "muestra" and _es_num(r.get("ts"))
+        and (r.get("boot") == propio or r.get("boot") == "desconocido" and inicio <= r["ts"] < siguiente_inicio)
+    ]
+    filas.sort(key=lambda x: x[1])
+    vacio = {"filas_en_ventana": 0, "ultima_epoch": None, "periodo_s": None, "ultima_lectura": None,
+             "curva_termica": None}
     if not filas:
-        return {"filas_en_ventana": 0, "ultima_epoch": None, "periodo_s": None, "ultima_lectura": None, "curva_termica": None}
-    ultima = filas[-1][2]
-    pasos = [b[2] - a[2] for a, b in zip(filas[-9:], filas[-8:])]
+        return vacio
+    ultima = filas[-1][1]
+    pasos = [b[1] - a[1] for a, b in zip(filas[-9:], filas[-8:])]
     curva: dict[int, dict[str, Any]] = {}
-    for _, f, e in filas:
-        if e >= ultima - CURVA_TERMICA_S and _termica(f) is not None:
-            curva[int(e)] = {"epoch": e, "termica": _termica(f)}  # la ultima de cada segundo
+    for f, e in filas:
+        if e >= ultima - CURVA_TERMICA_S and isinstance(f.get("temp_c"), dict):
+            curva[int(e)] = {"epoch": e, "termica": f["temp_c"]}  # la ultima de cada segundo
     return {
+        **vacio,
         "filas_en_ventana": len(filas),
         "ultima_epoch": ultima,
         "periodo_s": round(statistics.median(pasos), 3) if pasos else None,
-        "ultima_lectura": filas[-1][1],
+        "ultima_lectura": filas[-1][0],
         "curva_termica": list(curva.values()) or None,
     }
 
@@ -1042,17 +1140,20 @@ def _evidencia_forense(
     return ev
 
 
-def _evidencia_externa(fin: float, hueco_s: float, ruta: Path | None = None) -> tuple[dict[str, Any] | None, str | None]:
-    """(externo, no_concluyente): `externo` solo si el medidor mide el corte con voltaje; si hay filas sin conclusion se declara como no leido."""
-    ext = medidor_energia.ventana_de_corte(ruta or _externo() / "energia.jsonl", fin, hueco_s)
+def _evidencia_externa(
+    fin: float, hueco_s: float, ruta: Path | list[Path] | None = None
+) -> tuple[dict[str, Any] | None, str | None]:
+    """(externo, no_concluyente): `externo` si el medidor concluye con voltaje o si, sin voltaje, decidio por
+    potencia (`decidido_por`); filas sin ninguna conclusion se declaran como no leido."""
+    ext = medidor_energia.ventana_de_corte(ruta if ruta is not None else _serie("energia", en_la_atom=True), fin, hueco_s)
     if ext is None:
         return None, None
-    if ext["voltaje_perdido"] is None:
+    if ext["voltaje_perdido"] is None and ext.get("decidido_por") != "potencia":
         return None, f"medidor_externo ({ext['motivo']})"
     return ext, None
 
 
-def _anade_evidencia_externa(ev: dict[str, Any], fin: float, ruta: Path | None = None) -> None:
+def _anade_evidencia_externa(ev: dict[str, Any], fin: float, ruta: Path | list[Path] | None = None) -> None:
     """Pone `ev["externo"]` si el medidor concluye, o declara en `no_se_pudo_leer` que hubo filas sin conclusion."""
     externo, no_concluyente = _evidencia_externa(fin, ev["hueco_s"], ruta)
     if externo is not None:
@@ -1167,7 +1268,7 @@ def _anade_fuera_del_journal(
         no_leido.append("etapas_arranque (sin filas para este boot)")
     ev["tiempos_externos"] = tiempos_externos(inicio, fin, siguiente_inicio)
     ev["netconsole"] = netconsole_en(inicio, siguiente_inicio)
-    ev["aliento"] = aliento_en(inicio, siguiente_inicio)
+    ev["aliento"] = aliento_en(ev["boot_id"], inicio, siguiente_inicio)
     if ev["aliento"] is None:
         no_leido.append(f"anillo_ultimo_aliento ({ANILLO} ilegible o ausente)")
 

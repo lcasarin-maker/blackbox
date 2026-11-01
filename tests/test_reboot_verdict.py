@@ -9,6 +9,7 @@ from types import SimpleNamespace
 import pytest
 
 from tools import reboot_verdict as rv
+from tools import ultimo_aliento
 from tools.reboot_verdict import disparador, veredicto
 
 pytestmark = pytest.mark.unit
@@ -21,7 +22,7 @@ def _sin_fuentes_de_la_maquina(tmp_path, monkeypatch):
     """Ningun test lee /var/lib/blackbox ni el $BLACKBOX_DATA real: cada fuente apunta a un tmp vacio."""
     monkeypatch.setattr(rv, "PSTORE_DIR", tmp_path / "sin_pstore")
     monkeypatch.setattr(rv, "ETAPAS", tmp_path / "sin_etapas.jsonl")
-    monkeypatch.setattr(rv, "ANILLO", tmp_path / "sin_anillo.jsonl")
+    monkeypatch.setattr(rv, "ANILLO", tmp_path / "sin_anillo.bin")
     monkeypatch.setattr(rv, "EXTERNO", tmp_path / "sin_externo")
 
 
@@ -649,7 +650,25 @@ def _fx(monkeypatch, tmp_path, externo=None, etapas=True, anillo=False, journal=
     if etapas:
         monkeypatch.setattr(rv, "ETAPAS", FX / "etapas.jsonl")
     if anillo:
-        monkeypatch.setattr(rv, "ANILLO", FX / "ultimo_aliento.jsonl")
+        monkeypatch.setattr(rv, "ANILLO", _anillo_real(tmp_path))
+
+
+def _anillo_real(tmp_path):
+    """Un anillo de verdad, escrito con `ultimo_aliento.Anillo`: 65 s del boot A subiendo hasta 95 C, cada
+    250 ms, hasta FIN + 2.25; el arranque B a 40 C, con UNA muestra de B fechada dentro de la ventana de A
+    (reloj sin NTP) que el filtro por `boot` no debe atribuirle."""
+    ruta = tmp_path / "anillo.bin"
+    a = ultimo_aliento.Anillo(str(ruta), tamano=4096 + 1024 * 400)
+    a.abrir()
+    pasos = 261  # FIN + 2.25 - 65 ... FIN + 2.25
+    for k in range(pasos):
+        t = FIN + 2.25 - 0.25 * (pasos - 1 - k)
+        a.escribir({"ts": t, "boot": A_ID, "tipo": "muestra", "temp_c": {"0": round(70.0 + 25.0 * k / (pasos - 1), 2)}})
+    a.escribir({"ts": FIN - 10, "boot": B_ID, "tipo": "muestra", "temp_c": {"0": 40.0}})
+    for k in range(8):
+        a.escribir({"ts": SIG + 30 + 0.25 * k, "boot": B_ID, "tipo": "muestra", "temp_c": {"0": 40.0}})
+    a.cerrar()
+    return ruta
 
 
 def _fila(ev):
@@ -812,27 +831,51 @@ def test_netconsole_atribuye_el_panic_de_la_ventana_y_no_el_del_boot_anterior(tm
     _fx(monkeypatch, tmp_path, externo="externo_netconsole")
     f = _fila(rv.recoge(BOOTS_FX, 0))
     assert f["causa"] == "PANICO_NETCONSOLE"
-    assert f["causa_fuente"] == f"{FX / 'externo_netconsole' / 'netconsole.jsonl'}:4"  # no la linea 1 (otro boot)
+    assert f["causa_fuente"] == f"{FX / 'externo_netconsole' / 'testigo' / 'netconsole.jsonl'}:4"  # no la linea 1 (otro boot)
     assert f["netconsole"]["lineas_en_ventana"] == 3
 
 
 def test_etapas_dicen_hasta_donde_llego_y_solo_un_arranque_trunco_es_fallo():
-    vistas = {"local-fs": (100.0, 4, 1), "basic": (102.0, 6, 2)}
+    # las ramas (gpu-lista corre junto a basic) no cuentan para la etapa maxima: el arranque se quedo en basic
+    vistas = {"local-fs": (100.0, 4, "e:1"), "basic": (102.0, 6, "e:2"), "gpu-lista": (101.0, 5, "e:3")}
     r = rv.resumen_etapas(vistas)
-    assert (r["maxima"], r["faltante"], r["ultima_epoch"]) == ("basic", "network-online", 102.0)
+    assert (r["maxima"], r["faltante"], r["ultima_epoch"]) == ("basic", "multi-user", 102.0)
+    assert r["ramas"] == {"network-online": None, "gpu-lista": 5} and r["fuente"] == "e:2"
     ev = {**BASE, "etapas": r, "fin_epoch": 160.0}
     v = veredicto(ev)
-    assert v["causa"] == "FALLO_DE_ARRANQUE_EN_NETWORK_ONLINE" and v["etiqueta"] == "CORTE_ABRUPTO"
-    assert "etapas.jsonl" in v["causa_fuente"] or str(rv.ETAPAS) in v["causa_fuente"]
+    assert v["causa"] == "FALLO_DE_ARRANQUE_EN_BASIC" and v["etiqueta"] == "CORTE_ABRUPTO"
+    assert v["causa_fuente"].startswith("e:2") and any("nunca a 'multi-user'" in x for x in v["razones"])
     # control: vivio una hora despues de su ultima etapa: el que fallo fue el escritor, no el arranque
     assert veredicto({**ev, "fin_epoch": 102.0 + 3600})["causa"] == "INDETERMINADO"
-    # control: network-online ausente (sin red) pero el arranque siguio hasta gpu-lista: completo
-    completo = {e: (100.0 + n, n, n) for n, e in enumerate(rv.ETAPAS_ORDEN) if e not in ("network-online", "sesion")}
+    # control: sin gdm (arranque sin pantalla) y sin red, pero llego a graphical: completo
+    completo = {e: (100.0 + n, n, f"e:{n}") for n, e in enumerate(rv.ETAPAS_ORDEN) if e not in ("gdm", "sesion-usuario")}
     rc = rv.resumen_etapas(completo)
-    assert rc["faltante"] is None and rc["saltadas"] == ["network-online"]
+    assert rc["faltante"] is None and rc["saltadas"] == ["gdm"] and rc["ramas"]["network-online"] is None
     assert veredicto({**BASE, "etapas": rc, "fin_epoch": 110.0})["causa"] == "INDETERMINADO"
+    # sesion-<uid> entra a la cadena por etapas_arranque.canonica; la de GDM (uid < 1000) no es de una persona
+    assert rv.resumen_etapas({"sesion-1000": (1.0, 1, "e:1")})["alcanzadas"] == ["sesion-usuario"]
+    assert rv.resumen_etapas({"sesion-120": (1.0, 1, "e:1")})["alcanzadas"] == []
     # control: solo etapas que no conoce no son un fallo en local-fs
-    assert veredicto({**BASE, "etapas": rv.resumen_etapas({"tpm": (1.0, 1, 1)}), "fin_epoch": 2.0})["causa"] == "INDETERMINADO"
+    assert veredicto({**BASE, "etapas": rv.resumen_etapas({"tpm": (1.0, 1, "e:1")}), "fin_epoch": 2.0})["causa"] == "INDETERMINADO"
+
+
+def test_etapas_leen_la_rotacion_y_toleran_realtime_null(tmp_path, monkeypatch):
+    """El esquema real de etapa-marca.sh: `.1` es la generacion vieja, y `realtime: null` es una etapa sin hora."""
+    e = tmp_path / "etapas.jsonl"
+    (tmp_path / "etapas.jsonl.1").write_text(
+        json.dumps({"boot_id": _dashed(A_ID), "etapa": "local-fs", "monotonic": 3.91, "realtime": T0 + 4.1}) + "\n", encoding="utf-8"
+    )
+    e.write_text(
+        json.dumps({"boot_id": _dashed(A_ID), "etapa": "basic", "monotonic": None, "realtime": None}) + "\n"
+        + json.dumps({"boot_id": _dashed(A_ID), "etapa": "multi-user", "monotonic": "9", "realtime": T0 + 9}) + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(rv, "ETAPAS", e)
+    vistas = rv.etapas_de()[A_ID]
+    assert set(vistas) == {"local-fs", "basic"}  # multi-user trae monotonic de texto: se descarta como en etapas_arranque
+    assert vistas["local-fs"] == (T0 + 4.1, 3.91, f"{e}.1:1") and vistas["basic"] == (None, None, f"{e}:1")
+    r = rv.resumen_etapas(vistas)
+    assert r["maxima"] == "basic" and r["ultima_epoch"] == T0 + 4.1 and r["fuente"] == f"{e}:1"
 
 
 def test_arranque_fantasma_con_etapas_y_sin_journal_aparece_como_fila(monkeypatch, tmp_path, capsys):
@@ -844,9 +887,9 @@ def test_arranque_fantasma_con_etapas_y_sin_journal_aparece_como_fila(monkeypatc
     assert [f["boot_id"] for f in filas] == [A_ID, G_ID]
     a, g = filas
     assert a["boot_id_siguiente"] == G_ID and g["boot_id_siguiente"] == B_ID
-    assert a["arranque_fantasma"] is False and a["etapas"]["maxima"] == "sesion"
+    assert a["arranque_fantasma"] is False and a["etapas"]["maxima"] == "sesion-usuario"
     assert g["arranque_fantasma"] is True and g["boot_idx"] is None and g["esquema"] == "bb-reboot/1"
-    assert g["etapas"]["maxima"] == "basic" and g["causa"] == "FALLO_DE_ARRANQUE_EN_NETWORK_ONLINE"
+    assert g["etapas"]["maxima"] == "basic" and g["causa"] == "FALLO_DE_ARRANQUE_EN_BASIC"
     assert g["etiqueta"] == "INDETERMINADO" and "etapas.jsonl" in g["causa_fuente"]
     assert a["hueco_s"] == 60  # la ventana de A acaba donde empieza G, no en B
     assert any("arranque fantasma 99999999 se interpone" in r for r in a["razones"])  # su BERT es de G
@@ -858,7 +901,7 @@ def test_arranque_fantasma_con_etapas_y_sin_journal_aparece_como_fila(monkeypatc
 
 
 def test_arranque_fantasma_solo_dentro_del_tramo_del_journal():
-    etapas = {"1" * 32: {"local-fs": (T0 - 9000, 4, 1)}, G_ID: {"local-fs": (FIN + 60, 4, 2)}, A_ID: {"basic": (T0 + 6, 6, 3)}}
+    etapas = {"1" * 32: {"local-fs": (T0 - 9000, 4, "e:1")}, G_ID: {"local-fs": (FIN + 60, 4, "e:2")}, A_ID: {"basic": (T0 + 6, 6, "e:3")}}
     assert [g["boot_id"] for g in rv.arranques_fantasma(BOOTS_FX, etapas)] == [G_ID]  # el viejo es journal rotado
 
 
@@ -870,12 +913,15 @@ def test_anillo_da_la_hora_de_muerte_al_segundo_y_la_curva_termica_previa(tmp_pa
     assert h["cota_superior_fuente"] == "ping" and h["cota_superior_epoch"] == FIN + 3
     assert h["incertidumbre_s"] <= 1.0 and h["periodo_anillo_s"] == 0.25
     curva = f["curva_termica_previa"]
-    assert 55 <= len(curva) <= 61 and curva[-1]["termica"] == {"gpu_c": 95.0}
+    assert 55 <= len(curva) <= 61 and curva[-1]["termica"] == {"0": 95.0}
+    assert curva[0]["termica"]["0"] < curva[-1]["termica"]["0"]  # la curva sube
     assert all(FIN + 2.25 - 60 - 1 <= p["epoch"] <= FIN + 2.25 for p in curva)
-    assert f["ultimo_aliento"]["termica"] == {"gpu_c": 95.0}  # las filas del arranque siguiente (40 C) no son del muerto
+    # las muestras del arranque siguiente (40 C), incluida la fechada dentro de la ventana, no son del muerto
+    assert f["ultimo_aliento"]["temp_c"] == {"0": 95.0} and f["ultimo_aliento"]["boot"] == A_ID
+    assert all(p["termica"]["0"] > 40.0 for p in curva)
     # control: sin anillo, la hora la da el ping y se declara la fuente que falto
     _fx(monkeypatch, tmp_path, externo="externo_corte")
-    monkeypatch.setattr(rv, "ANILLO", tmp_path / "sin_anillo.jsonl")
+    monkeypatch.setattr(rv, "ANILLO", tmp_path / "sin_anillo.bin")
     f = _fila(rv.recoge(BOOTS_FX, 0))
     assert f["hora_muerte"]["fuente"] == "ping" and f["curva_termica_previa"] is None
     assert any("anillo_ultimo_aliento" in x for x in f["could_not_run"])
@@ -884,7 +930,10 @@ def test_anillo_da_la_hora_de_muerte_al_segundo_y_la_curva_termica_previa(tmp_pa
 def test_testigo_que_calla_con_la_atom_se_dice_y_no_concluye(tmp_path, monkeypatch):
     ext = tmp_path / "ext"
     ext.mkdir()
-    (ext / "latido.jsonl").write_text("\n".join(json.dumps({"epoch": FIN - 30 + 5 * k}) for k in range(7)) + "\n", encoding="utf-8")
+    (ext / "testigo").mkdir()
+    (ext / "testigo" / "latido.jsonl").write_text(
+        "\n".join(json.dumps({"epoch": FIN - 30 + 5 * k, "evento": "latido"}) for k in range(7)) + "\n", encoding="utf-8"
+    )
     _fx(monkeypatch, tmp_path)
     monkeypatch.setattr(rv, "EXTERNO", ext)
     f = _fila(rv.recoge(BOOTS_FX, 0))
@@ -928,3 +977,29 @@ def test_la_fila_conserva_cada_campo_de_bb_reboot_1_y_solo_anade(monkeypatch, tm
     assert rv.main(["--ultimos", "1", "--escribe"]) == 0
     fila = json.loads((tmp_path / "reboots.jsonl").read_text(encoding="utf-8"))
     assert set(fila) == CAMPOS_BB_REBOOT_1 | CAMPOS_NUEVOS and fila["esquema"] == "bb-reboot/1"
+
+
+def test_series_del_testigo_con_rotaciones_b64_y_parada(tmp_path, monkeypatch):
+    """Los nombres y campos reales de bb_testigo en `externo/testigo/`: rotaciones .N, netconsole en `b64` cuando el
+    datagrama no era UTF-8, y `evento: parada` (testigo detenido) que no cuenta como latido."""
+    import base64
+
+    ext = tmp_path / "ext"
+    t = ext / "testigo"
+    t.mkdir(parents=True)
+    panic = "Kernel panic - not syncing: Fatal exception \xff".encode("latin-1")
+    (t / "netconsole.jsonl.1").write_text(json.dumps({"epoch": FIN - 5, "texto": "linea vieja"}) + "\n", encoding="utf-8")
+    (t / "netconsole.jsonl").write_text(json.dumps({"epoch": FIN + 1, "b64": base64.b64encode(panic).decode()}) + "\n", encoding="utf-8")
+    (t / "latido.jsonl").write_text(
+        json.dumps({"epoch": FIN - 10, "evento": "latido"}) + "\n" + json.dumps({"epoch": FIN + 20, "evento": "parada"}) + "\n",
+        encoding="utf-8",
+    )
+    _fx(monkeypatch, tmp_path)
+    monkeypatch.setattr(rv, "EXTERNO", ext)
+    assert [p.name for p in rv._serie("netconsole", en_la_atom=False)] == ["netconsole.jsonl.1", "netconsole.jsonl"]
+    f = _fila(rv.recoge(BOOTS_FX, 0))
+    assert f["causa"] == "PANICO_NETCONSOLE" and f["causa_fuente"] == f"{t / 'netconsole.jsonl'}:1"
+    assert f["netconsole"]["lineas_en_ventana"] == 2
+    lat = f["tiempos_externos"]["latido"]
+    assert lat["en_el_hueco"] == 0 and lat["paradas_en_el_hueco"] == 1 and lat["ultimo_hasta_la_muerte"] == FIN - 10
+    assert any("lo detuvieron" in r for r in f["razones"])
