@@ -3,7 +3,7 @@
 
 La completitud se prueba sobre el SUJETO, no sobre lo que informan los agentes (regla de enjambre): cada tema del
 inventario debe tener (1) el texto descargado COMPLETO y (2) un resultado de analisis con el esquema valido.
-Patron tomado de Twiner (resultado de tres estados y completitud sustantiva, sin importar su codigo):
+Patron cosechado de otro repositorio (resultado de tres estados y completitud sustantiva, sin importar su codigo):
   descargado        recibo `fetched` con todos los mensajes y texto no vacio
   vacio_del_producto el foro respondio 403/404 (tema borrado o privado): informacion, no fallo
   no_se_pudo        cualquier otra cosa (red, 5xx, mensajes faltantes): cuenta como fallo y NO se traga

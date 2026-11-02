@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""Entrega de la cosecha del foro de NVIDIA a la carpeta de investigaciones de Atlas (FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01).
+"""Entrega de la cosecha del foro de NVIDIA a la base de conocimiento del consumidor (FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01).
 
-Patron de la entrega del 2026-10-11 (FEATURE-ATLAS-REINDEX-PAQUETE-GB10-01): archivos Markdown bajo
-`Atlas/knowledge/investigations/<carpeta>/` con frontmatter de SOLO CADENAS (el indexador de Atlas fallo con otros tipos),
-un manifiesto con el SHA-256 de cada archivo, y NADA mas: no se ejecuta el build de Atlas (usa GPU) ni se hace commit en su repo.
-bb no importa codigo de Atlas: el contrato es la carpeta de archivos.
+Patron de la entrega del 2026-10-11: archivos Markdown bajo una carpeta de investigaciones del consumidor, con frontmatter
+de SOLO CADENAS (su indexador fallo con otros tipos), un manifiesto con el SHA-256 de cada archivo, y NADA mas: no se
+ejecuta el build del consumidor (usa GPU) ni se hace commit en su repo. bb no importa codigo del consumidor: el contrato
+es la carpeta de archivos.
+
+La carpeta destino sale de `BB_ENTREGA_DESTINO`; sin ella, `~/.local/share/blackbox/entrega-cosecha-foro/`. La entrega
+del 2026-10-12 dejo su manifiesto en la carpeta de evidencia con el nombre de entonces; una corrida nueva escribe
+MANIFIESTO al lado y no lo pisa.
 
 Entra cada tema candidato (oleada 1 con utilidad alta o media, oleada 2 con candidato si o quizas) con su resultado
 estructurado y su texto, truncado a TOPE_TEXTO caracteres (el frontmatter lo dice). Salen ademas un indice y un catalogo
@@ -15,6 +19,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import sys
 import unicodedata
@@ -22,6 +27,8 @@ from pathlib import Path
 from typing import Any
 
 TOPE_TEXTO = 60000
+DESTINO_ENV = "BB_ENTREGA_DESTINO"
+MANIFIESTO = "entrega_manifiesto.sha256"
 PROPOSITOS = ("monitorear", "medir", "rastrear", "solucionar", "prevenir", "omision_nvidia")
 
 
@@ -108,15 +115,15 @@ def escribe(destino: Path, cands: list[dict[str, Any]], fecha: str, cobertura: d
 - Esta carpeta contiene los {len(cands)} temas candidatos (oleada 1: utilidad alta o media; oleada 2: triaje si o quizas) con su texto truncado a {TOPE_TEXTO} caracteres.
 - Cobertura medida con `tools/verifica_cosecha_foro.py` sobre el sujeto: {json.dumps(cobertura, ensure_ascii=False)}
 - Limites: la oleada 2 es una lectura corta; en hilos largos un `no` significa "no lo vi en lo leido". Las afirmaciones son de usuarios y de personal del foro, no verificadas por esta maquina salvo el reloj atascado (`bb reloj`) y la memoria por cgroup (`bb gpumem`).
-- Catalogo por proposito: `catalogo_mecanismos.md`. Manifiesto con SHA-256 de cada archivo: en el repositorio blackbox, `tasks/evidence/FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01/entrega_atlas_manifiesto.sha256`.
+- Catalogo por proposito: `catalogo_mecanismos.md`. Manifiesto con SHA-256 de cada archivo: en el repositorio blackbox, `tasks/evidence/FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01/{MANIFIESTO}`.
 """)
     return manifiesto
 
 
 def main(argv: list[str] | None = None) -> int:
     a = argv if argv is not None else sys.argv[1:]
-    if len(a) != 1:
-        print("uso: python -m tools.entrega_cosecha_foro <carpeta-destino-en-Atlas>", file=sys.stderr)
+    if a:
+        print(f"uso: [{DESTINO_ENV}=<carpeta-destino>] python -m tools.entrega_cosecha_foro (sin argumentos)", file=sys.stderr)
         return 2
     raiz = Path(__file__).resolve().parent.parent
     ev = raiz / "tasks/evidence/FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01"
@@ -125,14 +132,15 @@ def main(argv: list[str] | None = None) -> int:
         for t in json.loads((ev / n).read_text(encoding="utf-8"))["temas"]:
             inv[t["id"]] = t
     datos = Path.home() / ".local/share/blackbox"
+    destino = Path(os.environ.get(DESTINO_ENV) or datos / "entrega-cosecha-foro")
     cobertura = {"oleada1": json.loads((ev / "ola1-verificacion.json").read_text(encoding="utf-8")).get("cobertura_completa"),
                  "oleada2": json.loads((ev / "ola2-verificacion.json").read_text(encoding="utf-8")).get("cobertura_completa")}
     cands = candidatos(ev, datos / "foro-722-723", datos / "foro-721-33", inv)
-    m = escribe(Path(a[0]), cands, "2026-10-12", cobertura)
+    m = escribe(destino, cands, "2026-10-12", cobertura)
     # formato de `sha256sum` (verificable con `cd <destino> && sha256sum -c <manifiesto>`): el JSON con el hash tras el nombre
     # del archivo disparaba la regla generic-api-key de gitleaks (nombres con "api" y un hash largo en la misma linea)
-    (ev / "entrega_atlas_manifiesto.sha256").write_text("".join(f"{h}  {n}\n" for n, h in sorted(m.items())), encoding="utf-8")
-    print(f"{len(m)} archivos escritos en {a[0]}; manifiesto con {len(m)} SHA-256")
+    (ev / MANIFIESTO).write_text("".join(f"{h}  {n}\n" for n, h in sorted(m.items())), encoding="utf-8")
+    print(f"{len(m)} archivos escritos en {destino}; manifiesto con {len(m)} SHA-256")
     return 0
 
 

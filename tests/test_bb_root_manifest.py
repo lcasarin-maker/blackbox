@@ -824,6 +824,8 @@ def test_apt_guardia_si_puede_lo_declarado(linea: str):
 # --- earlyoom-proteger: ejecutado sobre tmp_path (rutas, root y systemd sustituidos) --------
 
 EARLYOOM_VIEJO = ROOT / "tests" / "fixtures" / "etc_default_earlyoom.viejo"  # lo desplegado del 2026-10-14 al 2026-10-16 (sha 89fe78da...)
+# El 2026-11-01 (boleta #35 A) la linea 1 de las dos copias, un comentario, se neutralizo: sus sha256 ya no son los
+# desplegados (89fe78da... y 0e8bc5de...) y el script sellado se re-sello con los nuevos.
 # lo que despliega (DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01); al desplegarlo pasa a system-config/ y estas dos
 # constantes avanzan con el siguiente cambio, como paso con el del 2026-10-14
 EARLYOOM_NUEVO = ROOT / "adopted" / "system-config" / "etc_default_earlyoom"

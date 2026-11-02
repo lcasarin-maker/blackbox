@@ -8,7 +8,7 @@ severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-11
-close_check: {"cmd": "grep -q . /home/<usuario>/.local/share/blackbox/externo/ping.jsonl", "expect": "exit_zero", "porque": "Un corte de energia mata al propio instrumento: la evidencia tiene que venir de afuera. Sin registro externo de ping Y de voltaje/consumo, CORTE_ABRUPTO no se separa en CORTE_DE_RED o APAGADO_INTERNO."}
+close_check: {"cmd": "grep -q . $HOME/.local/share/blackbox/externo/ping.jsonl", "expect": "exit_zero", "porque": "Un corte de energia mata al propio instrumento: la evidencia tiene que venir de afuera. Sin registro externo de ping Y de voltaje/consumo, CORTE_ABRUPTO no se separa en CORTE_DE_RED o APAGADO_INTERNO."}
 ---
 
 ## Por que

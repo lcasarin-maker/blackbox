@@ -49,10 +49,10 @@ def test_calibra_calor_como_script_sin_telemetria_es_could_not_run_rc2(tmp_path:
     assert "COULD_NOT_RUN: no existe la telemetria" in proc.stderr
 
 
-def test_entrega_cosecha_foro_como_script_sin_destino_imprime_el_uso_rc2(tmp_path: Path) -> None:
-    proc = _modulo("tools.entrega_cosecha_foro", datos=tmp_path)
+def test_entrega_cosecha_foro_como_script_con_argumento_imprime_el_uso_rc2(tmp_path: Path) -> None:
+    proc = _modulo("tools.entrega_cosecha_foro", str(tmp_path / "destino"), datos=tmp_path)
     assert proc.returncode == 2
-    assert "uso: python -m tools.entrega_cosecha_foro" in proc.stderr and proc.stdout == ""
+    assert "uso: [BB_ENTREGA_DESTINO=<carpeta-destino>] python -m tools.entrega_cosecha_foro" in proc.stderr and proc.stdout == ""
 
 
 def test_hid_inventario_como_script_sin_hid_ni_linea_base_es_indeterminado_rc2(tmp_path: Path) -> None:
