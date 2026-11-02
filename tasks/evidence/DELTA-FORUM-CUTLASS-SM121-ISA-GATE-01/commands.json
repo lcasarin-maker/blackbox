@@ -17,7 +17,7 @@
   {
    "argv": [
     "cat",
-    "/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01/experiment-plan.json"
+    "/home/<usuario>/projects/blackbox/tasks/evidence/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01/experiment-plan.json"
    ],
    "exit": 0,
    "stdout": "{\"cutlass_revision\": \"098de2a652cf8f00fd70b2df54051c7eccbb855a\", \"cute_revision\": \"098de2a652cf8f00fd70b2df54051c7eccbb855a\", \"backend\": \"cutlass3x_sm120_collective_builder\", \"operation\": \"nvfp4_bf16_blockscaled_gemm\", \"model_sha256\": \"f318c1496c71a92e8550ff6689e9b31caa6a1f2f8ea81d2378afd15dbfa5de78\", \"input_sha256\": \"f3148264bfdcc2ee29e45317b68ef2b39aaeeaa4706182da1c206f3957432ecb\", \"batch_size\": 1, \"concurrency\": 1, \"soak_seconds\": 20, \"reference_max_abs_error\": 0.0}",
@@ -62,7 +62,7 @@
    "argv": [
     "git",
     "-C",
-    "/home/lcasarin/.cache/bb-trabajo/cutlass-lab/cutlass",
+    "/home/<usuario>/.cache/bb-trabajo/cutlass-lab/cutlass",
     "rev-parse",
     "HEAD"
    ],
@@ -87,7 +87,7 @@
    "argv": [
     "rm",
     "-rf",
-    "/home/lcasarin/.cache/bb-trabajo/cutlass-lab/canary-build"
+    "/home/<usuario>/.cache/bb-trabajo/cutlass-lab/canary-build"
    ],
    "exit": 0,
    "stdout": "",
@@ -100,15 +100,15 @@
     "-G",
     "Ninja",
     "-S",
-    "/home/lcasarin/.cache/bb-trabajo/cutlass-lab/canary",
+    "/home/<usuario>/.cache/bb-trabajo/cutlass-lab/canary",
     "-B",
-    "/home/lcasarin/.cache/bb-trabajo/cutlass-lab/canary-build",
+    "/home/<usuario>/.cache/bb-trabajo/cutlass-lab/canary-build",
     "-DBB_REV=098de2a652cf8f00fd70b2df54051c7eccbb855a",
     "-DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc",
     "-DCMAKE_BUILD_TYPE=Release"
    ],
    "exit": 0,
-   "stdout": "-- The CXX compiler identification is GNU 13.3.0\n-- The CUDA compiler identification is NVIDIA 13.0.88\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/bin/c++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Detecting CUDA compiler ABI info\n-- Detecting CUDA compiler ABI info - done\n-- Check for working CUDA compiler: /usr/local/cuda/bin/nvcc - skipped\n-- Detecting CUDA compile features\n-- Detecting CUDA compile features - done\n-- Configuring done (2.3s)\n-- Generating done (0.0s)\n-- Build files have been written to: /home/lcasarin/.cache/bb-trabajo/cutlass-lab/canary-build\n",
+   "stdout": "-- The CXX compiler identification is GNU 13.3.0\n-- The CUDA compiler identification is NVIDIA 13.0.88\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/bin/c++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Detecting CUDA compiler ABI info\n-- Detecting CUDA compiler ABI info - done\n-- Check for working CUDA compiler: /usr/local/cuda/bin/nvcc - skipped\n-- Detecting CUDA compile features\n-- Detecting CUDA compile features - done\n-- Configuring done (2.3s)\n-- Generating done (0.0s)\n-- Build files have been written to: /home/<usuario>/.cache/bb-trabajo/cutlass-lab/canary-build\n",
    "stderr": "",
    "captured_at": "2026-10-16T05:36:47.532528+00:00",
    "phase": "configure"
@@ -117,12 +117,12 @@
    "argv": [
     "cmake",
     "--build",
-    "/home/lcasarin/.cache/bb-trabajo/cutlass-lab/canary-build",
+    "/home/<usuario>/.cache/bb-trabajo/cutlass-lab/canary-build",
     "--",
     "-v"
    ],
    "exit": 0,
-   "stdout": "[1/2] /usr/local/cuda/bin/nvcc -forward-unknown-to-host-compiler  -I/home/lcasarin/.cache/bb-trabajo/cutlass-lab/cutlass/include -I/home/lcasarin/.cache/bb-trabajo/cutlass-lab/cutlass/tools/util/include -I/home/lcasarin/.cache/bb-trabajo/cutlass-lab/cutlass/examples/common -O3 -DNDEBUG -std=c++17 \"--generate-code=arch=compute_121a,code=[compute_121a,sm_121a]\" --expt-relaxed-constexpr -DBB_CUTLASS_REVISION=\\\"098de2a652cf8f00fd70b2df54051c7eccbb855a\\\" -DBB_CUTE_REVISION=\\\"098de2a652cf8f00fd70b2df54051c7eccbb855a\\\" -DBB_BACKEND=\\\"cutlass3x_sm120_collective_builder\\\" -DBB_OPERATION=\\\"nvfp4_bf16_blockscaled_gemm\\\" -MD -MT CMakeFiles/canary79a.dir/canary79a.cu.o -MF CMakeFiles/canary79a.dir/canary79a.cu.o.d -x cu -c /home/lcasarin/.cache/bb-trabajo/cutlass-lab/canary/canary79a.cu -o CMakeFiles/canary79a.dir/canary79a.cu.o\n/home/lcasarin/.cache/bb-trabajo/cutlass-lab/cutlass/include/cutlass/gemm/kernel/sm100_static_tile_scheduler.hpp(53): warning #20012-D: __device__ annotation is ignored on a non-virtual function(\"StaticPersistentTileScheduler100\") that is explicitly defaulted on its first declaration\n    __inline__ __attribute__((always_inline)) __attribute__((device)) __attribute__((host))\n                                                             ^\n\nRemark: The warnings can be suppressed with \"-diag-suppress <warning-number>\"\n\n/home/lcasarin/.cache/bb-trabajo/cutlass-lab/cutlass/include/cutlass/gemm/kernel/sm100_static_tile_scheduler.hpp(53): warning #20012-D: __host__ annotation is ignored on a non-virtual function(\"StaticPersistentTileScheduler100\") that is explicitly defaulted on its first declaration\n    __inline__ __attribute__((always_inline)) __attribute__((device)) __attribute__((host))\n                                                                                     ^\n\n/home/lcasarin/.cache/bb-trabajo/cutlass-lab/cutlass/include/cutlass/gemm/kernel/sm100_static_tile_scheduler.hpp(53): warning #20012-D: __device__ annotation is ignored on a non-virtual function(\"StaticPersistentTileScheduler100\") that is explicitly defaulted on its first declaration\n    __inline__ __attribute__((always_inline)) __attribute__((device)) __attribute__((host))\n                                                             ^\n\nRemark: The warnings can be suppressed with \"-diag-suppress <warning-number>\"\n\n/home/lcasarin/.cache/bb-trabajo/cutlass-lab/cutlass/include/cutlass/gemm/kernel/sm100_static_tile_scheduler.hpp(53): warning #20012-D: __host__ annotation is ignored on a non-virtual function(\"StaticPersistentTileScheduler100\") that is explicitly defaulted on its first declaration\n    __inline__ __attribute__((always_inline)) __attribute__((device)) __attribute__((host))\n                                                                                     ^\n\n[2/2] : && /usr/bin/g++  CMakeFiles/canary79a.dir/canary79a.cu.o -o canary79a  -lcudadevrt  -lcudart_static  -lrt  -lpthread  -ldl -L\"/usr/local/cuda/targets/sbsa-linux/lib/stubs\" -L\"/usr/local/cuda/targets/sbsa-linux/lib\" && :\n",
+   "stdout": "[1/2] /usr/local/cuda/bin/nvcc -forward-unknown-to-host-compiler  -I/home/<usuario>/.cache/bb-trabajo/cutlass-lab/cutlass/include -I/home/<usuario>/.cache/bb-trabajo/cutlass-lab/cutlass/tools/util/include -I/home/<usuario>/.cache/bb-trabajo/cutlass-lab/cutlass/examples/common -O3 -DNDEBUG -std=c++17 \"--generate-code=arch=compute_121a,code=[compute_121a,sm_121a]\" --expt-relaxed-constexpr -DBB_CUTLASS_REVISION=\\\"098de2a652cf8f00fd70b2df54051c7eccbb855a\\\" -DBB_CUTE_REVISION=\\\"098de2a652cf8f00fd70b2df54051c7eccbb855a\\\" -DBB_BACKEND=\\\"cutlass3x_sm120_collective_builder\\\" -DBB_OPERATION=\\\"nvfp4_bf16_blockscaled_gemm\\\" -MD -MT CMakeFiles/canary79a.dir/canary79a.cu.o -MF CMakeFiles/canary79a.dir/canary79a.cu.o.d -x cu -c /home/<usuario>/.cache/bb-trabajo/cutlass-lab/canary/canary79a.cu -o CMakeFiles/canary79a.dir/canary79a.cu.o\n/home/<usuario>/.cache/bb-trabajo/cutlass-lab/cutlass/include/cutlass/gemm/kernel/sm100_static_tile_scheduler.hpp(53): warning #20012-D: __device__ annotation is ignored on a non-virtual function(\"StaticPersistentTileScheduler100\") that is explicitly defaulted on its first declaration\n    __inline__ __attribute__((always_inline)) __attribute__((device)) __attribute__((host))\n                                                             ^\n\nRemark: The warnings can be suppressed with \"-diag-suppress <warning-number>\"\n\n/home/<usuario>/.cache/bb-trabajo/cutlass-lab/cutlass/include/cutlass/gemm/kernel/sm100_static_tile_scheduler.hpp(53): warning #20012-D: __host__ annotation is ignored on a non-virtual function(\"StaticPersistentTileScheduler100\") that is explicitly defaulted on its first declaration\n    __inline__ __attribute__((always_inline)) __attribute__((device)) __attribute__((host))\n                                                                                     ^\n\n/home/<usuario>/.cache/bb-trabajo/cutlass-lab/cutlass/include/cutlass/gemm/kernel/sm100_static_tile_scheduler.hpp(53): warning #20012-D: __device__ annotation is ignored on a non-virtual function(\"StaticPersistentTileScheduler100\") that is explicitly defaulted on its first declaration\n    __inline__ __attribute__((always_inline)) __attribute__((device)) __attribute__((host))\n                                                             ^\n\nRemark: The warnings can be suppressed with \"-diag-suppress <warning-number>\"\n\n/home/<usuario>/.cache/bb-trabajo/cutlass-lab/cutlass/include/cutlass/gemm/kernel/sm100_static_tile_scheduler.hpp(53): warning #20012-D: __host__ annotation is ignored on a non-virtual function(\"StaticPersistentTileScheduler100\") that is explicitly defaulted on its first declaration\n    __inline__ __attribute__((always_inline)) __attribute__((device)) __attribute__((host))\n                                                                                     ^\n\n[2/2] : && /usr/bin/g++  CMakeFiles/canary79a.dir/canary79a.cu.o -o canary79a  -lcudadevrt  -lcudart_static  -lrt  -lpthread  -ldl -L\"/usr/local/cuda/targets/sbsa-linux/lib/stubs\" -L\"/usr/local/cuda/targets/sbsa-linux/lib\" && :\n",
    "stderr": "",
    "captured_at": "2026-10-16T05:37:23.369510+00:00",
    "phase": "build"
@@ -131,7 +131,7 @@
    "argv": [
     "/usr/local/cuda/bin/cuobjdump",
     "--list-elf",
-    "/home/lcasarin/.cache/bb-trabajo/cutlass-lab/canary-build/canary79a"
+    "/home/<usuario>/.cache/bb-trabajo/cutlass-lab/canary-build/canary79a"
    ],
    "exit": 0,
    "stdout": "ELF file    1: canary79a.1.sm_121a.cubin\n",
@@ -140,7 +140,7 @@
   },
   {
    "argv": [
-    "/home/lcasarin/.cache/bb-trabajo/cutlass-lab/canary-build/canary79a",
+    "/home/<usuario>/.cache/bb-trabajo/cutlass-lab/canary-build/canary79a",
     "--m=1024",
     "--n=1024",
     "--k=1024",
@@ -155,7 +155,7 @@
   {
    "argv": [
     "cat",
-    "/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01/canary.json"
+    "/home/<usuario>/projects/blackbox/tasks/evidence/DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01/canary.json"
    ],
    "exit": 0,
    "stdout": "{\"requests\": 1250000, \"completed\": 1250000, \"batch_size\": 1, \"concurrency\": 1, \"duration_seconds\": 22.962999999999997, \"wall_seconds\": 23.71385407447815, \"logits\": [-11.0, 6.0, -33.0, 2.0, 2.0, 37.0, 8.0, 1.0, -6.0, 19.0, 10.0, 6.0, 22.0, -12.0, 1.0, 25.0, -9.0, -26.0, -7.0, -11.0, -22.0, 8.0, 27.0, -13.0, 29.0, 6.0, 44.0, 25.0, -10.0, -1.0, -25.0, 21.0], \"reference_logits\": [-11.0, 6.0, -33.0, 2.0, 2.0, 37.0, 8.0, 1.0, -6.0, 19.0, 10.0, 6.0, 22.0, -12.0, 1.0, 25.0, -9.0, -26.0, -7.0, -11.0, -22.0, 8.0, 27.0, -13.0, 29.0, 6.0, 44.0, 25.0, -10.0, -1.0, -25.0, 21.0]}",
@@ -169,8 +169,8 @@
     "-arch=sm_121",
     "-cubin",
     "-o",
-    "/home/lcasarin/.cache/bb-trabajo/cutlass-lab/isa/ok.cubin",
-    "/home/lcasarin/.cache/bb-trabajo/cutlass-lab/isa/ok.cu"
+    "/home/<usuario>/.cache/bb-trabajo/cutlass-lab/isa/ok.cubin",
+    "/home/<usuario>/.cache/bb-trabajo/cutlass-lab/isa/ok.cu"
    ],
    "exit": 0,
    "stdout": "",
@@ -184,8 +184,8 @@
     "-arch=sm_121",
     "-cubin",
     "-o",
-    "/home/lcasarin/.cache/bb-trabajo/cutlass-lab/isa/mala.cubin",
-    "/home/lcasarin/.cache/bb-trabajo/cutlass-lab/isa/mala_tcgen05.cu"
+    "/home/<usuario>/.cache/bb-trabajo/cutlass-lab/isa/mala.cubin",
+    "/home/<usuario>/.cache/bb-trabajo/cutlass-lab/isa/mala_tcgen05.cu"
    ],
    "exit": 255,
    "stdout": "",

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Two reviewed files only; backups preserve original ownership and modes.
 set -euo pipefail
-repo=/home/lcasarin/projects/blackbox
+repo="$(getent passwd "${SUDO_USER:?corre con sudo desde la cuenta del checkout}" | cut -d: -f6)/projects/blackbox"
 [ "$(id -u)" -eq 0 ] || { echo 'Run through sudo bash.' >&2; exit 2; }
 cd "$repo"
 sha256sum --check <<'HASHES'

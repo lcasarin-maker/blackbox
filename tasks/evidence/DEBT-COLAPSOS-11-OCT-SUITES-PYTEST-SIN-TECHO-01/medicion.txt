@@ -25,11 +25,11 @@ rc=0
 85:        tasks_max=1230,
 86:        turnos=1,
 
-$ python3 -c "import json,collections;c=collections.Counter(json.loads(l)[\"accion\"] for l in open(\"/home/lcasarin/.local/share/blackbox/portero.jsonl\") if l.startswith(\"{\") and json.loads(l).get(\"ts\",\"\")>=\"2026-10-14\");print(dict(c))"
+$ python3 -c "import json,collections;c=collections.Counter(json.loads(l)[\"accion\"] for l in open(\"/home/<usuario>/.local/share/blackbox/portero.jsonl\") if l.startswith(\"{\") and json.loads(l).get(\"ts\",\"\")>=\"2026-10-14\");print(dict(c))"
 rc=0
 {'esperar': 468, 'turno': 3, 'fin': 3, 'admitir': 2, 'congelar': 14, 'descongelar': 10, 'no_actua': 9}
 
-$ python3 -c "import json;[print(e[\"ts\"][:19],e[\"accion\"],e[\"raiz\"],e[\"rss_kb\"],e[\"cgroup\"].rsplit(\"/\",1)[-1],e.get(\"topes\")) for e in map(json.loads,open(\"/home/lcasarin/.local/share/blackbox/portero.jsonl\")) if e.get(\"ts\",\"\")>=\"2026-10-14\" and e.get(\"accion\") in (\"congelar\",\"admitir\") and e.get(\"cgroup\")]"
+$ python3 -c "import json;[print(e[\"ts\"][:19],e[\"accion\"],e[\"raiz\"],e[\"rss_kb\"],e[\"cgroup\"].rsplit(\"/\",1)[-1],e.get(\"topes\")) for e in map(json.loads,open(\"/home/<usuario>/.local/share/blackbox/portero.jsonl\")) if e.get(\"ts\",\"\")>=\"2026-10-14\" and e.get(\"accion\") in (\"congelar\",\"admitir\") and e.get(\"cgroup\")]"
 rc=0
 2026-10-14T13:54:55 congelar 422984 5738408 app-org.chromium.Chromium-58710.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
 2026-10-14T14:00:00 congelar 439107 5367436 app-org.chromium.Chromium-58710.scope {'MemoryMax': 21474836480, 'MemoryHigh': 19327352832, 'MemorySwapMax': 0, 'TasksMax': 1230}
@@ -92,7 +92,7 @@ rc=0
 
 Resultado de cada adopcion de hoy (rc del efecto) y estado actual de las raices cuya adopcion fallo:
 
-$ python3 -c "import json;[print(e[\"ts\"][:19],e[\"accion\"],e[\"raiz\"],\"rc=\"+str(e.get(\"rc\")),str(e.get(\"salida\",\"\"))[-70:]) for e in map(json.loads,open(\"/home/lcasarin/.local/share/blackbox/portero.jsonl\")) if e.get(\"ts\",\"\")>=\"2026-10-14\" and e.get(\"accion\") in (\"congelar\",\"admitir\",\"descongelar\") and e.get(\"cgroup\")]"
+$ python3 -c "import json;[print(e[\"ts\"][:19],e[\"accion\"],e[\"raiz\"],\"rc=\"+str(e.get(\"rc\")),str(e.get(\"salida\",\"\"))[-70:]) for e in map(json.loads,open(\"/home/<usuario>/.local/share/blackbox/portero.jsonl\")) if e.get(\"ts\",\"\")>=\"2026-10-14\" and e.get(\"accion\") in (\"congelar\",\"admitir\",\"descongelar\") and e.get(\"cgroup\")]"
 rc=0
 2026-10-14T13:54:55 congelar 422984 rc=0 o "/org/freedesktop/systemd1/job/178444"
 2026-10-14T13:56:09 descongelar 422984 rc=0 

@@ -6,8 +6,8 @@ E2-L110 — SPEC-L110
 Ancla única: SPEC.md:110-112: “Ninguna pieza fisica depende de que alguien inicie sesion. Es lo que costo 4 h 21 min de stack caido el 2026-09-24, y por eso el linger esta en enable-privileged.sh.”
 Ancla de mecanismo: enable-privileged.sh:635-664. El bloque explica el boot a las 14:11:31 y el inicio de `user@1000.service` y `ai-nemotron.service` a las 18:33:07; condiciona `loginctl enable-linger` al estado previo y explica que habilita las unidades de usuario sin login.
 Git histórico: `git show --format=fuller --no-patch 1ec66b3` conserva esa observación como 4 h 21 min 36 s y el motivo de habilitar linger.
-Estado del marcador: `stat /var/lib/systemd/linger/lcasarin` -> existe, archivo vacío, mtime 2026-09-24 22:12:28.763666418 -0600.
-Límite de verificación: `loginctl show-user lcasarin -p Linger -p State -p Sessions` y `systemctl --user show ...` -> `Failed to connect to bus: Operation not permitted`. El coordinador sí aportó su lectura viva `Linger=yes`; desde este proceso solo confirmé el marcador persistente. No pude comprobar un boot actual sin login.
+Estado del marcador: `stat /var/lib/systemd/linger/<usuario>` -> existe, archivo vacío, mtime 2026-09-24 22:12:28.763666418 -0600.
+Límite de verificación: `loginctl show-user <usuario> -p Linger -p State -p Sessions` y `systemctl --user show ...` -> `Failed to connect to bus: Operation not permitted`. El coordinador sí aportó su lectura viva `Linger=yes`; desde este proceso solo confirmé el marcador persistente. No pude comprobar un boot actual sin login.
 
 E2-L271 — SPEC-L271
 Ancla única: SPEC.md:271. La redacción distingue instrumentos gobernados de blackbox, adoptados externos y el lector de muestras `bb-guardia-proceso`.

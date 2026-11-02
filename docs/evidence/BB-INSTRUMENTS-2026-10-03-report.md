@@ -20,7 +20,7 @@ Los cinco módulos Python nuevos son `apt_sources`, `runtime_provenance`, `chat_
 Comando literal:
 
 ```sh
-python3 /home/lcasarin/.Codex/tools/triage.py merge --dir tasks/evidence/BB-INSTRUMENTS-2026-10-03/development-verdicts --expected tasks/evidence/BB-INSTRUMENTS-2026-10-03/development-source.json --require status,evidence,reason
+python3 /home/<usuario>/.Codex/tools/triage.py merge --dir tasks/evidence/BB-INSTRUMENTS-2026-10-03/development-verdicts --expected tasks/evidence/BB-INSTRUMENTS-2026-10-03/development-source.json --require status,evidence,reason
 ```
 
 Salida: `returned: 98 of 98`. IDs únicos 98; faltantes 0; desconocidos 0; duplicados 0. La completitud describe este reparto, no el estado de los sujetos.

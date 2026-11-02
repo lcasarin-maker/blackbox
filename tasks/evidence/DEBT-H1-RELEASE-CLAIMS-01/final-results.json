@@ -4,7 +4,7 @@
     "claim_text": "[externo] no importa codigo de blackbox, ni al reves. Consume su salida:",
     "claim_sha256": "9b0d0fdd103616ca780d2448b069fa90413e4384e271de338c612df5c39942dc",
     "verdict": "PASS",
-    "evidence": "En `/home/lcasarin/projects/[externo]/tools/bb_consulta.py:39-53`, [externo] llama la telemetría de Blackbox mediante `subprocess.run`; `[externo]/tools/atom_degradacion_resuelta.py:65-70` consume el JSONL usando `$BLACKBOX_DATA`. La búsqueda recíproca `rg -n '(^|[[:space:]])(from|import)[[:space:]]+blackbox|blackbox\\.[A-Za-z_]' /home/lcasarin/projects/[externo] --glob '*.py' --glob '*.sh' --glob '!docs/archive/**'` y la búsqueda de imports [externo] en Blackbox no encontraron imports cruzados; el helper `_argv_tokens` está copiado localmente en `tools/atom_gpu_telemetry.py:67-85`."
+    "evidence": "En `/home/<usuario>/projects/[externo]/tools/bb_consulta.py:39-53`, [externo] llama la telemetría de Blackbox mediante `subprocess.run`; `[externo]/tools/atom_degradacion_resuelta.py:65-70` consume el JSONL usando `$BLACKBOX_DATA`. La búsqueda recíproca `rg -n '(^|[[:space:]])(from|import)[[:space:]]+blackbox|blackbox\\.[A-Za-z_]' /home/<usuario>/projects/[externo] --glob '*.py' --glob '*.sh' --glob '!docs/archive/**'` y la búsqueda de imports [externo] en Blackbox no encontraron imports cruzados; el helper `_argv_tokens` está copiado localmente en `tools/atom_gpu_telemetry.py:67-85`."
   },
   {
     "claim_id": "SPEC-L122",
@@ -18,7 +18,7 @@
     "claim_text": "Las unidades de usuario que Blackbox instala pueden arrancar sin sesión",
     "claim_sha256": "0a3582259b793a3f2dcfec2431cc38e57b6149058863bdc4bf71836e768aa51c",
     "verdict": "PASS",
-    "evidence": "`enable-privileged.sh:650` ejecuta `loginctl enable-linger` para el dueño, y `SPEC.md:135-138` circunscribe la afirmación a unidades de usuario y señala que demostrar arranque sin sesión requiere observar una máquina en ese estado. La consulta de host del 2026-10-03 `loginctl show-user lcasarin -p Linger -p State -p Sessions` devolvió `Linger=yes`, `State=active`, `Sessions=12`; esto confirma el mecanismo habilitado, no una prueba histórica de arranque sin sesión."
+    "evidence": "`enable-privileged.sh:650` ejecuta `loginctl enable-linger` para el dueño, y `SPEC.md:135-138` circunscribe la afirmación a unidades de usuario y señala que demostrar arranque sin sesión requiere observar una máquina en ese estado. La consulta de host del 2026-10-03 `loginctl show-user <usuario> -p Linger -p State -p Sessions` devolvió `Linger=yes`, `State=active`, `Sessions=12`; esto confirma el mecanismo habilitado, no una prueba histórica de arranque sin sesión."
   },
   {
     "claim_id": "SPEC-L309",

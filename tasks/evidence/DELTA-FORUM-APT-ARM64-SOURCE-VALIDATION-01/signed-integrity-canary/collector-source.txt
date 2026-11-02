@@ -1,6 +1,6 @@
 from pathlib import Path
 import subprocess,tempfile,os,json,hashlib,datetime,email.utils
-out=Path('/home/lcasarin/projects/blackbox/tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signed-integrity-canary');out.mkdir(exist_ok=True)
+out=Path('/home/<usuario>/projects/blackbox/tasks/evidence/DELTA-FORUM-APT-ARM64-SOURCE-VALIDATION-01/signed-integrity-canary');out.mkdir(exist_ok=True)
 rows=[];phases=[]
 with tempfile.TemporaryDirectory(prefix='bb-apt-integrity-canary-') as directory:
  root=Path(directory);root.chmod(0o755);repo=root/'repo';repo.mkdir();home=root/'gpg';home.mkdir(mode=0o700)

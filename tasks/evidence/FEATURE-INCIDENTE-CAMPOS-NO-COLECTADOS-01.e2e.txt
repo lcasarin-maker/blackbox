@@ -60,16 +60,16 @@ $ python3 -m tools.incident_report --json   (boot terminado -1 de esta maquina; 
 [soporte.adjuntos_en_orden.0]
 {
  "que": "nvidia-bug-report.log.gz (obligatorio, si cuelga se envia el parcial)",
- "comando": "sudo nvidia-bug-report.sh --output-file /home/lcasarin/.local/share/blackbox/incidentes/bb-2026-10-11-54b71618.nvidia-bug-report.log",
+ "comando": "sudo nvidia-bug-report.sh --output-file /home/<usuario>/.local/share/blackbox/incidentes/bb-2026-10-11-54b71618.nvidia-bug-report.log",
  "root": true,
- "estado": "NOT_COLLECTED: nvidia-bug-report.sh instalado en /usr/bin/nvidia-bug-report.sh; root: no (uid 1000), bb no ejecuta sudo; describe el boot actual, no el del incidente; bb lo reconoce si queda como /home/lcasarin/.local/share/blackbox/incidentes/bb-2026-10-11-54b71618.nvidia-bug-report.log.gz"
+ "estado": "NOT_COLLECTED: nvidia-bug-report.sh instalado en /usr/bin/nvidia-bug-report.sh; root: no (uid 1000), bb no ejecuta sudo; describe el boot actual, no el del incidente; bb lo reconoce si queda como /home/<usuario>/.local/share/blackbox/incidentes/bb-2026-10-11-54b71618.nvidia-bug-report.log.gz"
 }
 [soporte.adjuntos_en_orden.1]
 {
  "que": "bundle completo de dgx-spark-fieldiag (.tgz, no un solo log; incluye summary.json)",
  "comando": "sudo init 3; cd /opt/nvidia/dgx-spark-fieldiag; sudo ./partnerdiag --field",
  "root": true,
- "estado": "NOT_COLLECTED; bloqueado: Secure Boot enabled y fieldiag exige apagarlo (foro 358951 #12); fieldiag instalado en /opt/nvidia/dgx-spark-fieldiag; root: no (uid 1000), bb no ejecuta sudo; bb lo reconoce si el summary.json queda como /home/lcasarin/.local/share/blackbox/incidentes/bb-2026-10-11-54b71618.fieldiag-summary.json"
+ "estado": "NOT_COLLECTED; bloqueado: Secure Boot enabled y fieldiag exige apagarlo (foro 358951 #12); fieldiag instalado en /opt/nvidia/dgx-spark-fieldiag; root: no (uid 1000), bb no ejecuta sudo; bb lo reconoce si el summary.json queda como /home/<usuario>/.local/share/blackbox/incidentes/bb-2026-10-11-54b71618.fieldiag-summary.json"
 }
 
 # controles negativos: cada mutacion del codigo hace fallar su test (rc=1 = el instrumento puede salir negativo)

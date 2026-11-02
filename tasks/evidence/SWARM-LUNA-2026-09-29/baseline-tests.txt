@@ -16,7 +16,7 @@ E     Failed to connect to bus: Operation not permitted
 E     [bb cap] pico: no disponible (el scope ya se recogio)
 E     
 E   assert 1 == 0
-E    +  where 1 = CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'cap', '6', '/opt/miniforge3/bin/python3', '-c', "im...ui dentro\nFailed to connect to bus: Operation not permitted\n[bb cap] pico: no disponible (el scope ya se recogio)\n').returncode
+E    +  where 1 = CompletedProcess(args=['/home/<usuario>/projects/blackbox/bin/bb', 'cap', '6', '/opt/miniforge3/bin/python3', '-c', "im...ui dentro\nFailed to connect to bus: Operation not permitted\n[bb cap] pico: no disponible (el scope ya se recogio)\n').returncode
 __________ test_sample_escribe_json_valido_con_los_campos_que_decide ___________
 tests/test_bb_bash.py:155: in test_sample_escribe_json_valido_con_los_campos_que_decide
     m = muestras(datos)
@@ -357,7 +357,7 @@ __________________ test_sigterm_distingue_armado_de_no_armado __________________
 tests/test_bb_bash.py:961: in test_sigterm_distingue_armado_de_no_armado
     assert "regla de auditoria: armado" in r.stdout
 E   assert 'regla de auditoria: armado' in "== emisores de SIGTERM/SIGKILL desde 30 minutes ago ==\n\n  0 senales registradas en la ventana\n\n-- estado del inst...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n"
-E    +  where "== emisores de SIGTERM/SIGKILL desde 30 minutes ago ==\n\n  0 senales registradas en la ventana\n\n-- estado del inst...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'sigterm', '30 minutes ago'], returncode=0, stdout="...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
+E    +  where "== emisores de SIGTERM/SIGKILL desde 30 minutes ago ==\n\n  0 senales registradas en la ventana\n\n-- estado del inst...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/<usuario>/projects/blackbox/bin/bb', 'sigterm', '30 minutes ago'], returncode=0, stdout="...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
 _______________ test_la_muestra_guarda_la_memoria_de_CADA_slice ________________
 tests/test_bb_bash.py:1095: in test_la_muestra_guarda_la_memoria_de_CADA_slice
     s = _slices_de_la_muestra(datos)
@@ -411,12 +411,12 @@ tests/test_bb_bash.py:1234: in test_sigterm_DECLARA_la_ventana_que_el_anillo_cub
     assert "could_not_run: 1" in r.stdout, (
 E   AssertionError: pedir 120 min contra un anillo de 2 no puede salir con could_not_run 0
 E   assert 'could_not_run: 1' in "== emisores de SIGTERM/SIGKILL desde 2 hours ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VICTI...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n"
-E    +  where "== emisores de SIGTERM/SIGKILL desde 2 hours ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VICTI...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'sigterm', '2 hours ago'], returncode=0, stdout="== ...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
+E    +  where "== emisores de SIGTERM/SIGKILL desde 2 hours ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VICTI...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/<usuario>/projects/blackbox/bin/bb', 'sigterm', '2 hours ago'], returncode=0, stdout="== ...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
 ________ test_control_negativo_un_hueco_de_SEGUNDOS_no_levanta_el_aviso ________
 tests/test_bb_bash.py:1255: in test_control_negativo_un_hueco_de_SEGUNDOS_no_levanta_el_aviso
     assert "could_not_run: 0" in r.stdout
 E   assert 'could_not_run: 0' in "== emisores de SIGTERM/SIGKILL desde 5 minutes ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VIC...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n"
-E    +  where "== emisores de SIGTERM/SIGKILL desde 5 minutes ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VIC...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'sigterm', '5 minutes ago'], returncode=0, stdout="=...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
+E    +  where "== emisores de SIGTERM/SIGKILL desde 5 minutes ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VIC...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/<usuario>/projects/blackbox/bin/bb', 'sigterm', '5 minutes ago'], returncode=0, stdout="=...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
 __________________ test_notify_manda_de_verdad_por_el_socket ___________________
 tests/test_bb_usable.py:226: in test_notify_manda_de_verdad_por_el_socket
     srv.bind(str(ruta))

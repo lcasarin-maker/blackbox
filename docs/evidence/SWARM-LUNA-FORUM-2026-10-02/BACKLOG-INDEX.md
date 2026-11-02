@@ -4,32 +4,32 @@
 
 | Ficha canónica | Registros |
 |---|---:|
-| [FEATURE-1358-CGROUP-01-REPRO](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-1358-CGROUP-01-REPRO.md) | 2 |
-| [FEATURE-1358-CGROUP-02-TRAZA](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-1358-CGROUP-02-TRAZA.md) | 1 |
-| [FEATURE-1358-CGROUP-05-CUELGUES](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md) | 37 |
-| [FEATURE-APT-CRITICAL-METAPACKAGE-GUARD](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.md) | 5 |
-| [FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md) | 5 |
-| [FEATURE-FORUM-GB10-RUNTIME-COMPAT-01](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md) | 104 |
-| [FEATURE-FORUM-GPU-CLOCK-CAP-AB-01](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md) | 3 |
-| [FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.md) | 4 |
-| [FEATURE-FORUM-NETCONSOLE-01](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md) | 1 |
-| [FEATURE-FORUM-NVME-READONLY-01](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-FORUM-NVME-READONLY-01.md) | 2 |
-| [FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.md) | 2 |
-| [FEATURE-FORUM-RCU-PANIC-PSTORE-01](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md) | 1 |
-| [FEATURE-FORUM-RESCUE-RUNBOOK-01](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md) | 12 |
-| [FEATURE-FORUM-SBSA-WATCHDOG-STATE-01](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md) | 1 |
-| [FEATURE-FORUM-WIFI-ISOLATION-01](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md) | 2 |
-| [FEATURE-MEMORYSAVER-02-TRAZADOR](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md) | 1 |
-| [FEATURE-USB-HID-POSTUPDATE-CHECK](/home/lcasarin/projects/blackbox/tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md) | 1 |
-| [FORUM-00-CX7-HOTPLUG-FAN-PROTECTION](/home/lcasarin/projects/blackbox/tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md) | 10 |
-| [FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT](/home/lcasarin/projects/blackbox/tasks/backlog/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT.md) | 1 |
-| [FORUM-00-DOCKER-OOM-RESTART-LOOP](/home/lcasarin/projects/blackbox/tasks/backlog/FORUM-00-DOCKER-OOM-RESTART-LOOP.md) | 5 |
-| [FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION](/home/lcasarin/projects/blackbox/tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md) | 20 |
-| [FORUM-00-KERNEL-INITRD-UPDATE-GATE](/home/lcasarin/projects/blackbox/tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md) | 15 |
-| [FORUM-00-REALTEK-EEE-DIRECT-LINK](/home/lcasarin/projects/blackbox/tasks/backlog/FORUM-00-REALTEK-EEE-DIRECT-LINK.md) | 2 |
-| [FORUM-02-GX10-READ-INTEGRITY](/home/lcasarin/projects/blackbox/tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md) | 1 |
-| [FORUM-02-PSTORE-KERNEL-REGRESSION](/home/lcasarin/projects/blackbox/tasks/backlog/FORUM-02-PSTORE-KERNEL-REGRESSION.md) | 1 |
-| [FORUM-REALTEK-DRIVER-BINDING-01](/home/lcasarin/projects/blackbox/tasks/backlog/FORUM-REALTEK-DRIVER-BINDING-01.md) | 1 |
+| [FEATURE-1358-CGROUP-01-REPRO](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-1358-CGROUP-01-REPRO.md) | 2 |
+| [FEATURE-1358-CGROUP-02-TRAZA](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-1358-CGROUP-02-TRAZA.md) | 1 |
+| [FEATURE-1358-CGROUP-05-CUELGUES](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md) | 37 |
+| [FEATURE-APT-CRITICAL-METAPACKAGE-GUARD](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD.md) | 5 |
+| [FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01.md) | 5 |
+| [FEATURE-FORUM-GB10-RUNTIME-COMPAT-01](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md) | 104 |
+| [FEATURE-FORUM-GPU-CLOCK-CAP-AB-01](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md) | 3 |
+| [FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-FORUM-GPU-GSP-BOOT-HEALTH-01.md) | 4 |
+| [FEATURE-FORUM-NETCONSOLE-01](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-FORUM-NETCONSOLE-01.md) | 1 |
+| [FEATURE-FORUM-NVME-READONLY-01](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-FORUM-NVME-READONLY-01.md) | 2 |
+| [FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-FORUM-PROVIDER-FALLBACK-REGRESSION-01.md) | 2 |
+| [FEATURE-FORUM-RCU-PANIC-PSTORE-01](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-FORUM-RCU-PANIC-PSTORE-01.md) | 1 |
+| [FEATURE-FORUM-RESCUE-RUNBOOK-01](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-FORUM-RESCUE-RUNBOOK-01.md) | 12 |
+| [FEATURE-FORUM-SBSA-WATCHDOG-STATE-01](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01.md) | 1 |
+| [FEATURE-FORUM-WIFI-ISOLATION-01](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-FORUM-WIFI-ISOLATION-01.md) | 2 |
+| [FEATURE-MEMORYSAVER-02-TRAZADOR](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-MEMORYSAVER-02-TRAZADOR.md) | 1 |
+| [FEATURE-USB-HID-POSTUPDATE-CHECK](/home/<usuario>/projects/blackbox/tasks/backlog/FEATURE-USB-HID-POSTUPDATE-CHECK.md) | 1 |
+| [FORUM-00-CX7-HOTPLUG-FAN-PROTECTION](/home/<usuario>/projects/blackbox/tasks/backlog/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION.md) | 10 |
+| [FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT](/home/<usuario>/projects/blackbox/tasks/backlog/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT.md) | 1 |
+| [FORUM-00-DOCKER-OOM-RESTART-LOOP](/home/<usuario>/projects/blackbox/tasks/backlog/FORUM-00-DOCKER-OOM-RESTART-LOOP.md) | 5 |
+| [FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION](/home/<usuario>/projects/blackbox/tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md) | 20 |
+| [FORUM-00-KERNEL-INITRD-UPDATE-GATE](/home/<usuario>/projects/blackbox/tasks/backlog/FORUM-00-KERNEL-INITRD-UPDATE-GATE.md) | 15 |
+| [FORUM-00-REALTEK-EEE-DIRECT-LINK](/home/<usuario>/projects/blackbox/tasks/backlog/FORUM-00-REALTEK-EEE-DIRECT-LINK.md) | 2 |
+| [FORUM-02-GX10-READ-INTEGRITY](/home/<usuario>/projects/blackbox/tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md) | 1 |
+| [FORUM-02-PSTORE-KERNEL-REGRESSION](/home/<usuario>/projects/blackbox/tasks/backlog/FORUM-02-PSTORE-KERNEL-REGRESSION.md) | 1 |
+| [FORUM-REALTEK-DRIVER-BINDING-01](/home/<usuario>/projects/blackbox/tasks/backlog/FORUM-REALTEK-DRIVER-BINDING-01.md) | 1 |
 
 ## Trazabilidad individual
 

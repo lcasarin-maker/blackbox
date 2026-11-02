@@ -2,7 +2,7 @@ Despliegue del escalon de bb-usable (DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECH
 NO desplegado por el agente: bb-usable es un servicio de SISTEMA y reiniciarlo requiere sudo del dueno.
 
 Antes de nada, dos hechos que cambian el orden:
-  - `ExecStart` apunta a /home/lcasarin/projects/blackbox/bin/bb-usable. En cuanto esta rama se fusione
+  - `ExecStart` apunta a /home/<usuario>/projects/blackbox/bin/bb-usable. En cuanto esta rama se fusione
     en master, el codigo nuevo corre en el SIGUIENTE arranque de bb-usable (reinicio de la maquina o del
     servicio), se despliegue la unit o no. Si arranca sin la unit nueva, el escalon funciona pero sus
     eventos y registros de origen van a /root/.local/share/blackbox.
@@ -11,7 +11,7 @@ Antes de nada, dos hechos que cambian el orden:
 
 Pasos (en el checkout principal, con la rama ya en master):
 
-  cd /home/lcasarin/projects/blackbox
+  cd /home/<usuario>/projects/blackbox
   sudo cp systemd/bb-usable.service /etc/systemd/system/bb-usable.service
   sudo systemctl daemon-reload
   sudo systemctl restart bb-usable.service
@@ -22,12 +22,12 @@ Pasos (en el checkout principal, con la rama ya en master):
 Comprobacion (cada una puede salir mal):
 
   systemctl show bb-usable.service -p Environment
-      -> debe contener BLACKBOX_DATA=/home/lcasarin/.local/share/blackbox
+      -> debe contener BLACKBOX_DATA=/home/<usuario>/.local/share/blackbox
   journalctl -u bb-usable -n 20 --no-pager
       -> NO debe aparecer "ORIGEN NO CARGADO"; si aparece, el escalon actua igual pero el origen queda
          NOT_COLLECTED y hay que leer el error que imprime.
   ls -l ~/.local/share/blackbox/escalon/
-      -> un fichero del dia, del usuario lcasarin (no de root), con una linea cada ~30 s:
+      -> un fichero del dia, del usuario <usuario> (no de root), con una linea cada ~30 s:
          tail -n 2 ~/.local/share/blackbox/escalon/$(date +%F).jsonl
 
 Re-adopcion (para que `bb drift` compare contra la unit nueva):

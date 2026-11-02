@@ -18,10 +18,10 @@ Se detiene por la regla de /0: una ola que cierra cero termina la ejecución. La
 
 | Grupo | Fichas | Worktree |
 |---|---:|---|
-| guardia | 2 | /home/lcasarin/.codex/worktrees/bb-guardia-debt/blackbox |
-| watchdog | 1 | /home/lcasarin/.codex/worktrees/bb-watchdog-debt/blackbox |
-| termica | 2 | /home/lcasarin/.codex/worktrees/bb-thermal-debt/blackbox |
-| scan | 3 | /home/lcasarin/.codex/worktrees/bb-scan-debt/blackbox |
+| guardia | 2 | /home/<usuario>/.codex/worktrees/bb-guardia-debt/blackbox |
+| watchdog | 1 | /home/<usuario>/.codex/worktrees/bb-watchdog-debt/blackbox |
+| termica | 2 | /home/<usuario>/.codex/worktrees/bb-thermal-debt/blackbox |
+| scan | 3 | /home/<usuario>/.codex/worktrees/bb-scan-debt/blackbox |
 
 Los lotes `batch_*.json` y `items.json` se generaron desde las fichas. Cada id pendiente y su grupo constan en esos archivos. Reutilizar estos worktrees tras comprobar su estado al reanudar; cada uno seguía en `72d190d` al inspeccionarlo.
 

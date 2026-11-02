@@ -4,7 +4,7 @@
     "verdict": "confirmed",
     "evidence": [
       "SPEC.md:118-121 fija el contrato de intercambio mediante salida JSONL. `tools/atom_gpu_telemetry.py:96-97` deriva JSONL_PATH de BLACKBOX_DATA/ATOM_TELEMETRY_JSONL y `:870-880` serializa cada evento y lo escribe como una línea; el consumidor está implementado por archivo compartido.",
-      "`/home/lcasarin/projects/[externo]/tools/atom_degradacion_resuelta.py:60-61,65-70` importa módulos `tools.*` propios de [externo] y resuelve TELEMETRIA_PATH desde BLACKBOX_DATA/ATOM_TELEMETRY_JSONL, con el mismo nombre de archivo que escribe blackbox. La inspección AST de los árboles actuales registró 72 archivos Python de blackbox y 1,152 de [externo], con `cross_repo_imports []` en ambos sentidos; la búsqueda complementaria de importlib/__import__/runpy/exec no encontró import dinámico entre repositorios."
+      "`/home/<usuario>/projects/[externo]/tools/atom_degradacion_resuelta.py:60-61,65-70` importa módulos `tools.*` propios de [externo] y resuelve TELEMETRIA_PATH desde BLACKBOX_DATA/ATOM_TELEMETRY_JSONL, con el mismo nombre de archivo que escribe blackbox. La inspección AST de los árboles actuales registró 72 archivos Python de blackbox y 1,152 de [externo], con `cross_repo_imports []` en ambos sentidos; la búsqueda complementaria de importlib/__import__/runpy/exec no encontró import dinámico entre repositorios."
     ],
     "fix": null
   },

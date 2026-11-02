@@ -1,6 +1,6 @@
 # Nueva ola /0 — 2026-10-03
 
-La medición inicial con `python3 /home/lcasarin/.agents/skills/debt/scan.py` devolvió `TOTAL PENDIENTE (sin duplicar) 100`. Buscó tasks/backlog, otras carpetas de fichas, BACKLOG.md, marcadores ponytail, TODO/FIXME/XXX/HACK, colas de jobs y allowlist sin indexar; las fuentes restantes dieron cero o NO EXISTE. La ruta antigua escrita en la skill no existía (rc=2); se resolvió al archivo instalado y el escáner funcionó. La salida literal se conserva en scan-before.txt.
+La medición inicial con `python3 /home/<usuario>/.agents/skills/debt/scan.py` devolvió `TOTAL PENDIENTE (sin duplicar) 100`. Buscó tasks/backlog, otras carpetas de fichas, BACKLOG.md, marcadores ponytail, TODO/FIXME/XXX/HACK, colas de jobs y allowlist sin indexar; las fuentes restantes dieron cero o NO EXISTE. La ruta antigua escrita en la skill no existía (rc=2); se resolvió al archivo instalado y el escáner funcionó. La salida literal se conserva en scan-before.txt.
 
 El examen inicial identificó nueve posibles instrumentos implementables. La revisión de sus fases descartó ocho cierres: faltan capturas del sujeto y controles físicos; crear parsers o fixtures genéricos para aparentar cierre agregaría deuda. Los ocho close_check fallaron antes de cambios porque sus selectores faltan (pytest rc=4). Los veredictos por ID nombran cada captura o prueba pendiente. La investigación padre permanece separada del instrumento.
 

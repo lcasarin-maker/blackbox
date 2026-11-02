@@ -45,7 +45,7 @@ $ printf '[Scope]\nMemoryLow=3G\n' > ~/.config/systemd/user/app-gnome-.scope.d/0
 $ systemctl --user daemon-reload
 $ systemctl --user show app-gnome-com.anthropic.Claude-38380.scope -p MemoryLow -p DropInPaths
 MemoryLow=3221225472
-DropInPaths=/home/lcasarin/.config/systemd/user/app-gnome-.scope.d/00-prueba.conf
+DropInPaths=/home/<usuario>/.config/systemd/user/app-gnome-.scope.d/00-prueba.conf
 $ cat .../app-gnome-com.anthropic.Claude-38380.scope/memory.low
 3221225472
 $ cat .../app-com.anthropic.Claude-38380.scope/memory.low          # el ARNES

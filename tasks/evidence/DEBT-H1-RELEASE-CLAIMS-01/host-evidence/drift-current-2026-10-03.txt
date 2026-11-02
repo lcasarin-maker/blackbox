@@ -6,19 +6,19 @@ $ ./bin/bb drift
   igual       /srv/ai/gpu_governance/gpu_lock.sh
   SUSPENDIDO  /srv/ai/gpu_governance/gpu_sampler.sh (documentado en suspended/MANIFIESTO.md, vence 2026-10-07)
   igual       /srv/ai/gpu_governance/monitor_memory.sh
-  igual       /home/lcasarin/.config/systemd/user/ai-gpu-telemetry.service
-  igual       /home/lcasarin/.config/systemd/user/ai-memory-monitor.service
-  igual       /home/lcasarin/.config/systemd/user/ai-memory-monitor.timer
-  igual       /home/lcasarin/.config/systemd/user/atom-crash-detector.service
-  igual       /home/lcasarin/.config/systemd/user/atom-crash-detector.timer
-  igual       /home/lcasarin/.config/systemd/user/atom-gpu-telemetry.service
-  igual       /home/lcasarin/.config/systemd/user/blackbox-drift.service
-  igual       /home/lcasarin/.config/systemd/user/blackbox-drift.timer
-  igual       /home/lcasarin/.config/systemd/user/blackbox-sample.service
-  igual       /home/lcasarin/.config/systemd/user/blackbox-sample.timer
+  igual       /home/<usuario>/.config/systemd/user/ai-gpu-telemetry.service
+  igual       /home/<usuario>/.config/systemd/user/ai-memory-monitor.service
+  igual       /home/<usuario>/.config/systemd/user/ai-memory-monitor.timer
+  igual       /home/<usuario>/.config/systemd/user/atom-crash-detector.service
+  igual       /home/<usuario>/.config/systemd/user/atom-crash-detector.timer
+  igual       /home/<usuario>/.config/systemd/user/atom-gpu-telemetry.service
+  igual       /home/<usuario>/.config/systemd/user/blackbox-drift.service
+  igual       /home/<usuario>/.config/systemd/user/blackbox-drift.timer
+  igual       /home/<usuario>/.config/systemd/user/blackbox-sample.service
+  igual       /home/<usuario>/.config/systemd/user/blackbox-sample.timer
   igual       /etc/default/kdump-tools
   DIVERGE     /etc/modprobe.d/99-blackbox-uvm.conf
-                --- /home/lcasarin/projects/blackbox/adopted/system-config/etc_modprobe.d_99-blackbox-uvm.conf	2026-10-02 06:36:39.554002968 -0600
+                --- /home/<usuario>/projects/blackbox/adopted/system-config/etc_modprobe.d_99-blackbox-uvm.conf	2026-10-02 06:36:39.554002968 -0600
                 +++ /etc/modprobe.d/99-blackbox-uvm.conf	2026-09-28 12:59:14.055265930 -0600
                 @@ -1,5 +1,4 @@
                 -# blackbox: mitigación parcial para NVIDIA/open-gpu-kernel-modules#1358.
@@ -48,13 +48,13 @@ $ ./bin/bb drift
   igual       /etc/systemd/system/user-.slice.d/99-blackbox-escritorio.conf
   igual       /etc/systemd/system/user.slice.d/99-blackbox-escritorio.conf
   igual       /etc/systemd/system/user@.service.d/99-blackbox-escritorio.conf
-  igual       /home/lcasarin/.config/systemd/user/app-gnome-.scope.d/99-blackbox-escritorio.conf
-  igual       /home/lcasarin/.config/systemd/user/app.slice.d/99-blackbox-escritorio.conf
-  igual       /home/lcasarin/.config/systemd/user/app.slice.d/99-blackbox.conf
-  igual       /home/lcasarin/.config/systemd/user/session.slice.d/99-blackbox-escritorio.conf
-  igual       /home/lcasarin/.config/systemd/user/snap.antigravity.antigravity-.scope.d/99-blackbox-escritorio.conf
+  igual       /home/<usuario>/.config/systemd/user/app-gnome-.scope.d/99-blackbox-escritorio.conf
+  igual       /home/<usuario>/.config/systemd/user/app.slice.d/99-blackbox-escritorio.conf
+  igual       /home/<usuario>/.config/systemd/user/app.slice.d/99-blackbox.conf
+  igual       /home/<usuario>/.config/systemd/user/session.slice.d/99-blackbox-escritorio.conf
+  igual       /home/<usuario>/.config/systemd/user/snap.antigravity.antigravity-.scope.d/99-blackbox-escritorio.conf
   DIVERGE     /usr/local/bin/nvrm-watch.sh
-                --- /home/lcasarin/projects/blackbox/adopted/system-config/usr_local_bin_nvrm-watch.sh	2026-10-02 07:40:47.022166209 -0600
+                --- /home/<usuario>/projects/blackbox/adopted/system-config/usr_local_bin_nvrm-watch.sh	2026-10-02 07:40:47.022166209 -0600
                 +++ /usr/local/bin/nvrm-watch.sh	2026-09-28 12:59:11.918670237 -0600
                 @@ -1,5 +1,5 @@
                  #!/bin/bash

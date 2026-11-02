@@ -36,7 +36,7 @@ mv /srv/ai/gpu_governance/gpu_sampler.sh.suspendido-2026-09-07 \
 systemctl --user enable --now ai-gpu-telemetry.service
 ```
 
-## own-chats-classify.timer — suspendido y REACTIVADO el 2026-09-08
+## Timer clasificador de otro proyecto — suspendido y REACTIVADO el 2026-09-08
 
 | | |
 |---|---|

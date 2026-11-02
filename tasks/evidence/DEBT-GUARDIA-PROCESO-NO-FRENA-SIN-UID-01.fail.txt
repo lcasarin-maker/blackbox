@@ -14,7 +14,7 @@ tests/test_guardia_proceso_uid.py:74: in test_mismo_usuario_sin_status_es_tocabl
     assert guardia._es_intocable(hijo, "sleep") is None
 E   AssertionError: assert 'no se pudo leer /proc/<pid>/status/Uid -- por precaucion, no se toca' is None
 E    +  where 'no se pudo leer /proc/<pid>/status/Uid -- por precaucion, no se toca' = <function _es_intocable at 0xe8a34381a200>(3438983, 'sleep')
-E    +    where <function _es_intocable at 0xe8a34381a200> = <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-lcasarin-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'>._es_intocable
+E    +    where <function _es_intocable at 0xe8a34381a200> = <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-<usuario>-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'>._es_intocable
 ________________ test_mismo_usuario_sin_status_recibe_la_senal _________________
 tests/test_guardia_proceso_uid.py:82: in test_mismo_usuario_sin_status_recibe_la_senal
     espia.assert_called_once_with(hijo, signal.SIGTERM)
@@ -26,11 +26,11 @@ E   AssertionError: Expected 'mock' to be called once. Called 0 times.
 _________________ test_root_con_status_legible_sigue_intocable _________________
 tests/test_guardia_proceso_uid.py:90: in test_root_con_status_legible_sigue_intocable
     monkeypatch.setattr(guardia, "_uid_por_stat", lambda pid: os.getuid())
-E   AttributeError: <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-lcasarin-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'> has no attribute '_uid_por_stat'
+E   AttributeError: <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-<usuario>-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'> has no attribute '_uid_por_stat'
 ________________ test_root_sin_status_sigue_intocable_por_stat _________________
 tests/test_guardia_proceso_uid.py:97: in test_root_sin_status_sigue_intocable_por_stat
     monkeypatch.setattr(guardia, "_uid_por_stat", lambda pid: 0)
-E   AttributeError: <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-lcasarin-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'> has no attribute '_uid_por_stat'
+E   AttributeError: <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-<usuario>-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'> has no attribute '_uid_por_stat'
 __________________ test_root_real_sin_status_sigue_intocable ___________________
 tests/test_guardia_proceso_uid.py:108: in test_root_real_sin_status_sigue_intocable
     assert motivo is not None and "root" in motivo
@@ -38,15 +38,15 @@ E   AssertionError: assert ('no se pudo leer /proc/<pid>/status/Uid -- por preca
 _______________________ test_pid_1_sigue_intocable[None] _______________________
 tests/test_guardia_proceso_uid.py:117: in test_pid_1_sigue_intocable
     monkeypatch.setattr(guardia, "_uid_por_stat", lambda pid: os.getuid())
-E   AttributeError: <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-lcasarin-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'> has no attribute '_uid_por_stat'
+E   AttributeError: <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-<usuario>-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'> has no attribute '_uid_por_stat'
 _______________________ test_pid_1_sigue_intocable[1000] _______________________
 tests/test_guardia_proceso_uid.py:117: in test_pid_1_sigue_intocable
     monkeypatch.setattr(guardia, "_uid_por_stat", lambda pid: os.getuid())
-E   AttributeError: <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-lcasarin-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'> has no attribute '_uid_por_stat'
+E   AttributeError: <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-<usuario>-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'> has no attribute '_uid_por_stat'
 ____________________ test_otro_usuario_por_stat_no_se_toca _____________________
 tests/test_guardia_proceso_uid.py:148: in test_otro_usuario_por_stat_no_se_toca
     monkeypatch.setattr(guardia, "_uid_por_stat", lambda pid: os.getuid() + 1)
-E   AttributeError: <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-lcasarin-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'> has no attribute '_uid_por_stat'
+E   AttributeError: <module 'bb_guardia_proceso' from '/tmp/claude-1000/-home-<usuario>-projects-blackbox/d784c60d-c7e1-4064-9fd1-20d057dc4401/scratchpad/guardia_fail_check/repo_copy/bin/bb-guardia-proceso'> has no attribute '_uid_por_stat'
 =========================== short test summary info ============================
 FAILED tests/test_guardia_proceso_uid.py::test_guardia_resuelve_dueno_sin_status_legible
 FAILED tests/test_guardia_proceso_uid.py::test_mismo_usuario_sin_status_es_tocable_por_stat_real

@@ -12,7 +12,7 @@ severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-30
-close_check: {"cmd": "HOME=$(mktemp -d) PYTHONUSERBASE=/home/lcasarin/.local python3 -m pytest -q -p no:cacheprovider tests/test_portero.py::test_real_dropin_por_prefijo_topa_el_scope_al_crearse_y_no_a_otro", "expect": "exit_zero", "porque": "Enmienda 2026-10-30 con la causa MEDIDA: el runner del pre-push corre con HOME en un directorio temporal y la prueba escribia su drop-in en Path.home()/.config/systemd/user, que el gestor real no lee. El comando original (grep de un centinela) se sustituye por el que reproduce la condicion del gate: con HOME temporal el test viejo da rc=1 y el nuevo rc=0 (evidencia en fail.txt y pass.txt)."}
+close_check: {"cmd": "PYTHONUSERBASE=$(getent passwd $(id -un) | cut -d: -f6)/.local HOME=$(mktemp -d) python3 -m pytest -q -p no:cacheprovider tests/test_portero.py::test_real_dropin_por_prefijo_topa_el_scope_al_crearse_y_no_a_otro", "expect": "exit_zero", "porque": "Enmienda 2026-10-30 con la causa MEDIDA: el runner del pre-push corre con HOME en un directorio temporal y la prueba escribia su drop-in en Path.home()/.config/systemd/user, que el gestor real no lee. El comando original (grep de un centinela) se sustituye por el que reproduce la condicion del gate: con HOME temporal el test viejo da rc=1 y el nuevo rc=0 (evidencia en fail.txt y pass.txt)."}
 ---
 
 ## Medido (2026-10-30, sesion de /cerrar-deuda)

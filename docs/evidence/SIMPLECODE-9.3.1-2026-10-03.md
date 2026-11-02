@@ -1,6 +1,6 @@
 # Actualización canónica del kit de guardrails 9.3.1
 
-Se aplicó `PYTHONPATH=/home/lcasarin/projects/simplecode/src /home/lcasarin/projects/simplecode/.venv/bin/python -m simplecode.cli sync-satellites --projects-dir /home/lcasarin/projects --target /home/lcasarin/projects/blackbox --apply`.
+Se aplicó `PYTHONPATH=/home/<usuario>/projects/simplecode/src /home/<usuario>/projects/simplecode/.venv/bin/python -m simplecode.cli sync-satellites --projects-dir /home/<usuario>/projects --target /home/<usuario>/projects/blackbox --apply`.
 Resultado literal: `UPDATED (canonical config), RUNTIME_INSTALLED (8.9.6 -> 9.3.1), KIT_LOCK_INSTALLED`. El plan posterior devuelve cero desfases; `MAKEFILE_ABSENT` es informativo.
 
 La configuración añade gitleaks sobre todo el historial en pre-push y cinco prioridades. Pre-commit 4.6.2 emite cinco `Unexpected key(s) ... priority`; estas claves se ignoran. Se conserva la configuración canónica y se registra el defecto de integración, pendiente del productor.

@@ -76,7 +76,7 @@ $ ls /srv/ai/models/llm
 nemotron-3.5-lightning-30b-a3b-nvfp4  nemotron-3.5-lightning-30b-a3b-nvfp4-dspark  nemotron-3-super-120b-a12b-nvfp4
 qwen3-14b-nvfp4  qwen3.6-27b-fp8  qwen3-8b-nvfp4
 $ command -v hermes
-/home/lcasarin/.local/bin/hermes   (rc=0)
+/home/<usuario>/.local/bin/hermes   (rc=0)
 $ grep -c -E '127.0.0.1:8000|localhost:8000|nemotron-local' ~/.hermes/config.yaml
 0   (rc=1: Hermes apunta a un proveedor remoto, no al vLLM local)
 $ docker inspect nemotron-server --format '{{json .Args}}'   (extracto)

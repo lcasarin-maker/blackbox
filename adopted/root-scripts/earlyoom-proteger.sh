@@ -9,7 +9,10 @@
 # Por que: el --avoid desplegado el 2026-10-14 no casa con claude (el CLI), node, cowork-linux-he, electron,
 #      chrome_crashpad, Xwayland, init, dbus, earlyoom ni bb, que los otros cuatro vigilantes protegen; los umbrales
 #      (-r 60 -m 10 -s 100,100) y --prefer no cambian. La version anterior de este script (2026-10-14, de 7e8a44b6...
-#      a 89fe78da...) ya se desplego; esta parte de lo que dejo.
+#      a 89fe78da...) ya se desplego; esta parte de lo que dejo. Desplegada a su vez el 2026-10-16 (0e8bc5de...).
+#      El 2026-11-01 (boleta #35 A) se neutralizo el comentario de la linea 1 del fichero viejo y del nuevo: los dos
+#      sha256 de abajo son los de esas copias. Contra el desplegado de antes (0e8bc5de...) el script se niega (rc 3);
+#      tras reinstalar adopted/system-config/etc_default_earlyoom, no hace nada (rc 0).
 # Desbloquea: DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01.
 # Guardas: el fichero actual debe ser byte a byte el conocido (sha256 abajo) o el nuevo (entonces no hace nada, rc 0);
 #      ni el fichero, ni /etc/default, ni /var/lib/blackbox, ni la copia pueden ser symlink; /var/lib/blackbox debe ser
@@ -21,8 +24,8 @@ umask 022
 conf=/etc/default/earlyoom
 dir_conf=/etc/default
 base=/var/lib/blackbox
-sha_viejo=89fe78dade9afa4d8df1e51627d119b145102c3a21dd140a0f4a44f8b4b13c8e
-sha_nuevo=0e8bc5de5b688de3b3a876298458f88096956a3a93ff402bd2900eb37a563733
+sha_viejo=b4fb4f09ab4ecf827bde4772e0729ef183207b2cf72add5b728955fe80b38569
+sha_nuevo=f15bb4fce9dab977f85d3736bbe41ba79eccbc07a848075c1255a5c5d0bd8db6
 bak="$base/etc_default_earlyoom.$sha_viejo"
 espera=3
 tmp=
@@ -73,7 +76,7 @@ fi
 
 tmp="$(mktemp "$dir_conf/.earlyoom.XXXXXX")"
 cat > "$tmp" <<'NUEVO'
-# Configuración de DGX-201 (Atlas), 2026-08-21.
+# Configuración del 2026-08-21, adoptada de otro repositorio del ecosistema.
 #
 # Umbrales: los DEFAULT de earlyoom (SIGTERM 10%, SIGKILL 5%). No se copian los
 # del hilo de NVIDIA (-m 3): en 121 GB serían 3.6 GB, y el default ya disparó

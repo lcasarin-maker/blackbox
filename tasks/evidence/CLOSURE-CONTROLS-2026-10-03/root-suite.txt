@@ -24,7 +24,7 @@ E     Failed to connect to bus: Operation not permitted
 E     [bb cap] pico: no disponible (el scope ya se recogio)
 E     
 E   assert 1 == 0
-E    +  where 1 = CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'cap', '6', '/opt/miniforge3/bin/python3', '-c', "im...ui dentro\nFailed to connect to bus: Operation not permitted\n[bb cap] pico: no disponible (el scope ya se recogio)\n').returncode
+E    +  where 1 = CompletedProcess(args=['/home/<usuario>/projects/blackbox/bin/bb', 'cap', '6', '/opt/miniforge3/bin/python3', '-c', "im...ui dentro\nFailed to connect to bus: Operation not permitted\n[bb cap] pico: no disponible (el scope ya se recogio)\n').returncode
 __________________ test_bb_usable_con_latido_fresco_SI_cuenta __________________
 tests/test_bb_bash.py:605: in test_bb_usable_con_latido_fresco_SI_cuenta
     assert "ARMADO" in _fila(r, "bb-usable (vigilante"), r.stdout
@@ -57,12 +57,12 @@ E       - systemctl show bb-usable.service: rc=1: Failed to connect to bus: Oper
 E       OJO: 'ciego' no es 'armado'. Un instrumento ciego no deja el sujeto
 E            limpio: deja el informe sin esa fila.
 E       muestras acumuladas: 0
-E       datos en: /tmp/pytest-of-lcasarin/pytest-4767/test_bb_usable_con_latido_fres0/blackbox
+E       datos en: /tmp/pytest-of-<usuario>/pytest-4767/test_bb_usable_con_latido_fres0/blackbox
 E     
 E       Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.
 E     
 E   assert 'ARMADO' in '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)'
-E    +  where '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)' = _fila(CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'status'], returncode=0, stdout="== estado de la ins...able_con_latido_fres0/blackbox\n\n  Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr=''), 'bb-usable (vigilante')
+E    +  where '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)' = _fila(CompletedProcess(args=['/home/<usuario>/projects/blackbox/bin/bb', 'status'], returncode=0, stdout="== estado de la ins...able_con_latido_fres0/blackbox\n\n  Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr=''), 'bb-usable (vigilante')
 ___________ test_control_negativo_bb_usable_activa_con_latido_RANCIO ___________
 tests/test_bb_bash.py:612: in test_control_negativo_bb_usable_activa_con_latido_RANCIO
     assert "FALTA" in _fila(r, "bb-usable (vigilante"), r.stdout
@@ -95,12 +95,12 @@ E       - systemctl show bb-usable.service: rc=1: Failed to connect to bus: Oper
 E       OJO: 'ciego' no es 'armado'. Un instrumento ciego no deja el sujeto
 E            limpio: deja el informe sin esa fila.
 E       muestras acumuladas: 0
-E       datos en: /tmp/pytest-of-lcasarin/pytest-4767/test_control_negativo_bb_usabl0/blackbox
+E       datos en: /tmp/pytest-of-<usuario>/pytest-4767/test_control_negativo_bb_usabl0/blackbox
 E     
 E       Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.
 E     
 E   assert 'FALTA' in '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)'
-E    +  where '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)' = _fila(CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'status'], returncode=0, stdout="== estado de la ins...ol_negativo_bb_usabl0/blackbox\n\n  Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr=''), 'bb-usable (vigilante')
+E    +  where '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)' = _fila(CompletedProcess(args=['/home/<usuario>/projects/blackbox/bin/bb', 'status'], returncode=0, stdout="== estado de la ins...ol_negativo_bb_usabl0/blackbox\n\n  Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr=''), 'bb-usable (vigilante')
 _______ test_control_negativo_bb_usable_activa_sin_latido[journal_vacio] _______
 tests/test_bb_bash.py:622: in test_control_negativo_bb_usable_activa_sin_latido
     assert "FALTA" in _fila(r, "bb-usable (vigilante"), r.stdout
@@ -133,12 +133,12 @@ E       - systemctl show bb-usable.service: rc=1: Failed to connect to bus: Oper
 E       OJO: 'ciego' no es 'armado'. Un instrumento ciego no deja el sujeto
 E            limpio: deja el informe sin esa fila.
 E       muestras acumuladas: 0
-E       datos en: /tmp/pytest-of-lcasarin/pytest-4767/test_control_negativo_bb_usabl1/blackbox
+E       datos en: /tmp/pytest-of-<usuario>/pytest-4767/test_control_negativo_bb_usabl1/blackbox
 E     
 E       Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.
 E     
 E   assert 'FALTA' in '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)'
-E    +  where '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)' = _fila(CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'status'], returncode=0, stdout="== estado de la ins...ol_negativo_bb_usabl1/blackbox\n\n  Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr=''), 'bb-usable (vigilante')
+E    +  where '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)' = _fila(CompletedProcess(args=['/home/<usuario>/projects/blackbox/bin/bb', 'status'], returncode=0, stdout="== estado de la ins...ol_negativo_bb_usabl1/blackbox\n\n  Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr=''), 'bb-usable (vigilante')
 _______ test_control_negativo_bb_usable_activa_sin_latido[solo_arranque] _______
 tests/test_bb_bash.py:622: in test_control_negativo_bb_usable_activa_sin_latido
     assert "FALTA" in _fila(r, "bb-usable (vigilante"), r.stdout
@@ -171,28 +171,28 @@ E       - systemctl show bb-usable.service: rc=1: Failed to connect to bus: Oper
 E       OJO: 'ciego' no es 'armado'. Un instrumento ciego no deja el sujeto
 E            limpio: deja el informe sin esa fila.
 E       muestras acumuladas: 0
-E       datos en: /tmp/pytest-of-lcasarin/pytest-4767/test_control_negativo_bb_usabl2/blackbox
+E       datos en: /tmp/pytest-of-<usuario>/pytest-4767/test_control_negativo_bb_usabl2/blackbox
 E     
 E       Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.
 E     
 E   assert 'FALTA' in '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)'
-E    +  where '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)' = _fila(CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'status'], returncode=0, stdout="== estado de la ins...ol_negativo_bb_usabl2/blackbox\n\n  Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr=''), 'bb-usable (vigilante')
+E    +  where '  CIEGO     bb-usable (vigilante de usabilidad, reinicia si la maquina no sirve)' = _fila(CompletedProcess(args=['/home/<usuario>/projects/blackbox/bin/bb', 'status'], returncode=0, stdout="== estado de la ins...ol_negativo_bb_usabl2/blackbox\n\n  Con 4 piezas sin armar, un fallo puede volver a quedarse sin rastro.\n", stderr=''), 'bb-usable (vigilante')
 __________________ test_sigterm_distingue_armado_de_no_armado __________________
 tests/test_bb_bash.py:1014: in test_sigterm_distingue_armado_de_no_armado
     assert "regla de auditoria: armado" in r.stdout
 E   assert 'regla de auditoria: armado' in "== emisores de SIGTERM/SIGKILL desde 30 minutes ago ==\n\n  0 senales registradas en la ventana\n\n-- estado del inst...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n"
-E    +  where "== emisores de SIGTERM/SIGKILL desde 30 minutes ago ==\n\n  0 senales registradas en la ventana\n\n-- estado del inst...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'sigterm', '30 minutes ago'], returncode=0, stdout="...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
+E    +  where "== emisores de SIGTERM/SIGKILL desde 30 minutes ago ==\n\n  0 senales registradas en la ventana\n\n-- estado del inst...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/<usuario>/projects/blackbox/bin/bb', 'sigterm', '30 minutes ago'], returncode=0, stdout="...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
 _____________ test_sigterm_DECLARA_la_ventana_que_el_anillo_cubre ______________
 tests/test_bb_bash.py:1310: in test_sigterm_DECLARA_la_ventana_que_el_anillo_cubre
     assert "could_not_run: 1" in r.stdout, (
 E   AssertionError: pedir 120 min contra un anillo de 2 no puede salir con could_not_run 0
 E   assert 'could_not_run: 1' in "== emisores de SIGTERM/SIGKILL desde 2 hours ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VICTI...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n"
-E    +  where "== emisores de SIGTERM/SIGKILL desde 2 hours ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VICTI...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'sigterm', '2 hours ago'], returncode=0, stdout="== ...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
+E    +  where "== emisores de SIGTERM/SIGKILL desde 2 hours ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VICTI...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/<usuario>/projects/blackbox/bin/bb', 'sigterm', '2 hours ago'], returncode=0, stdout="== ...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
 ________ test_control_negativo_un_hueco_de_SEGUNDOS_no_levanta_el_aviso ________
 tests/test_bb_bash.py:1331: in test_control_negativo_un_hueco_de_SEGUNDOS_no_levanta_el_aviso
     assert "could_not_run: 0" in r.stdout
 E   assert 'could_not_run: 0' in "== emisores de SIGTERM/SIGKILL desde 5 minutes ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VIC...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n"
-E    +  where "== emisores de SIGTERM/SIGKILL desde 5 minutes ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VIC...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/lcasarin/projects/blackbox/bin/bb', 'sigterm', '5 minutes ago'], returncode=0, stdout="=...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
+E    +  where "== emisores de SIGTERM/SIGKILL desde 5 minutes ago ==\n\n  CUANDO              SENAL    EMISOR                 -> VIC...e el proxy que comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n" = CompletedProcess(args=['/home/<usuario>/projects/blackbox/bin/bb', 'sigterm', '5 minutes ago'], returncode=0, stdout="=...ue comprueba la regla no tiene sujeto; usa 'sudo auditctl -l | grep blackbox_sig' para saberlo de verdad\n", stderr='').stdout
 __________________ test_notify_manda_de_verdad_por_el_socket ___________________
 tests/test_bb_usable.py:226: in test_notify_manda_de_verdad_por_el_socket
     srv.bind(str(ruta))

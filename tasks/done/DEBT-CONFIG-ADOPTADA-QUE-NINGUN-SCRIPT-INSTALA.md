@@ -31,7 +31,7 @@ Entre esos 15 hay cosas que no son accesorias:
 | fichero | que es |
 |---|---|
 | `etc_systemd_system_bb-usable.service` | la unit del vigilante que REINICIA la maquina |
-| `home_lcasarin_.config_systemd_user_app.slice.d_99-blackbox.conf` | el techo de memoria del escritorio y los arneses |
+| `home_<usuario>_.config_systemd_user_app.slice.d_99-blackbox.conf` | el techo de memoria del escritorio y los arneses |
 | `usr_local_bin_nvrm-watch.sh` + su `.service` y su `.timer` | el vigilante de la GPU |
 | `etc_security_limits.d_*`, `etc_sysctl.d_99-sysrq.conf`, ... | limites y sysctl del arranque |
 
@@ -140,7 +140,7 @@ el instrumento no sabria decir que no:
   etc_systemd_system_nvrm-watch.service                             1
   etc_systemd_system_nvrm-watch.timer                               1
   etc_systemd_system_sysstat-collect.timer.d_override.conf          1
-  home_lcasarin_.config_systemd_user_app.slice.d_99-blackbox.conf   1
+  home_<usuario>_.config_systemd_user_app.slice.d_99-blackbox.conf   1
   usr_local_bin_nvrm-watch.sh                                       1
   --- control negativo: los declarados solo-registro ---
   etc_default_kdump-tools                                           0

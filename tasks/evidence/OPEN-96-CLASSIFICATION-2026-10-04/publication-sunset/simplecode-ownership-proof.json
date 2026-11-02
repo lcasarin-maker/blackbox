@@ -7,22 +7,22 @@
       "bytes": 82646
     },
     "satellite_sync": {
-      "path": "/home/lcasarin/projects/simplecode/src/simplecode/satellite/satellite_sync.py",
+      "path": "/home/<usuario>/projects/simplecode/src/simplecode/satellite/satellite_sync.py",
       "sha256": "f531005bed923beec138f8a8ceb5d856a78bf5c2304f1ee8cf3176054c1c0640",
       "bytes": 81354
     },
     "simplecode_cli_new": {
-      "path": "/home/lcasarin/projects/simplecode/src/simplecode/cli_new.py",
+      "path": "/home/<usuario>/projects/simplecode/src/simplecode/cli_new.py",
       "sha256": "0cb9720094dd1c4c476f6b951614e2bcca2bc8de874e25a1c9a6d7d359bb048b",
       "bytes": 43065
     },
     "prek_vendor": {
-      "path": "/home/lcasarin/projects/simplecode/src/simplecode/verification/prek_vendor.py",
+      "path": "/home/<usuario>/projects/simplecode/src/simplecode/verification/prek_vendor.py",
       "sha256": "5ecd4a90b1bba82c95331ab600b7cdf4ebff8cfffdd7656fbc01e1118db3c1ad",
       "bytes": 8950
     },
     "hook_install": {
-      "path": "/home/lcasarin/projects/simplecode/src/simplecode/verification/hook_install.py",
+      "path": "/home/<usuario>/projects/simplecode/src/simplecode/verification/hook_install.py",
       "sha256": "9684ce95f9c64a6ee1f1bc97a0cfdb15b208d5d6c2925cf2bbac835c51371fed",
       "bytes": 23213
     },
@@ -74,19 +74,19 @@
   },
   "authoritative_lifecycle": [
     {
-      "path": "/home/lcasarin/projects/simplecode/src/simplecode/satellite/satellite_sync.py",
+      "path": "/home/<usuario>/projects/simplecode/src/simplecode/satellite/satellite_sync.py",
       "anchors": "_sync_runtime lines 1016-1044 writes run.py/runtime.zip from canonical producer on explicit apply; _sync_kit_lock lines 1047-1071 writes lock only after identity check; lines 1084-1087 say a blanket .simplecode/* swallows kit.lock/run.py/runtime.zip and a satellite must be able to git add them; sync_satellite lines 1416-1452 says sync manages runtime files and fresh scaffolds track runtime files."
     },
     {
-      "path": "/home/lcasarin/projects/simplecode/src/simplecode/cli_new.py",
+      "path": "/home/<usuario>/projects/simplecode/src/simplecode/cli_new.py",
       "anchors": "portable runner and scaffold generation for runner/runtime/kit.lock; see source functions _portable_runner, _write_project, kit_lock_bytes."
     },
     {
-      "path": "/home/lcasarin/projects/simplecode/src/simplecode/verification/prek_vendor.py",
+      "path": "/home/<usuario>/projects/simplecode/src/simplecode/verification/prek_vendor.py",
       "anchors": "lines 87-88 define .simplecode/bin/prek and version marker; ensure_prek lines 154-184 validates or downloads/checksums/smoke-tests cache; it is a generated cache, distinct from canonical runtime files."
     },
     {
-      "path": "/home/lcasarin/projects/simplecode/src/simplecode/verification/hook_install.py",
+      "path": "/home/<usuario>/projects/simplecode/src/simplecode/verification/hook_install.py",
       "anchors": "lines 229-238 call prek_vendor --print-path and use verified binary opportunistically, with pre-commit fallback."
     }
   ],

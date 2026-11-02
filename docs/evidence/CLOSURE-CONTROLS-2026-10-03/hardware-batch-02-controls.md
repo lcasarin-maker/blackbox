@@ -28,7 +28,7 @@ Predicate criteria are implemented across all ten cards; no live finding is clos
 - `pyright tools/hardware_batch02_controls.py`: 0 errors, 0 warnings, 0 informations.
 - Branch coverage: 75% for the full module; 1,438 statements, 294 missed, 782 branches, 272 partial. The remaining coverage work is open and no lines/branches are excluded.
 - Generated verdict: `/tmp/bb-closure-hardware-batch02-verdict.json`, 10 source-ordered rows, 10 `unknown` because this worktree has no live capture directories. SHA-256: `605246296699166b960f8629c37920e438c4113b2f141b8796011e3b3d286688`.
-- `python3 /home/lcasarin/.Codex/tools/triage.py merge --dir /tmp/bb-controls-hardware-triage-final --expected tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-batch-02.json --require id,status,reason,files,control_command,evidence_needed`: `returned: 10 of 10`.
+- `python3 /home/<usuario>/.Codex/tools/triage.py merge --dir /tmp/bb-controls-hardware-triage-final --expected tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-batch-02.json --require id,status,reason,files,control_command,evidence_needed`: `returned: 10 of 10`.
 
 ## `DELTA-FORUM-CUTLASS-SM121-ISA-GATE-01`
 

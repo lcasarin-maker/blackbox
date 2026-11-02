@@ -15,16 +15,16 @@ El cierre runtime inicial se rechazó una vez por contrato incompleto: faltaban 
 Comandos y salidas literales:
 
 ```
-python3 /home/lcasarin/.Codex/tools/triage.py merge --dir tasks/evidence/LUNA-FIVES-2026-10-03/wave01-verdicts --expected tasks/evidence/LUNA-FIVES-2026-10-03/batch_00.json --require status,evidence,reason
+python3 /home/<usuario>/.Codex/tools/triage.py merge --dir tasks/evidence/LUNA-FIVES-2026-10-03/wave01-verdicts --expected tasks/evidence/LUNA-FIVES-2026-10-03/batch_00.json --require status,evidence,reason
 returned: 5 of 5
 
-python3 /home/lcasarin/.Codex/tools/triage.py merge --dir tasks/evidence/LUNA-FIVES-2026-10-03/all-verdicts --expected tasks/evidence/LUNA-FIVES-2026-10-03/source.json --require status,evidence,reason
+python3 /home/<usuario>/.Codex/tools/triage.py merge --dir tasks/evidence/LUNA-FIVES-2026-10-03/all-verdicts --expected tasks/evidence/LUNA-FIVES-2026-10-03/source.json --require status,evidence,reason
 returned: 99 of 99
 ```
 
 IDs ausentes: 0; duplicados: 0; desconocidos: 0; malformados: 0. Los 94 ajenos a esta ola conservaron la clasificación de la revisión anterior, identificada por fuente en remaining-classification.json; no se presentan como revisados nuevamente por Luna. Incluyen tres decisiones pendientes. El escáner posterior imprime TOTAL PENDIENTE (sin duplicar) 98. El esquema imprime checked=282 passed=282 failed=0 unverified=0 avisos=80 could_not_run=0. Backlog verifier: fraude=0, contract_breach=0, could_not_run=0, unverified=0.
 
-Los lotes siguientes de cinco quedan generados. Su clasificación vigente requiere evidencia/recursos del sujeto o decisión de Luis. La skill [/0](/home/lcasarin/.agents/skills/0/SKILL.md) manda: «Bloqueada […] No se lanza; va al reporte final con su bloqueador nombrado». no se repiten las mismas investigaciones sin recursos nuevos. Los bloqueos individuales están en all-verdicts y remaining-classification.json.
+Los lotes siguientes de cinco quedan generados. Su clasificación vigente requiere evidencia/recursos del sujeto o decisión de Luis. La skill [/0](/home/<usuario>/.agents/skills/0/SKILL.md) manda: «Bloqueada […] No se lanza; va al reporte final con su bloqueador nombrado». no se repiten las mismas investigaciones sin recursos nuevos. Los bloqueos individuales están en all-verdicts y remaining-classification.json.
 
 ## Validación e incidencias
 

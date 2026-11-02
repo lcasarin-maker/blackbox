@@ -3,7 +3,7 @@ zero debt (repo-wide ship freeze)...............................................
 - exit code: 1
 
 [gate-runner] kit: zip:runtime.zip:b556a108901d
-[gate-runner] FAIL: zero-debt-repo exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=ce6a62d0b222
+[gate-runner] FAIL: zero-debt-repo exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=255d60168d5c
 [zero-debt] mode: zero  lane: repo-wide
 [zero-debt] files scanned: 64  findings: 6  files with findings: 2
 [zero-debt] HALLAZGOS: 6
@@ -18,7 +18,7 @@ zero debt (repo-wide ship freeze)...............................................
   - tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py (3 findings: hardcoded_path, unencoded_file_io, unencoded_file_io, unencoded_file_io, unencoded_file_io, unencoded_file_io, blocking_sleep, blocking_sleep, blocking_sleep)
   - tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py (3 findings: hardcoded_path, unencoded_file_io, unencoded_file_io, unencoded_file_io, unencoded_file_io, blocking_sleep)
 [zero-debt] findings (JSONL): 15
-  {"detector_id": "hardcoded_path", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 3, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:3: hardcoded_path: hardcoded absolute path '/home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02'", "severity": "FAIL", "would_block": true}
+  {"detector_id": "hardcoded_path", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 3, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:3: hardcoded_path: hardcoded absolute path '/home/<usuario>/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02'", "severity": "FAIL", "would_block": true}
   {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 46, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:46: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
   {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 49, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:49: unencoded_file_io: .read_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
   {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 36, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:36: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
@@ -27,7 +27,7 @@ zero debt (repo-wide ship freeze)...............................................
   {"detector_id": "blocking_sleep", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 48, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:48: blocking_sleep: blocking time.sleep() with no # blocking-sleep: <reason> -- <TICKET> justification", "severity": "FAIL", "would_block": true}
   {"detector_id": "blocking_sleep", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 32, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:32: blocking_sleep: blocking time.sleep() with no # blocking-sleep: <reason> -- <TICKET> justification", "severity": "FAIL", "would_block": true}
   {"detector_id": "blocking_sleep", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py", "line": 16, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:16: blocking_sleep: blocking time.sleep() with no # blocking-sleep: <reason> -- <TICKET> justification", "severity": "FAIL", "would_block": true}
-  {"detector_id": "hardcoded_path", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 3, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:3: hardcoded_path: hardcoded absolute path '/home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02'", "severity": "FAIL", "would_block": true}
+  {"detector_id": "hardcoded_path", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 3, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:3: hardcoded_path: hardcoded absolute path '/home/<usuario>/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02'", "severity": "FAIL", "would_block": true}
   {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 36, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:36: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
   {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 17, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:17: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
   {"detector_id": "unencoded_file_io", "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py", "line": 26, "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_inventory.py:26: unencoded_file_io: .write_text(...) with no explicit encoding=", "severity": "FAIL", "would_block": true}
@@ -160,28 +160,28 @@ E     [ledger-schema] HALLAZGOS: 1
 E     [ledger-schema] FAIL: 1 ficha(s) con esquema invalido; primera tasks/DEBT-PII-HOST-DIAGNOSTICS-CONTACT-01.md (kind fuera de dominio: '"task"' no está en ['bug', 'debt', 'risk', 'task'])
 E     
 E   assert 1 == 0
-E    +  where 1 = CompletedProcess(args=['/opt/miniforge3/bin/python', '/home/lcasarin/projects/blackbox/.simplecode/run.py', 'simplecod...ICS-CONTACT-01.md (kind fuera de dominio: \'"task"\' no está en [\'bug\', \'debt\', \'risk\', \'task\'])\n', stderr='').returncode
+E    +  where 1 = CompletedProcess(args=['/opt/miniforge3/bin/python', '/home/<usuario>/projects/blackbox/.simplecode/run.py', 'simplecod...ICS-CONTACT-01.md (kind fuera de dominio: \'"task"\' no está en [\'bug\', \'debt\', \'risk\', \'task\'])\n', stderr='').returncode
 ================================ tests coverage ================================
 _______________ coverage: platform linux, python 3.12.11-final-0 _______________
 
-Coverage JSON written to file /home/lcasarin/projects/blackbox/.simplecode/coverage.json
+Coverage JSON written to file /home/<usuario>/projects/blackbox/.simplecode/coverage.json
 =========================== short test summary info ============================
 FAILED tests/test_debt_registration_controls.py::test_debt_schema_evidence_index_scope_01
 1 failed, 878 passed in 113.03s (0:01:53)
 [coverage] interpreter: /opt/miniforge3/bin/python (python 3.12.11)
-/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+/home/<usuario>/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
   warner(PytestBenchmarkWarning(text))
-/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+/home/<usuario>/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
   warner(PytestBenchmarkWarning(text))
-/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+/home/<usuario>/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
   warner(PytestBenchmarkWarning(text))
-/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+/home/<usuario>/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
   warner(PytestBenchmarkWarning(text))
-/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+/home/<usuario>/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
   warner(PytestBenchmarkWarning(text))
-/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+/home/<usuario>/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
   warner(PytestBenchmarkWarning(text))
-/home/lcasarin/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
+/home/<usuario>/.local/lib/python3.12/site-packages/pytest_benchmark/logger.py:44: PytestBenchmarkWarning: Benchmarks are automatically disabled because xdist plugin is active.Benchmarks cannot be performed reliably in a parallelized environment.
   warner(PytestBenchmarkWarning(text))
 [gate-runner] FAIL: coverage-100 exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=73fa35ab4cb7
 
@@ -191,18 +191,18 @@ pyright (type checking).........................................................
 
 [gate-runner] kit: zip:runtime.zip:b556a108901d
 [gate-runner] FAIL: pyright exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=69020127f9fa
-/home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py
-  /home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:27:16 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
-  /home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:32:26 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
-  /home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:35:9 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
-  /home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:38:18 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
-/home/lcasarin/projects/blackbox/tests/test_scan_samples.py
-  /home/lcasarin/projects/blackbox/tests/test_scan_samples.py:105:18 - error: Argument of type "None" cannot be assigned to parameter "boot" of type "str" in function "_fila"
+/home/<usuario>/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py
+  /home/<usuario>/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:27:16 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+  /home/<usuario>/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:32:26 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+  /home/<usuario>/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:35:9 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+  /home/<usuario>/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:38:18 - error: Object of type "None" is not subscriptable (reportOptionalSubscript)
+/home/<usuario>/projects/blackbox/tests/test_scan_samples.py
+  /home/<usuario>/projects/blackbox/tests/test_scan_samples.py:105:18 - error: Argument of type "None" cannot be assigned to parameter "boot" of type "str" in function "_fila"
     "None" is not assignable to "str" (reportArgumentType)
-  /home/lcasarin/projects/blackbox/tests/test_scan_samples.py:106:18 - error: Argument of type "Literal[7]" cannot be assigned to parameter "boot" of type "str" in function "_fila"
+  /home/<usuario>/projects/blackbox/tests/test_scan_samples.py:106:18 - error: Argument of type "Literal[7]" cannot be assigned to parameter "boot" of type "str" in function "_fila"
     "Literal[7]" is not assignable to "str" (reportArgumentType)
-  /home/lcasarin/projects/blackbox/tests/test_scan_samples.py:107:18 - error: Argument of type "dict[Any, Any]" cannot be assigned to parameter "boot" of type "str" in function "_fila" (reportArgumentType)
-  /home/lcasarin/projects/blackbox/tests/test_scan_samples.py:114:31 - error: Argument of type "list[str]" cannot be assigned to parameter "boot" of type "str" in function "_fila"
+  /home/<usuario>/projects/blackbox/tests/test_scan_samples.py:107:18 - error: Argument of type "dict[Any, Any]" cannot be assigned to parameter "boot" of type "str" in function "_fila" (reportArgumentType)
+  /home/<usuario>/projects/blackbox/tests/test_scan_samples.py:114:31 - error: Argument of type "list[str]" cannot be assigned to parameter "boot" of type "str" in function "_fila"
     "list[str]" is not assignable to "str" (reportArgumentType)
 8 errors, 0 warnings, 0 informations
 WARNING: there is a new pyright version available (v1.1.411 -> v1.1.414).
@@ -237,26 +237,26 @@ version reflects what shipped (semver from Conventional Commits)................
 [gate-runner] FAIL: version-bump exited 1; see .simplecode/evidence/gate_failures.jsonl; redacted output sha256=41bb682e3ea4
 [sunset-audit] version=2.2.0 (20 exemption(s) found)
 [sunset-audit] stale: 17 of 20 versioned exemption(s), compared against 2.2
-  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:8  [gitignore]  (current: 2.2)
-  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:15  [gitignore]  (current: 2.2)
-  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:21  [gitignore]  (current: 2.2)
-  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:26  [gitignore]  (current: 2.2)
-  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:30  [gitignore]  (current: 2.2)
-  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:35  [gitignore]  (current: 2.2)
-  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:50  [gitignore]  (current: 2.2)
-  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:60  [gitignore]  (current: 2.2)
-  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:65  [gitignore]  (current: 2.2)
-  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:67  [gitignore]  (current: 2.2)
-  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:69  [gitignore]  (current: 2.2)
-  STALE(2.1)  /home/lcasarin/projects/blackbox/.gitignore:71  [gitignore]  (current: 2.2)
-  STALE(2.1)  /home/lcasarin/projects/blackbox/tools/atom_gpu_telemetry.py:1693  [blocking-sleep-override]  (current: 2.2)
-  STALE(2.1)  /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:782  [blocking-sleep-override]  (current: 2.2)
-  STALE(2.1)  /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:818  [blocking-sleep-override]  (current: 2.2)
-  STALE(2.1)  /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:1577  [blocking-sleep-override]  (current: 2.2)
-  STALE(2.1)  /home/lcasarin/projects/blackbox/tests/test_bb_bash.py:1629  [blocking-sleep-override]  (current: 2.2)
-  OK(2.2)   /home/lcasarin/projects/blackbox/tools/cgroup_repro.py:92  [blocking-sleep-override]
-  OK(2.2)   /home/lcasarin/projects/blackbox/tools/cgroup_repro.py:189  [blocking-sleep-override]
-  OK(2.2)   /home/lcasarin/projects/blackbox/tools/cgroup_repro.py:226  [blocking-sleep-override]
+  STALE(2.1)  /home/<usuario>/projects/blackbox/.gitignore:8  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/<usuario>/projects/blackbox/.gitignore:15  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/<usuario>/projects/blackbox/.gitignore:21  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/<usuario>/projects/blackbox/.gitignore:26  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/<usuario>/projects/blackbox/.gitignore:30  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/<usuario>/projects/blackbox/.gitignore:35  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/<usuario>/projects/blackbox/.gitignore:50  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/<usuario>/projects/blackbox/.gitignore:60  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/<usuario>/projects/blackbox/.gitignore:65  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/<usuario>/projects/blackbox/.gitignore:67  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/<usuario>/projects/blackbox/.gitignore:69  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/<usuario>/projects/blackbox/.gitignore:71  [gitignore]  (current: 2.2)
+  STALE(2.1)  /home/<usuario>/projects/blackbox/tools/atom_gpu_telemetry.py:1693  [blocking-sleep-override]  (current: 2.2)
+  STALE(2.1)  /home/<usuario>/projects/blackbox/tests/test_bb_bash.py:782  [blocking-sleep-override]  (current: 2.2)
+  STALE(2.1)  /home/<usuario>/projects/blackbox/tests/test_bb_bash.py:818  [blocking-sleep-override]  (current: 2.2)
+  STALE(2.1)  /home/<usuario>/projects/blackbox/tests/test_bb_bash.py:1577  [blocking-sleep-override]  (current: 2.2)
+  STALE(2.1)  /home/<usuario>/projects/blackbox/tests/test_bb_bash.py:1629  [blocking-sleep-override]  (current: 2.2)
+  OK(2.2)   /home/<usuario>/projects/blackbox/tools/cgroup_repro.py:92  [blocking-sleep-override]
+  OK(2.2)   /home/<usuario>/projects/blackbox/tools/cgroup_repro.py:189  [blocking-sleep-override]
+  OK(2.2)   /home/<usuario>/projects/blackbox/tools/cgroup_repro.py:226  [blocking-sleep-override]
 [sunset-audit] FAIL — 17 exemption(s) require review.
 [version-bump] HALLAZGOS: 17
 [version-bump] MINOR bump due: 36 commit(s) since 2.1.0 include a feat/fix/breaking change with no version bump yet.

@@ -24,7 +24,7 @@ Sujeto `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py`. 9 hallazg
     "detector_id": "hardcoded_path",
     "file_path": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py",
     "line": 3,
-    "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:3: hardcoded_path: hardcoded absolute path '/home/lcasarin/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02'",
+    "message": "tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/bb_forum_fetch.py:3: hardcoded_path: hardcoded absolute path '/home/<usuario>/projects/blackbox/tasks/evidence/SWARM-LUNA-FORUM-2026-10-02'",
     "severity": "FAIL",
     "would_block": true
   },

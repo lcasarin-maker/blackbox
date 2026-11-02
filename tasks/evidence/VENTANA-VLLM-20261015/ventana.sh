@@ -11,8 +11,8 @@
 # Revertir 3: sudo systemctl disable --now bb-gpu-accounting.service && sudo rm /etc/systemd/system/bb-gpu-accounting.service && sudo systemctl daemon-reload
 set -u
 [ "$(id -u)" = 0 ] || { echo "corre con sudo" >&2; exit 2; }
-R=/home/lcasarin/projects/blackbox
-U=${SUDO_USER:-lcasarin}
+U=${SUDO_USER:?corre con sudo desde la cuenta del checkout}
+R="$(getent passwd "$U" | cut -d: -f6)/projects/blackbox"
 V=$R/tasks/evidence/VENTANA-VLLM-20261015
 EV=$R/tasks/evidence/DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01
 IMG=vllm/vllm-openai:v0.27.1

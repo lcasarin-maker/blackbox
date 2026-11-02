@@ -17,37 +17,37 @@ ESTADO: INCOMPLETO. Falta la pieza 10.1 (regla de auditoria de bb, ilegible sin 
 Por eso este fichero NO lleva la marca que cierra la ficha.
 
 == 1. /srv/ai ==========================================================================
-1.1  /srv/ai/gpu_governance/{admission_check,gpu_lock,monitor_memory}.sh | lcasarin | veto de memoria, exclusion de GPU, monitor | YA (adopted/gpu_governance) | bb
-1.2  /srv/ai/gpu_governance/gpu_sampler.sh.suspendido-2026-09-07 | lcasarin | muestreador suspendido | YA (SUSPENDIDO en suspended/MANIFIESTO.md, vence 2026-11-07) | bb
-1.3  /srv/ai/gpu_governance/gpu.lock | lcasarin | estado en ejecucion del lock | NO: estado, no configuracion | bb (runtime)
-1.4  /srv/ai/gateway/admission_check_wrapper.sh | lcasarin 775 | ExecStartPre del motor: lee admission_check_gb y llama a admission_check.sh | ADOPTADA HOY -> adopted/gateway/ | bb
-1.5  /srv/ai/gateway/active_engine.json | lcasarin | imagen, modelo, flags y memoria del motor | NO | pila-IA (bb lo LEE: admission_check_gb, container_memory_gb)
-1.6  /srv/ai/gateway/active_engine*.bak* (14 ficheros) | lcasarin | historico de configuraciones del motor | NO | pila-IA
-1.7  /srv/ai/gateway/main.py, README.md, configs/ (vacio), __pycache__/ | lcasarin | lanzador del contenedor del motor y su contrato L3 | NO | pila-IA
-1.8  /srv/ai/librechat/config/librechat.yaml (+ .bak) | lcasarin | configuracion de la UI de chat | NO | pila-IA
-1.9  /srv/ai/librechat/.env, .env.bak-* | lcasarin 600 | SECRETOS | NO, NUNCA (no se leyeron) | pila-IA
-1.10 /srv/ai/librechat/data, mongo/ | lcasarin, dnsmasq | datos de la UI | NO | pila-IA
-1.11 /srv/ai/engines/ollama/store (vacio) | lcasarin | almacen de un motor | NO | pila-IA
-1.12 /srv/ai/bakeoff/ (runner.py, workloads, results) | lcasarin | benchmark de motores (mide motores, no la maquina) | NO | pila-IA
-1.13 /srv/ai/suspensiones/open-webui-2026-08-17.json | lcasarin | volcado `docker inspect` de un contenedor suspendido; trae su entorno (7 coincidencias de key/token/secret: no se copia) | NO | pila-IA
-1.14 /srv/ai/vendor/ (marker-venv, SkillOpt) | lcasarin | dependencias de la pila | NO | pila-IA
-1.15 /srv/ai/models/ (155G), _downloads/ (40G), storage/ (root, open-webui) | lcasarin/root | modelos y datos | NO | pila-IA (bb lee models/_coredumps)
-1.16 /srv/ai/logs/memory_monitor.log | lcasarin | salida de monitor_memory.sh (adoptado) | NO: dato, no configuracion | bb (runtime)
-1.17 /srv/ai/logs/gpu/*.csv (11) | lcasarin | salida historica del muestreador suspendido | NO: dato | bb (runtime)
-1.18 /srv/ai/.claude/ | lcasarin | estado de un agente sobre /srv/ai | NO | otro (estado de herramienta, puede llevar credenciales)
+1.1  /srv/ai/gpu_governance/{admission_check,gpu_lock,monitor_memory}.sh | <usuario> | veto de memoria, exclusion de GPU, monitor | YA (adopted/gpu_governance) | bb
+1.2  /srv/ai/gpu_governance/gpu_sampler.sh.suspendido-2026-09-07 | <usuario> | muestreador suspendido | YA (SUSPENDIDO en suspended/MANIFIESTO.md, vence 2026-11-07) | bb
+1.3  /srv/ai/gpu_governance/gpu.lock | <usuario> | estado en ejecucion del lock | NO: estado, no configuracion | bb (runtime)
+1.4  /srv/ai/gateway/admission_check_wrapper.sh | <usuario> 775 | ExecStartPre del motor: lee admission_check_gb y llama a admission_check.sh | ADOPTADA HOY -> adopted/gateway/ | bb
+1.5  /srv/ai/gateway/active_engine.json | <usuario> | imagen, modelo, flags y memoria del motor | NO | pila-IA (bb lo LEE: admission_check_gb, container_memory_gb)
+1.6  /srv/ai/gateway/active_engine*.bak* (14 ficheros) | <usuario> | historico de configuraciones del motor | NO | pila-IA
+1.7  /srv/ai/gateway/main.py, README.md, configs/ (vacio), __pycache__/ | <usuario> | lanzador del contenedor del motor y su contrato L3 | NO | pila-IA
+1.8  /srv/ai/librechat/config/librechat.yaml (+ .bak) | <usuario> | configuracion de la UI de chat | NO | pila-IA
+1.9  /srv/ai/librechat/.env, .env.bak-* | <usuario> 600 | SECRETOS | NO, NUNCA (no se leyeron) | pila-IA
+1.10 /srv/ai/librechat/data, mongo/ | <usuario>, dnsmasq | datos de la UI | NO | pila-IA
+1.11 /srv/ai/engines/ollama/store (vacio) | <usuario> | almacen de un motor | NO | pila-IA
+1.12 /srv/ai/bakeoff/ (runner.py, workloads, results) | <usuario> | benchmark de motores (mide motores, no la maquina) | NO | pila-IA
+1.13 /srv/ai/suspensiones/open-webui-2026-08-17.json | <usuario> | volcado `docker inspect` de un contenedor suspendido; trae su entorno (7 coincidencias de key/token/secret: no se copia) | NO | pila-IA
+1.14 /srv/ai/vendor/ (marker-venv, SkillOpt) | <usuario> | dependencias de la pila | NO | pila-IA
+1.15 /srv/ai/models/ (155G), _downloads/ (40G), storage/ (root, open-webui) | <usuario>/root | modelos y datos | NO | pila-IA (bb lee models/_coredumps)
+1.16 /srv/ai/logs/memory_monitor.log | <usuario> | salida de monitor_memory.sh (adoptado) | NO: dato, no configuracion | bb (runtime)
+1.17 /srv/ai/logs/gpu/*.csv (11) | <usuario> | salida historica del muestreador suspendido | NO: dato | bb (runtime)
+1.18 /srv/ai/.claude/ | <usuario> | estado de un agente sobre /srv/ai | NO | otro (estado de herramienta, puede llevar credenciales)
 
 == 2. ~/.config/systemd/user ===========================================================
-2.1  ai-gpu-telemetry.service, ai-memory-monitor.{service,timer}, ai-nemotron-vigilante.{service,timer}, atom-crash-detector.{service,timer}, atom-gpu-telemetry.service, bb-aviso-termico.service, bb-reboot-verdict.{service,timer}, blackbox-drift.{service,timer}, blackbox-sample.{service,timer} | lcasarin | ver SPEC Inventario de propiedad | YA (adopted/systemd-user) | bb
-2.2  bb-guardia-proceso.service | lcasarin | corre bin/bb-guardia-proceso (frena un proceso desbocado) | ADOPTADA HOY -> adopted/systemd-user/ (identica a systemd/bb-guardia-proceso.service) | bb
-2.3  app.slice.d/99-blackbox.conf, app.slice.d/99-blackbox-escritorio.conf, session.slice.d/, app-gnome-.scope.d/, snap.antigravity.antigravity-.scope.d/ | lcasarin | techos y memory.low del escritorio | YA (adopted/system-config, home_...) | bb
-2.4  ai-nemotron.service (+ .bak-pre-admission-fix) | lcasarin | lanza el motor via main.py; su ExecStartPre es el wrapper 1.4 | NO | pila-IA (bb lo vigila y reinicia por systemctl)
-2.5  ai-ollama.service | lcasarin | motor de modelos pequenos (no habilitado) | NO | pila-IA
-2.6  ai-memory-monitor.timer.bak-2026-08-28 | lcasarin | copia vieja | NO | basura de bb; no se adopta un .bak
-2.7  [externo]-api.service, [externo]-api.service.d/memoria-acotada.conf (MemoryMax=8G) | lcasarin | API de [externo] y su techo | NO | [externo]
-2.8  kb-nightly-investigator.{service,timer}, liberation-watchdog.{service,timer}, liberation-watchdog.timer.d/cuanto-5min.conf, overnight-judge-watchdog.{service,timer} | lcasarin | cola y consolidacion de [externo] | NO | [externo]
-2.9  <proyecto-privado-1>-{fichas,guardian,monitor} (.service/.timer, 4 ficheros) | lcasarin | cadena de trabajo de otro proyecto | NO | otro-repo
-2.10 <proyecto-privado-2>-* (10 symlinks a su repo) | lcasarin | sincronizacion de otro proyecto, ya versionada alli | NO | otro-repo
-2.11 simplecode-daemon.service | lcasarin | demonio del kit simplecode | NO | otro-repo (simplecode)
+2.1  ai-gpu-telemetry.service, ai-memory-monitor.{service,timer}, ai-nemotron-vigilante.{service,timer}, atom-crash-detector.{service,timer}, atom-gpu-telemetry.service, bb-aviso-termico.service, bb-reboot-verdict.{service,timer}, blackbox-drift.{service,timer}, blackbox-sample.{service,timer} | <usuario> | ver SPEC Inventario de propiedad | YA (adopted/systemd-user) | bb
+2.2  bb-guardia-proceso.service | <usuario> | corre bin/bb-guardia-proceso (frena un proceso desbocado) | ADOPTADA HOY -> adopted/systemd-user/ (identica a systemd/bb-guardia-proceso.service) | bb
+2.3  app.slice.d/99-blackbox.conf, app.slice.d/99-blackbox-escritorio.conf, session.slice.d/, app-gnome-.scope.d/, snap.antigravity.antigravity-.scope.d/ | <usuario> | techos y memory.low del escritorio | YA (adopted/system-config, home_...) | bb
+2.4  ai-nemotron.service (+ .bak-pre-admission-fix) | <usuario> | lanza el motor via main.py; su ExecStartPre es el wrapper 1.4 | NO | pila-IA (bb lo vigila y reinicia por systemctl)
+2.5  ai-ollama.service | <usuario> | motor de modelos pequenos (no habilitado) | NO | pila-IA
+2.6  ai-memory-monitor.timer.bak-2026-08-28 | <usuario> | copia vieja | NO | basura de bb; no se adopta un .bak
+2.7  [externo]-api.service, [externo]-api.service.d/memoria-acotada.conf (MemoryMax=8G) | <usuario> | API de [externo] y su techo | NO | [externo]
+2.8  kb-nightly-investigator.{service,timer}, liberation-watchdog.{service,timer}, liberation-watchdog.timer.d/cuanto-5min.conf, overnight-judge-watchdog.{service,timer} | <usuario> | cola y consolidacion de [externo] | NO | [externo]
+2.9  <proyecto-privado-1>-{fichas,guardian,monitor} (.service/.timer, 4 ficheros) | <usuario> | cadena de trabajo de otro proyecto | NO | otro-repo
+2.10 <proyecto-privado-2>-* (10 symlinks a su repo) | <usuario> | sincronizacion de otro proyecto, ya versionada alli | NO | otro-repo
+2.11 simplecode-daemon.service | <usuario> | demonio del kit simplecode | NO | otro-repo (simplecode)
 2.12 systemd/app-com.anthropic.Claude-.scope.d (en el repo) | -- | plantilla de bb NO desplegada en la maquina | n/a | bb (hallazgo: plantilla sin despliegue; no es adopcion)
 
 == 3. /etc/systemd/system y /etc/systemd/*.conf.d ======================================
@@ -99,7 +99,7 @@ Por eso este fichero NO lleva la marca que cierra la ficha.
 9.2  nvrm-watch.timer, sysstat-collect.timer (+ override) | -- | -- | YA | bb
 9.3  timers de sistema restantes (apt-*, fwupd, anacron, ua, motd, logrotate, man-db, e2scrub, fstrim, dpkg-db-backup, tmpfiles, sysstat-summary, update-notifier-*) | root | paquetes | NO | SO-base
 9.4  /etc/cron.d/{anacron,e2scrub_all,sysstat} | root | paquetes | NO | SO-base
-9.5  crontab de usuario: 3 lineas del kit simplecode, 1 de <proyecto-privado-3> | lcasarin | auditorias de flota / cosecha semanal | NO | otro-repo
+9.5  crontab de usuario: 3 lineas del kit simplecode, 1 de <proyecto-privado-3> | <usuario> | auditorias de flota / cosecha semanal | NO | otro-repo
 9.6  /var/spool/cron/crontabs | root | ilegible sin root | COULD_NOT_RUN (solo se vio el crontab propio con crontab -l) | --
 
 == 10. Otros escritos por enable-privileged.sh ==========================================

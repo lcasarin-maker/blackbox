@@ -8,8 +8,8 @@ rc=1
 
 $ ls -d ~/.sparkrun ~/sparkrun
 rc=2
-ls: no se puede acceder a '/home/lcasarin/.sparkrun': No existe el archivo o el directorio
-ls: no se puede acceder a '/home/lcasarin/sparkrun': No existe el archivo o el directorio
+ls: no se puede acceder a '/home/<usuario>/.sparkrun': No existe el archivo o el directorio
+ls: no se puede acceder a '/home/<usuario>/sparkrun': No existe el archivo o el directorio
 
 $ jq -e ".admission_check_gb == null or .container_memory_gb == null or .gpu_memory_utilization == null" /srv/ai/gateway/active_engine.json
 rc=1

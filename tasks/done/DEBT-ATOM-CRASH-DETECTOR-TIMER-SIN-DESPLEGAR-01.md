@@ -12,7 +12,7 @@ severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-11
-close_check: {"cmd": "grep -qx OnBootSec=4min /home/lcasarin/.config/systemd/user/atom-crash-detector.timer", "expect": "exit_zero", "porque": "La copia versionada ya dice OnBootSec=4min; la instalada sigue en OnBootSec=2min. Pasa cuando la instalada corre a 4 min, despues de bb-reboot-verdict."}
+close_check: {"cmd": "grep -qx OnBootSec=4min $HOME/.config/systemd/user/atom-crash-detector.timer", "expect": "exit_zero", "porque": "La copia versionada ya dice OnBootSec=4min; la instalada sigue en OnBootSec=2min. Pasa cuando la instalada corre a 4 min, despues de bb-reboot-verdict."}
 ---
 
 ## Por que
