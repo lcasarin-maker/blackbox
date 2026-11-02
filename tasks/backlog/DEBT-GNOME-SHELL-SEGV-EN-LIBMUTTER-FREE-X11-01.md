@@ -37,3 +37,20 @@ El `close_check` falla hoy (hay coredump del 2026-10-27). Debe pasar solo tras 7
 ## Limite
 
 Un coredump, un host. No prueba que la causa sea el driver NVIDIA; la pila solo ubica la caida en mutter.
+
+## Medido el 2026-11-02: pila con simbolos y segunda firma
+
+`coredumpctl debug` sobre el core de 2026-11-02 16:53:04 (PID 4729) con `DEBUGINFOD_URLS=https://debuginfod.ubuntu.com` (sin instalar paquetes ni usar sudo), hilo 1:
+
+```
+#5  meta_input_device_x11_reset_scroll_info (device=0x0) at ../src/backends/x11/meta-input-device-x11.c:683
+#6  meta_seat_x11_translate_event (xevent=..., seat=...) at ../src/backends/x11/meta-seat-x11.c:2664
+#7  meta_backend_x11_handle_event ... meta-event-x11.c:71
+```
+
+- Es una desreferencia nula (`device=0x0`) en el backend X11 de mutter 46.2 al traducir un evento de XInput. Los cores del 2026-10-25 y del 2026-11-02 comparten `libmutter-14.so.0+0xf77a0`; el del 2026-10-27 cae en `+0xf604c` dentro de `free` (otra firma, la que describe la seccion anterior).
+- Disparador probable: 34 s antes del crash de hoy todo el arbol USB (hub, teclado, receptor) se reenumero (`usb 1-1: new high-speed USB device number 24`, 16:52:29) y X anadio y quito los dispositivos de entrada; el 2026-10-25 hubo la misma reenumeracion 31 s antes (22:58:40 contra 22:59:11). Contraejemplo: el 2026-11-02 14:53:36-38 el mismo hub se desconecto y reconecto dos veces sin caida, asi que el hotplug no basta. El 2026-10-27 no hubo reenumeracion previa.
+- Consecuencia medida el 2026-11-02: la sesion X cayo a las 16:53:37 y `chrome` y `antigravity` murieron con SIGTRAP a las 16:53:23 al perder X. La maquina no se reinicio (`uptime -s` 13:02:39).
+- Serie por semana (`coredumpctl list gnome-shell`): 2026-10-25, 10-26 (SIGQUIT, reinicio manual), 10-27 y 11-02: tres SIGSEGV en 8 dias.
+
+Pendiente del alcance 2 de arriba: decidir entre sesion Wayland (el X11 con el controlador NVIDIA es la combinacion en uso), actualizar mutter o evitar el hotplug; con evidencia de cada una.
