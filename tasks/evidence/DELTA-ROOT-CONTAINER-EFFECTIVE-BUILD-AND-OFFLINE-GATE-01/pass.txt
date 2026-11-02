@@ -1,9 +1,9 @@
-Perfil medido de este equipo el 2026-10-14: un solo contenedor de motor; los demas contenedores son bases pgvector (nombres de proyectos privados redactados). El puerto 8010 lo escucha la pasarela de Atlas (un proceso python3, no un contenedor de motor): sus modelos atlas-* son rutas de esa pasarela, no pesos servidos por una segunda instancia.
+Perfil medido de este equipo el 2026-10-14: un solo contenedor de motor; los demas contenedores son bases pgvector (nombres de proyectos privados redactados). El puerto 8010 lo escucha la pasarela de [externo] (un proceso python3, no un contenedor de motor): sus modelos [externo]-* son rutas de esa pasarela, no pesos servidos por una segunda instancia.
 
 $ docker ps --format "{{.Names}} {{.Image}}"
 rc=0
 nemotron-server vllm/vllm-openai:v0.27.1
-atlas-pgvector pgvector/pgvector:pg16
+[externo]-pgvector pgvector/pgvector:pg16
 otro proyecto-pg pgvector/pgvector:pg16
 
 $ docker inspect nemotron-server --format '{{.Config.Image}} {{.Image}}'
@@ -16,7 +16,7 @@ LISTEN 0      2048   127.0.0.1:8010 0.0.0.0:* users:(("python3",pid=3076115,fd=5
 
 $ curl -s -m 10 http://127.0.0.1:8010/v1/models | python3 -c "import json,sys;print([m['id'] for m in json.load(sys.stdin)['data']])"
 rc=0
-['atlas', 'atlas-rag', 'atlas-skill', 'atlas-mcp', 'atlas-brain', 'atlas-deep']
+['[externo]', '[externo]-rag', '[externo]-skill', '[externo]-mcp', '[externo]-brain', '[externo]-deep']
 
 $ docker images --format '{{.Repository}}:{{.Tag}} {{.ID}}' | grep -i vllm
 rc=0

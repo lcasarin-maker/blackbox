@@ -20,6 +20,7 @@ from pathlib import Path
 SEC_FUNCIONES = "## Inventario de funciones"
 SEC_PROPIEDAD = "## Inventario de propiedad"
 IGNORADOS = {"__init__.py", "__pycache__"}
+PREFIJO_HOME = "home_@BB_USUARIO@_"
 
 
 def seccion(spec: str, titulo: str) -> str:
@@ -59,6 +60,11 @@ def destino_desplegado(f: Path) -> str | None:
     propia primera linea dice seguir.
     """
     if f.parent.name == "system-config":
+        # `home_@BB_USUARIO@_<resto>` es el home de quien corre `bb drift`
+        # (boleta #23 A de Luis: el repo publico no lleva el usuario). El
+        # prefijo va aparte: el replace partiria el marcador.
+        if f.name.startswith(PREFIJO_HOME):
+            return "~/" + f.name[len(PREFIJO_HOME):].replace("_", "/")
         return "/" + f.name.replace("_", "/")
     if f.parent.name == "systemd-user":
         return "~/.config/systemd/user/" + f.name

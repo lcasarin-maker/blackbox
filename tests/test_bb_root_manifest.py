@@ -89,15 +89,22 @@ def test_proponer_rechaza_shebang_fuera_de_lista_y_symlink(src: Path):
 
 
 def test_main_propose_escribe_la_propuesta_e_imprime_scripts_y_comando(
-        tmp_path: Path, capsys: pytest.CaptureFixture[str]):
-    out = tmp_path / "prop.json"
-    assert bm.main(["--propose", "--out", str(out)]) == 0
+        tmp_path: Path, capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("SUDO_USER", "ejemplo")
+    out, rendido = tmp_path / "prop.json", tmp_path / "sudoers"
+    assert bm.main(["--propose", "--out", str(out), "--rendered-sudoers", str(rendido)]) == 0
     texto = capsys.readouterr().out
     assert out.read_bytes() == bm.PROPUESTA.read_bytes()
     for p in SCRIPTS:
         assert p.read_text(encoding="utf-8") in texto, f"falta el texto completo de {p.name}"
     assert hashlib.sha256(out.read_bytes()).hexdigest() in texto
-    assert texto.rstrip().splitlines()[-1].startswith("sudo sh -c ")
+    assert rendido.read_text(encoding="utf-8") == bm.SUDOERS.read_text(encoding="utf-8").replace(
+        bm.MARCADOR_USUARIO, "ejemplo")
+    assert REGLA_EJEMPLO in texto and hashlib.sha256(rendido.read_bytes()).hexdigest() in texto
+    ultima = texto.rstrip().splitlines()[-1]
+    assert ultima.startswith("sudo sh -c ")
+    # El comando instala el renderizado, nunca la plantilla con el marcador.
+    assert shlex.quote(str(rendido.resolve())) in shlex.split(ultima)[3] and str(bm.SUDOERS) not in ultima
 
 
 def test_main_propose_con_un_script_malo_sale_3(src: Path, tmp_path: Path):
@@ -105,6 +112,16 @@ def test_main_propose_con_un_script_malo_sale_3(src: Path, tmp_path: Path):
     out = tmp_path / "prop.json"
     assert bm.main(["--propose", "--src-dir", str(src), "--out", str(out)]) == 3
     assert not out.exists()
+
+
+@pytest.mark.parametrize("sudo_user", ["root", "a b", "a/b"])
+def test_main_propose_con_usuario_invalido_sale_3_sin_escribir_nada(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], sudo_user: str):
+    monkeypatch.setenv("SUDO_USER", sudo_user)
+    out, rendido = tmp_path / "prop.json", tmp_path / "sudoers"
+    assert bm.main(["--propose", "--out", str(out), "--rendered-sudoers", str(rendido)]) == 3
+    assert "usuario de sudoers invalido" in capsys.readouterr().err
+    assert not out.exists() and not rendido.exists() and not list(tmp_path.glob("*.nuevo"))
 
 
 # --- el comando de instalacion, simulado sin root ------------------------------------
@@ -115,7 +132,7 @@ def _simular(tmp_path: Path) -> tuple[Path, Path, Path, str, Path]:
     prop, runner, sudoers = pkg / "m.json", pkg / "runner.py", pkg / "sudoers"
     shutil.copy(bm.PROPUESTA, prop)
     shutil.copy(bm.RUNNER, runner)
-    shutil.copy(bm.SUDOERS, sudoers)
+    bm.escribir_sudoers(bm.SUDOERS, "ejemplo", sudoers)
     raiz = tmp_path / "raiz"
     for d in ("sbin", "sudoers.d"):
         (raiz / d).mkdir(parents=True)
@@ -154,20 +171,91 @@ def test_control_negativo_un_fichero_cambiado_tras_la_revision_no_se_instala(tmp
 
 # --- sudoers ---------------------------------------------------------------------
 
-LINEA_SUDOERS = r"<usuario> ALL=(root) NOPASSWD: /usr/local/sbin/bb-root-run ^[a-z0-9][a-z0-9-]*$"
+# El repo es publico (boleta #23 A): la regla versionada lleva el marcador, no el usuario.
+RESTO_REGLA = r"ALL=(root) NOPASSWD: /usr/local/sbin/bb-root-run ^[a-z0-9][a-z0-9-]*$"
+LINEA_SUDOERS = bm.MARCADOR_USUARIO + " " + RESTO_REGLA
+REGLA_EJEMPLO = "ejemplo " + RESTO_REGLA
+
+
+def _reglas(texto: str) -> list[str]:
+    return [x for x in texto.splitlines() if x.strip() and not x.startswith("#")]
+
+
+def usuarios_literales(texto: str) -> list[str]:
+    """Lo que precede a cada `ALL=(root)` y no es el marcador: un usuario real publicado."""
+    return [u for u in re.findall(r"(\S*)\s*ALL=\(root\)", texto) if u != bm.MARCADOR_USUARIO]
 
 
 def test_sudoers_tiene_una_sola_regla_y_es_la_regex_de_un_argumento():
-    reglas = [x for x in bm.SUDOERS.read_text(encoding="utf-8").splitlines()
-              if x.strip() and not x.startswith("#")]
-    assert reglas == [LINEA_SUDOERS]
+    assert _reglas(bm.SUDOERS.read_text(encoding="utf-8")) == [LINEA_SUDOERS]
 
 
-def test_sudoers_pasa_visudo_y_el_control_negativo_falla(tmp_path: Path):
-    assert subprocess.run(["visudo", "-c", "-f", str(bm.SUDOERS)], capture_output=True).returncode == 0
+def test_el_sudoers_versionado_no_lleva_ningun_usuario_real():
+    texto = bm.SUDOERS.read_text(encoding="utf-8")
+    assert texto.count("ALL=(root)") == 1 and usuarios_literales(texto) == []
+
+
+def test_control_negativo_con_el_usuario_literal_restaurado_la_guarda_lo_caza():
+    texto = bm.SUDOERS.read_text(encoding="utf-8").replace(bm.MARCADOR_USUARIO, "ejemplo")
+    assert usuarios_literales(texto) == ["ejemplo"]
+    assert usuarios_literales("ejemplo   ALL=(root) NOPASSWD: /x\n") == ["ejemplo"]
+
+
+def test_el_render_produce_la_regla_de_antes_y_deja_los_comentarios_byte_a_byte():
+    plantilla = bm.SUDOERS.read_text(encoding="utf-8")
+    rendido = bm.renderizar_sudoers(plantilla, "ejemplo")
+    assert _reglas(rendido) == [REGLA_EJEMPLO]
+    comentarios = [x for x in plantilla.splitlines(keepends=True) if x.startswith("#")]
+    assert [x for x in rendido.splitlines(keepends=True) if x.startswith("#")] == comentarios
+    assert rendido.encode() == plantilla.encode().replace(bm.MARCADOR_USUARIO.encode(), b"ejemplo")
+
+
+@pytest.mark.parametrize("usuario", ["root", "", "a b", "a/b", "../x", "Luis", "-x", "1a", "a" * 33, "a\n"])
+def test_el_render_rechaza_root_vacio_y_usuarios_que_no_validan(usuario: str):
+    with pytest.raises(ValueError, match="usuario de sudoers invalido"):
+        bm.renderizar_sudoers(bm.SUDOERS.read_text(encoding="utf-8"), usuario)
+
+
+@pytest.mark.parametrize("usuario", ["ejemplo", "_x", "a", "a" * 32, "web-1_b"])
+def test_el_render_acepta_los_usuarios_que_validan(usuario: str):
+    assert _reglas(bm.renderizar_sudoers(bm.SUDOERS.read_text(encoding="utf-8"), usuario)) == [
+        usuario + " " + RESTO_REGLA]
+
+
+@pytest.mark.parametrize("plantilla", ["sin marcador\n", "@BB_USUARIO@ x\n@BB_USUARIO@ y\n"])
+def test_el_render_exige_el_marcador_exactamente_una_vez(plantilla: str):
+    with pytest.raises(ValueError, match="exactamente una vez"):
+        bm.renderizar_sudoers(plantilla, "ejemplo")
+
+
+def test_usuario_instalador_es_sudo_user_o_el_usuario_efectivo():
+    import pwd
+    efectivo = pwd.getpwuid(os.geteuid()).pw_name
+    assert bm.usuario_instalador({"SUDO_USER": "ejemplo"}) == "ejemplo"
+    assert bm.usuario_instalador({"SUDO_USER": ""}) == efectivo  # `${SUDO_USER:-...}`: vacio = ausente
+    assert bm.usuario_instalador({}) == efectivo
+
+
+def test_sudoers_renderizado_pasa_visudo_y_el_control_negativo_falla(tmp_path: Path):
+    rendido = bm.escribir_sudoers(bm.SUDOERS, "ejemplo", tmp_path / "sudoers")
+    assert subprocess.run(["visudo", "-c", "-f", str(rendido)], capture_output=True).returncode == 0
     roto = tmp_path / "roto"
-    roto.write_text(LINEA_SUDOERS.replace("NOPASSWD:", "NOPASSWD") + ",\n", encoding="utf-8")
+    roto.write_text(REGLA_EJEMPLO.replace("NOPASSWD:", "NOPASSWD") + ",\n", encoding="utf-8")
     assert subprocess.run(["visudo", "-c", "-f", str(roto)], capture_output=True).returncode != 0
+
+
+def test_escribir_sudoers_no_deja_nada_si_visudo_rechaza_o_no_esta(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    plantilla = tmp_path / "plantilla"
+    plantilla.write_text(LINEA_SUDOERS.replace("NOPASSWD:", "NOPASSWD") + ",\n", encoding="utf-8")
+    destino = tmp_path / "out" / "sudoers"
+    destino.parent.mkdir()
+    with pytest.raises(ValueError, match="visudo -c -f rechaza"):
+        bm.escribir_sudoers(plantilla, "ejemplo", destino)
+    assert list(destino.parent.iterdir()) == []
+    monkeypatch.setattr(bm.shutil, "which", lambda _: str(tmp_path / "no-hay-visudo"))
+    with pytest.raises(ValueError, match="no se pudo correr visudo"):
+        bm.escribir_sudoers(bm.SUDOERS, "ejemplo", destino)
+    assert list(destino.parent.iterdir()) == []
 
 
 @pytest.mark.parametrize("argv,pasa", [
@@ -736,6 +824,8 @@ def test_apt_guardia_si_puede_lo_declarado(linea: str):
 # --- earlyoom-proteger: ejecutado sobre tmp_path (rutas, root y systemd sustituidos) --------
 
 EARLYOOM_VIEJO = ROOT / "tests" / "fixtures" / "etc_default_earlyoom.viejo"  # lo desplegado del 2026-10-14 al 2026-10-16 (sha 89fe78da...)
+# El 2026-11-01 (boleta #35 A) la linea 1 de las dos copias, un comentario, se neutralizo: sus sha256 ya no son los
+# desplegados (89fe78da... y 0e8bc5de...) y el script sellado se re-sello con los nuevos.
 # lo que despliega (DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01); al desplegarlo pasa a system-config/ y estas dos
 # constantes avanzan con el siguiente cambio, como paso con el del 2026-10-14
 EARLYOOM_NUEVO = ROOT / "adopted" / "system-config" / "etc_default_earlyoom"

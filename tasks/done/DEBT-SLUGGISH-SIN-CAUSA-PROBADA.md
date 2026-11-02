@@ -116,7 +116,7 @@ cuatro horas no se lean igual que una ventana observada minuto a minuto.
 
 ### El criterio de cierre, y por que es ese
 
-Mismo patron que `DEBT-DGX-438-SIN-CAUSA-RAIZ`, que esta en la misma
+Mismo patron que `DEBT-SIGTERM-SIN-CAUSA-RAIZ`, que esta en la misma
 situacion: la ficha cierra cuando alguien **escribe la causa** en
 `tasks/done/`, no cuando el repo compila.
 
@@ -128,7 +128,7 @@ explicarse. Se cambio antes de publicarla.
 
 Lo que se pierde diciendolo: este criterio depende de que alguien escriba, no
 de una medida automatica. Esa es su debilidad y esta aqui a proposito, igual
-que en DGX-438 -- porque la alternativa mecanica exige que la maquina vuelva a
+que en la ficha de SIGTERM sin causa raiz -- porque la alternativa mecanica exige que la maquina vuelva a
 ponerse lenta, y un gate no puede provocar eso. La caducidad de la linea base
 es lo que impide que envejezca callada.
 

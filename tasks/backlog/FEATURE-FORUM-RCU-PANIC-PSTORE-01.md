@@ -11,11 +11,17 @@ created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_rcu_panic_pstore --evidence tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01", "expect": "exit_zero", "porque": "Must verify the active RCU sysctl and persistent capture path on the target stack, prove rollback, and distinguish a tested panic path from an unobserved natural RCU recovery."}
 ---
 
-## Failure and proposed mitigation
+## Trabajo en la ATOM
 
-[NVIDIA forum thread 381655, posts 1–2](https://forums.developer.nvidia.com/t/dgx-spark-gb10-hard-freeze-under-sustained-load-rcu-stall-on-cpu-11-watchdog-kdump-both-fail-working-pstore-only-crash-capture-recipe-eviden/381655/1) reports an ASUS/NVIDIA DGX Spark, BIOS GX10DGX.0103.2026.0129.1152, Ubuntu 24.04, kernel 6.17.0-1008-nvidia, driver 580.142, and a roughly 2h16m hard freeze during mixed GPU/host workload. The owner reports 44 RCU stall messages, a failed kdump path, and an SBSA watchdog IRQ path blocked during the lockup. They then configured `kernel.panic_on_rcu_stall=1`, `kernel.panic=30`, `crash_kexec_post_notifiers=1`, and EFI pstore; a manually injected panic captured pstore output. The author did not demonstrate that a later natural RCU stall successfully panicked and rebooted.
+En un reinicio canario aprobado: `kernel.panic_on_rcu_stall=1` sin persistir, panic forzado, y tras el arranque `bb-root-run arranque-forense` + `bb scan` deben leer el registro de pstore; conservar armado kdump y verificar el rollback del sysctl.
 
-The follow-up distinguishes the kernel RCU stall from a later power-path event. The September power interruption had no RCU, Xid, OOM, thermal or panic evidence. `panic_on_rcu_stall` cannot be assumed to recover a physical power cut or a CPU lockup that prevents the panic path from running.
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/dgx-spark-gb10-hard-freeze-under-sustained-load-rcu-stall-on-cpu-11-watchdog-kdump-both-fail-working-pstore-only-crash-capture-recipe-eviden/381655/1
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
 
 ## Blackbox coverage and gap
 

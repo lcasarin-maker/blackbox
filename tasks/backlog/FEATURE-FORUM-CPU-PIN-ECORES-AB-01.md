@@ -11,14 +11,18 @@ created: 2026-10-21
 close_check: {"cmd": "python3 -m tools.verify_cpu_pin_ab --evidence tasks/evidence/FEATURE-FORUM-CPU-PIN-ECORES-AB-01", "expect": "exit_zero", "porque": "Debe comparar, con la misma carga y el mismo cap de reloj, el proceso de inferencia sin pin contra el pin a cpu 0-4,10-14 (A725), registrando las 7 thermal zones acpitz, clocks efectivos y throughput, con repeticion, control negativo (pin a los X925 no debe enfriar) y rollback verificado. Si falta hardware o carga, imprimir could_not_run y conservar open."}
 ---
 
-## Origen
+## Trabajo en la ATOM
 
-Hilo [386102](https://forums.developer.nvidia.com/t/386102) (GB10 a 95 C en zonas termicas y apagones bajo inferencia 122B) y su enlace [386117](https://forums.developer.nvidia.com/t/386117). Los reportes de foro siguen sin validacion local.
+A/B en la ATOM con el mismo workload acotado y el mismo tope de reloj: proceso de inferencia sin pin, fijado a los A725 (cpu 0-4,10-14) y, como control negativo, a los X925 (5-9,15-19); >= 2 repeticiones de >= 30 min por brazo con las 7 zonas, relojes, decode/prefill y potencia. Opt-in, con rollback de afinidad.
 
-- 386117 (un usuario, dos ASUS GX10, motor tensorfold, un dia de datos): las zonas `acpitz` llegaban a 95-97 C con la GPU fria; el host de inferencia ocupaba los X925 (cpu 5-9,15-19) mientras los diez A725 (cpu 0-4,10-14) estaban libres. `taskset -a -p -c 0-4,10-14 <pid>` bajo el pico de 94 a 72 C con el mismo throughput (107 vs 108 tok/s decode) y con el cap en 1400 MHz; con el pin, el cap volvio a 2000 MHz y el prefill subio ~20%. Reglas que reporta: el proceso entero va al conjunto de A725; repartir hilos entre los dos clusters A725 dio 2-3 C mas.
-- 386102 posts 3, 5, 10 (otros tres usuarios) reportan lo mismo con cap 1400-1700 MHz. Post 11 del autor: A/B en corridas cortas sin diferencia, corridas largas a 93-95 C; sin explicar.
-- 379389: el cap de reloj baja potencia en pared pero NO la zona caliente del SoC (90-96 C a todo reloj), porque no afecta a los nucleos Grace. El cap ayuda con transitorios de potencia, no con calor de CPU.
-- 386102 post 12: el 90 C de ACPI reflejaria la interfaz C2C y no la CPU. Sin verificar.
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/386102
+- https://forums.developer.nvidia.com/t/386117
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
 
 ## Lo medido en este equipo (2026-10-21)
 

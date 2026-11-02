@@ -15,17 +15,17 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_qwen38_long_run_json_correctness_canary_01`, un xfail que se retira con el cierre."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/380248/27
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-QWEN38-LONG-RUN-JSON-CORRECTNESS-CANARY-01.** [380248, posts 27, 34, 36–38](https://forums.developer.nvidia.com/t/380248/27) contiene un reporte aislado de Qwen3.8-27B: un operador dice que varios proveedores/quant mostraron salidas JSON cada vez menos válidas durante tareas autónomas largas, con aproximadamente 3/4 malformadas tras 30 minutos; no presenta prompts, respuestas ni hashes que permitan atribuirlo a AutoRound, FP8 KV, temperatura o MTP. Otros participantes expresan preocupación por deriva de calidad en procesos largos y por diferencias de BF16/FP8, pero reconocen que son observaciones subjetivas y no ofrecen pares controlados. En la misma discusión, la ficha inicial permite `max_model_len=1010000`, aunque sus pruebas visibles de throughput terminan a profundidad 8192; ese número de configuración no prueba integridad a un millón de tokens. Conservar como señal para la canaria semántica de runtime: sobre una versión/modelo exactos, ejecutar tareas largas repetidas que requieran JSON validable, guardar checksums/digest del checkpoint, backend, tokenizer, template, sampling, KV y MTP, y comparar control BF16 contra candidato cuantizado/FP8 si el stack lo soporta. Rechazar degradación objetiva de formato o contenido bajo criterios definidos antes del ensayo; mantener rollback de imagen/checkpoint. Cierre requiere fixtures reproducibles con respuestas completas y comparación pareada/soak; la anécdota por sí sola no demuestra regresión ni prescribe BF16.
-
-Fuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.
 
 ## Criterio de cierre y control negativo
 

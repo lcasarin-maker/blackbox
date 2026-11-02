@@ -15,13 +15,16 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/FORUM-02-USB-UVC-EP0.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m tools.verify_forum_finding --id FORUM-02-USB-UVC-EP0 --evidence tasks/evidence/FORUM-02-USB-UVC-EP0`, que sin captura real del sujeto no puede pasar; sin sujeto aqui no hay captura posible."}
 ---
 
-## Fuente y evidencia
+## Referencia pública
 
-Hilo NVIDIA [355453](https://forums.developer.nvidia.com/t/dgx-spark-xhci-controller-hc-died-crashes-with-realsense-d435i-streaming-30fps-depth-rgb/355453), en particular posts [11](https://forums.developer.nvidia.com/t/dgx-spark-xhci-controller-hc-died-crashes-with-realsense-d435i-streaming-30fps-depth-rgb/355453/11), [12](https://forums.developer.nvidia.com/t/dgx-spark-xhci-controller-hc-died-crashes-with-realsense-d435i-streaming-30fps-depth-rgb/355453/12) y [13–15](https://forums.developer.nvidia.com/t/dgx-spark-xhci-controller-hc-died-crashes-with-realsense-d435i-streaming-30fps-depth-rgb/355453/13).
+Hilos de los que salió esta ficha (URL pública):
 
-Un usuario con DGX Spark, host xHCI MediaTek MT8901 y kernel `6.17.0-1021-nvidia` reportó que una transferencia de control UVC EP0 después de iniciar el stream provoca la firma `HC died`. Otro flujo que no envía controles EP0 después de iniciar transmisión corrió 37 minutos. El autor informó una reproducción camera-agnostic con `usbmon` y tracepoints de xHCI. NVIDIA dijo que el problema estaba corregido en una actualización de julio; un usuario dijo que aún podía reproducirlo tras reinstalar DGX OS 7.5.0-2 y actualizar paquetes, y NVIDIA pidió distinguir unidad OEM de Spark FE. La versión efectiva de la corrección sigue sin identificarse.
+- https://forums.developer.nvidia.com/t/dgx-spark-xhci-controller-hc-died-crashes-with-realsense-d435i-streaming-30fps-depth-rgb/355453
+- https://forums.developer.nvidia.com/t/dgx-spark-xhci-controller-hc-died-crashes-with-realsense-d435i-streaming-30fps-depth-rgb/355453/11
+- https://forums.developer.nvidia.com/t/dgx-spark-xhci-controller-hc-died-crashes-with-realsense-d435i-streaming-30fps-depth-rgb/355453/12
+- https://forums.developer.nvidia.com/t/dgx-spark-xhci-controller-hc-died-crashes-with-realsense-d435i-streaming-30fps-depth-rgb/355453/13
 
-Blackbox ya detecta la firma de controlador muerto en `FEATURE-USB-XHCI-FORENSICS`; esa capacidad detecta el fallo después de ocurrir. No verifica qué combinación de kernel, driver, firmware y OEM contiene la corrección, ni propone un control preventivo para la secuencia UVC que dispara el cuelgue.
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
 
 ## Trabajo
 

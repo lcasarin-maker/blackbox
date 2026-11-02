@@ -1,0 +1,7 @@
+{
+  "_doc": "Cargas de otros repos que corren en esta maquina con dueno y tope propios, y que el portero (tools/portero.py) NO toca. Es DATO, no codigo: bb no nombra a sus consumidores en su codigo, y la exclusion vive aqui con el mismo efecto que tenia escrita en tools/portero.py (regla del coordinador, 2026-10-12, por choque confirmado con la cola del consumidor de conocimiento: cada job suyo corre en su propio `systemd-run --scope` con MemoryMax, y moverlo lo sacaria de ese tope). Campos: 'cgroups_excluidos', regex (Python re) del NOMBRE de un scope de app.slice, sin barras ni anclas, que se combinan con las propias de bb; 'ancestros_excluidos', subcadenas de la linea de comando de un ancestro; 'contenedores_excluidos', nombres exactos de contenedor Docker que ya tienen tope propio. Si este archivo falta o esta mal formado, el portero no actua sobre ningun arbol ni contenedor y lo declara (fallo cerrado hacia el comportamiento de antes). Guarda: tests/test_portero.py.",
+  "esquema": "bb-cargas-externas/1",
+  "cgroups_excluidos": ["liberation_job[^/]*\\.scope"],
+  "ancestros_excluidos": ["liberation_watchdog"],
+  "contenedores_excluidos": ["atlas-pgvector"]
+}

@@ -12,7 +12,7 @@ cuanta memoria unificada reserva de verdad la GPU, que **ningun cgroup ve**.
 Este modulo lo fija con medida y comprueba la suma. ## El numero que faltaba,
 medido `nvidia-smi` reporta la memoria unificada por proceso; el cgroup de ese
 mismo proceso no la contabiliza. Medido el 2026-09-25 en esta caja: pid 20687
-VLLM::EngineCore nvidia-smi 32837 MiB su cgroup 10.0 GB pid 3443 atlas-api
+VLLM::EngineCore nvidia-smi 32837 MiB su cgroup 10.0 GB pid 3443 [externo]-api
 nvidia-smi 4522 MiB su cgroup 5.9 GB Un punto no es una medida, asi que el
 techo sale del HISTORICO que bb ya guarda: el campo `gpu` de sus muestras
 lleva pid y MiB desde el 2026-09-08. Sobre **18 733 muestras con al menos un

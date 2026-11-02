@@ -111,7 +111,7 @@ PROTEGIDAS = PROTEGIDOS.unidades
 # mal formado: RESPALDO_RANGOS y aviso por stderr) y tests/test_arbitro_prioridad_memoria.py exige el respaldo identico.
 RANGOS_RUTA = PROTEGIDOS_RUTA.parent / "rangos_memoria.json"
 RESPALDO_RANGOS: tuple[tuple[str, int, tuple[str, ...]], ...] = (
-    ("laboratorio", 0, ("bb-lab-*.scope",)), ("suites", 1, ("bb-portero-suite-*.scope",)), ("atlas", 2, ()),
+    ("laboratorio", 0, ("bb-lab-*.scope",)), ("suites", 1, ("bb-portero-suite-*.scope",)), ("carga_externa", 2, ()),
     ("sesion", 3, ("app-*.scope", "session-*.scope")), ("motor", 4, ("*vllm*", "*docker*", "*containerd*")),
 )
 

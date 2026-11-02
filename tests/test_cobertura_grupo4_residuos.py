@@ -57,13 +57,13 @@ def test_un_esquema_distinto_se_reporta_con_la_version_esperada() -> None:
             por="bb reboots",
             nodo="node-9d835fe3",
             datos="reboots.jsonl#54b7161869da4fc99f7becb9571f529d",
-            atlas_refs=("knowledge/investigations/gb10_cortes_2026-10-11/00_INDICE.md",),
+            refs=("knowledge/investigations/gb10_cortes_2026-10-11/00_INDICE.md",),
             fuentes="- Veredicto de `reboots.jsonl`: CORTE_ABRUPTO.",
             inferencia="- [inferencia] causa indeterminada.",
         )
     )
     assert h.valida(base) == []  # control: el original es valido
-    ajeno = base.replace('esquema: "bb-hallazgo/1"', 'esquema: "bb-hallazgo/2"')
+    ajeno = base.replace('esquema: "bb-hallazgo/2"', 'esquema: "bb-hallazgo/3"')
     assert ajeno != base
     assert h.valida(ajeno) == [f"esquema distinto de {h.ESQUEMA}"]
 

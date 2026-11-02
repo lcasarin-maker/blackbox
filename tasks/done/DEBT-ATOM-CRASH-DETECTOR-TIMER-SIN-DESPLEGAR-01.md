@@ -12,13 +12,13 @@ severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-11
-close_check: {"cmd": "grep -qx OnBootSec=4min /home/<usuario>/.config/systemd/user/atom-crash-detector.timer", "expect": "exit_zero", "porque": "La copia versionada ya dice OnBootSec=4min; la instalada sigue en OnBootSec=2min. Pasa cuando la instalada corre a 4 min, despues de bb-reboot-verdict."}
+close_check: {"cmd": "grep -qx OnBootSec=4min $HOME/.config/systemd/user/atom-crash-detector.timer", "expect": "exit_zero", "porque": "La copia versionada ya dice OnBootSec=4min; la instalada sigue en OnBootSec=2min. Pasa cuando la instalada corre a 4 min, despues de bb-reboot-verdict."}
 ---
 
 ## Por que
 
-Desde `DEBT-CONTRATO-ATLAS-INSTRUMENTOS-EN-BLACKBOX-01` (2026-10-11),
-`Atlas/tools/detect_atom_crash.py` ya no mide: lee la fila que
+Desde una referencia externa (2026-10-11),
+Una referencia externa ya no mide: lee la fila que
 `bb-reboot-verdict` (timer a 3 min del arranque) escribe en `reboots.jsonl`. El
 timer instalado del detector corre a los 2 min, ANTES de que exista esa fila:
 el crash del boot recien caido se dictamina un arranque tarde (o dias, si la

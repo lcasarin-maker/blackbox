@@ -1,0 +1,29 @@
+#!/bin/sh
+# /etc/grub.d/09_bb_etapa -- capa grub-marca (blackbox adopted/opt-in). La instala y la quita
+# `tools/opt_in_captura.sh {aplica,retrocede} grub-marca`.
+#
+# Corre despues de 00_header, que ya hizo load_env y resolvio la entrada por defecto, y ANTES de cualquier entrada:
+# cada entrada de Ubuntu llama a `recordfail`, que pone recordfail=1 y lo guarda. Aqui se copian a bb_prev_*:
+#   bb_prev_recordfail  el recordfail que dejo el arranque anterior (1 = no llego a limpiarlo: no completo)
+#   bb_prev_default     la entrada que GRUB resolvio por defecto para ESTE arranque (next_entry, saved_entry o
+#                       GRUB_DEFAULT); NO la que se elija a mano en el menu, que solo se ve dentro de la entrada
+#   bb_prev_boot_once   no vacio si este arranque es de un solo uso (grub-reboot)
+# Desde Linux: `grub-editenv list | grep ^bb_prev_`.
+#
+# save_env solo es seguro con /boot/grub en ext2/3/4 sin LVM ni RAID. La herramienta lo comprueba antes de
+# instalarlo; aqui se repite con GRUB_FS, que grub-mkconfig exporta (grub-probe llama ext2 a ext4).
+set -e
+if [ "${GRUB_FS:-}" != ext2 ]; then
+    echo "# 09_bb_etapa: /boot/grub en '${GRUB_FS:-desconocido}', no ext2/3/4: sin marca"
+    exit 0
+fi
+cat <<'GRUB'
+### BEGIN /etc/grub.d/09_bb_etapa ###
+if [ -n "${have_grubenv}" ]; then
+  set bb_prev_recordfail="${recordfail}"
+  set bb_prev_default="${default}"
+  set bb_prev_boot_once="${boot_once}"
+  save_env bb_prev_recordfail bb_prev_default bb_prev_boot_once
+fi
+### END /etc/grub.d/09_bb_etapa ###
+GRUB

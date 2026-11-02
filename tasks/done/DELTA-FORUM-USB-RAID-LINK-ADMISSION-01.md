@@ -15,18 +15,17 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_usb_raid_link_admission_01`, un xfail que se retira con el cierre."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/349121
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-USB-RAID-LINK-ADMISSION-01.** En un Dell GB10 con dos unidades NVMe USB, el dueño describe renegociación intermitente a USB 2 de 480Mbps tras reinicios y una matriz mdadm que no se ensambla/monta si cualquiera de sus miembros queda por debajo de 5000Mbps; advierte riesgo de timeouts/corrupción al montar en ese estado. Otro usuario informa varios meses estable con UAS deshabilitado para VID:PID concretos y ventilación adicional, pero su A/B térmico quedó pendiente ([349121](https://forums.developer.nvidia.com/t/349121)). Proteger primero el montaje: comprobar link speed efectivo por identidad estable antes de assemble/mount y mantener array detenido si falta o queda bajo el piso acordado. Validar cualquier quirk UAS solo en canary del mismo enclosure/kernel con reversión. Esta observación corresponde a medios USB externos, no demuestra fallo del NVMe interno ni su causa.
-
-
-Fuentes: tasks/backlog/FORUM-02-GX10-READ-INTEGRITY.md.
 
 ## Criterio de cierre y control negativo
 
@@ -37,7 +36,6 @@ Aplicar el alcance y los controles concretos de la evidencia copiada arriba: sta
 La ficha permanece abierta. El selector original ya está integrado y llama a `tools.hardware_batch03_controls.verify` para este ID exacto. La ejecución del 2026-10-04 devolvió UNKNOWN, fail=0, could_not_run=1 por captura requerida ausente o contrato incompleto. El comando literal y su salida están registrados en `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/hardware-batch03-integration/original-selectors-after-reader-hardening.json`. Los tests de fixtures verifican el control; el cierre requiere el sujeto real y su evidencia específica.
 
 Conservar comandos, salida literal y could_not_run incluso cero; una ejecución skipped o inaccesible deja el cierre pendiente. Reutilizar instrumentos nativos y pruebas existentes antes de crear código.
-
 
 ## Avance de instrumentación 2026-10-03
 

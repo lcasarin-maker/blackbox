@@ -3,10 +3,17 @@
 `--propose`: lee `adopted/root-scripts/manifest.src.json` (nombre -> file, descripcion,
 timeout) y los scripts, valida cada uno con las MISMAS guardas del runner, escribe la
 propuesta en `--out` e imprime: el JSON exacto, el texto completo de cada script con su
-sha256, y UN comando `sudo sh -c '...'` que instala runner, manifiesto y sudoers. El
-comando compara el sha256 de cada copia YA root-owned con el impreso antes de moverla a
-su sitio, asi que cambiar el fichero del repo entre la revision de Luis y la instalacion
-hace fallar la instalacion en vez de instalar otra cosa.
+sha256, la regla de sudoers ya renderizada, y UN comando `sudo sh -c '...'` que instala
+runner, manifiesto y sudoers. El comando compara el sha256 de cada copia YA root-owned
+con el impreso antes de moverla a su sitio, asi que cambiar el fichero del repo entre la
+revision de Luis y la instalacion hace fallar la instalacion en vez de instalar otra cosa.
+
+El sudoers versionado es una PLANTILLA (el repo es publico, boleta #23 A de Luis): lleva
+`@BB_USUARIO@` donde va el usuario. `--propose` la renderiza con `${SUDO_USER:-$(id -un)}`
+validado (`^[a-z_][a-z0-9_-]{0,31}$`, nunca root), pasa `visudo -c -f` sobre el resultado y
+lo escribe FUERA del repo (`--rendered-sudoers`, por defecto un directorio de mkdtemp); el
+comando instala ese fichero, nunca la plantilla. Usuario invalido o visudo que rechaza: rc 3
+y no se escribe nada.
 
 `--check`: compara el manifiesto instalado (si se puede leer) con los scripts del repo y
 lista los que cambiaron desde la aprobacion. rc 0 = todo igual, 1 = hay cambios,
@@ -18,8 +25,15 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import pwd
+import re
 import shlex
+import shutil
+import subprocess
 import sys
+import tempfile
+from collections.abc import Mapping
 from pathlib import Path
 
 from tools import bb_root_run as rr
@@ -32,6 +46,8 @@ SUDOERS = PENDIENTE / "etc_sudoers.d_bb-root-run"
 RUNNER = ROOT / "tools" / "bb_root_run.py"
 RUNNER_INSTALADO = "/usr/local/sbin/bb-root-run"
 SUDOERS_INSTALADO = "/etc/sudoers.d/bb-root-run"
+MARCADOR_USUARIO = "@BB_USUARIO@"
+USUARIO_VALIDO = re.compile(r"[a-z_][a-z0-9_-]{0,31}")
 
 
 def sha(data: bytes) -> str:
@@ -57,6 +73,43 @@ def proponer(src_dir: Path) -> dict[str, dict[str, object]]:
         except rr.Rechazo as err:
             raise ValueError(f"{name}: {err}") from err
     return manifest
+
+
+def usuario_instalador(env: Mapping[str, str] | None = None) -> str:
+    """`${SUDO_USER:-$(id -un)}`: quien pidio el sudo o, sin sudo, quien corre esto."""
+    env = os.environ if env is None else env
+    return env.get("SUDO_USER") or pwd.getpwuid(os.geteuid()).pw_name
+
+
+def renderizar_sudoers(plantilla: str, usuario: str) -> str:
+    """La plantilla con el usuario en el marcador. ValueError si el usuario no vale o es root."""
+    if not USUARIO_VALIDO.fullmatch(usuario) or usuario == "root":
+        raise ValueError(f"usuario de sudoers invalido {usuario!r} (vacio, root o fuera de "
+                         f"^[a-z_][a-z0-9_-]{{0,31}}$)")
+    if plantilla.count(MARCADOR_USUARIO) != 1:
+        raise ValueError(f"la plantilla de sudoers debe llevar {MARCADOR_USUARIO} exactamente una vez")
+    return plantilla.replace(MARCADOR_USUARIO, usuario)
+
+
+def escribir_sudoers(plantilla: Path, usuario: str, destino: Path | None) -> Path:
+    """Renderiza, valida con `visudo -c -f` y solo entonces deja el resultado en `destino`
+    (None: un directorio nuevo de mkdtemp, fuera del repo)."""
+    texto = renderizar_sudoers(plantilla.read_text(encoding="utf-8"), usuario)
+    if destino is None:
+        destino = Path(tempfile.mkdtemp(prefix="bb-root-run-")) / "sudoers"
+    visudo = shutil.which("visudo") or "/usr/sbin/visudo"
+    tmp = destino.with_name(destino.name + ".nuevo")
+    tmp.write_text(texto, encoding="utf-8")
+    try:
+        r = subprocess.run([visudo, "-c", "-f", str(tmp)], capture_output=True, text=True)
+    except OSError as e:
+        tmp.unlink()
+        raise ValueError(f"no se pudo correr visudo ({e})") from e
+    if r.returncode != 0:
+        tmp.unlink()
+        raise ValueError(f"visudo -c -f rechaza el sudoers renderizado: {(r.stdout + r.stderr).strip()}")
+    tmp.replace(destino)
+    return destino
 
 
 def serializar(manifest: dict[str, dict[str, object]]) -> bytes:
@@ -85,15 +138,17 @@ def comando_instalacion(propuesta: Path, runner: Path, sudoers: Path) -> str:
 
 
 def texto_propuesta(manifest: dict[str, dict[str, object]], src_dir: Path,
-                    propuesta: Path, runner: Path) -> str:
+                    propuesta: Path, runner: Path, sudoers: Path) -> str:
     partes = ["===== manifiesto propuesto (" + str(propuesta) + ", sha256 "
               + sha(propuesta.read_bytes()) + ") =====", serializar(manifest).decode()]
     for name, e in manifest.items():
         partes.append(f"===== {name}: {e['file']} sha256 {e['sha256']} =====")
         partes.append((src_dir / str(e["file"])).read_text(encoding="utf-8"))
     partes.append(f"===== runner {runner} sha256 {sha(runner.read_bytes())} =====")
-    partes.append("Revisa los scripts de arriba; para instalar runner + manifiesto + sudoers:")
-    partes.append(comando_instalacion(propuesta, runner, SUDOERS))
+    partes.append(f"===== sudoers renderizado {sudoers} sha256 {sha(sudoers.read_bytes())} =====")
+    partes.append(sudoers.read_text(encoding="utf-8"))
+    partes.append("Revisa los scripts y la regla de arriba; para instalar runner + manifiesto + sudoers:")
+    partes.append(comando_instalacion(propuesta, runner, sudoers))
     return "\n".join(partes) + "\n"
 
 
@@ -144,6 +199,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--installed", type=Path, default=Path(rr.MANIFEST))
     p.add_argument("--runner", type=Path, default=RUNNER)
     p.add_argument("--installed-runner", type=Path, default=Path(RUNNER_INSTALADO))
+    p.add_argument("--rendered-sudoers", type=Path, default=None,
+                   help="donde dejar el sudoers renderizado (por defecto, fuera del repo con mkdtemp)")
     a = p.parse_args(argv)
     if a.check:
         rc, lineas = revisar(a.installed, a.src_dir, a.runner, a.installed_runner)
@@ -151,11 +208,13 @@ def main(argv: list[str] | None = None) -> int:
         return rc
     try:
         manifest = proponer(a.src_dir)
+        sudoers = escribir_sudoers(SUDOERS, usuario_instalador(), a.rendered_sudoers)
     except ValueError as e:
         print(f"[bb-root-manifest] PROPUESTA RECHAZADA: {e}", file=sys.stderr)
         return 3
     a.out.write_bytes(serializar(manifest))
-    sys.stdout.write(texto_propuesta(manifest, a.src_dir, a.out.resolve(), a.runner.resolve()))
+    sys.stdout.write(texto_propuesta(manifest, a.src_dir, a.out.resolve(), a.runner.resolve(),
+                                     sudoers.resolve()))
     return 0
 
 

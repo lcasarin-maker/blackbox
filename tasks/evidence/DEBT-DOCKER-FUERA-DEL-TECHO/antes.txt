@@ -8,11 +8,11 @@ max
 
 $ for c in ...; do docker inspect -f '{{.HostConfig.Memory}}'; done
   nemotron-server    80530636800  (75 GiB)
-  atlas-pgvector     2147483648  (2 GiB)
+  [externo]-pgvector     2147483648  (2 GiB)
   librechat          0  (SIN TECHO)
   mongo-librechat    0  (SIN TECHO)
   otro proyecto-pg        0  (SIN TECHO)
 
 $ awk '/MemTotal/' /proc/meminfo
   MemTotal = 121.1 GiB
-  techos declarados: app.slice 48G + nemotron 75G + atlas-pg 2G = 125G > 121.1 GiB
+  techos declarados: app.slice 48G + nemotron 75G + [externo]-pg 2G = 125G > 121.1 GiB

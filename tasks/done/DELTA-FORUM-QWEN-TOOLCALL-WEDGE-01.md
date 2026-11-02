@@ -15,17 +15,17 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01.md", "expect": "exit_zero", "porque": "Cerrada por aplicabilidad (void_wontfix, decision de Luis 2026-10-13): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a un test por ficha que se retiro con la deprecacion."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/381228/229
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-QWEN-TOOLCALL-WEDGE-01.** Otro dueño informa tres wedges de Qwen3.8 durante tool call a través de patched DS4 engine, vLLM y SGLang, con speculative acceptance 0.00; el agente Telegram reinició antes de capturar RCA ([381228, posts 229–230](https://forums.developer.nvidia.com/t/381228/229)). Registrar request-id, etapa tool-call, MTP acceptance, rank/collective progress y digest; preservar bundle acotado antes de reiniciar. Acceptance cero es señal contextual, no causa.
-
-Fuentes: tasks/backlog/FEATURE-1358-CGROUP-05-CUELGUES.md.
 
 ## Criterio de cierre y control negativo
 

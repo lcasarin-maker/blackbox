@@ -16,7 +16,7 @@ Que debe hacer quien recibe el aviso (el texto de la notificacion lo dice):
 Un estado con latido viejo (`actualizado` de hace mas de 60 s) es DESCONOCIDO, nunca `normal`: se avisa una
 vez de que no hay datos termicos. En el primer arranque no se avisa de `normal` ni de `desconocido`.
 
-Esto NO frena trabajos: el freno de Atlas ya existe (`tools/bb_consulta.py` llama a `--gate-termico`) y
+Esto NO frena trabajos: el freno del consumidor que encola trabajo ya existe (consulta `--gate-termico` por proceso) y
 bloqueo entre el 93 y el 100 % de las lecturas calientes del 2026-10-11.
 """
 
@@ -207,7 +207,7 @@ def main(argv: list[str] | None = None) -> int:
             previo, lee(), datetime.now(timezone.utc), recordatorio, time.monotonic()
         )
         if previo != antes or previo in accion_termica.ESTADOS_CALIENTES:
-            try:  # congelar/descongelar la carga que Atlas declara; un fallo no tumba el vigilante
+            try:  # congelar/descongelar la carga que el consumidor declara; un fallo no tumba el vigilante
                 accion_termica.aplica(previo)
             except OSError as e:
                 print(f"COULD_NOT_ACT: {e}", file=sys.stderr)

@@ -1,4 +1,4 @@
-"""entrega_cosecha_foro: frontmatter de solo cadenas (el indexador de Atlas fallo con otros tipos), truncado declarado, manifiesto."""
+"""entrega_cosecha_foro: frontmatter de solo cadenas (el indexador del consumidor fallo con otros tipos), truncado declarado, manifiesto."""
 
 from __future__ import annotations
 
@@ -139,17 +139,18 @@ def _raiz_falsa(tmp: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return ev
 
 
-def test_main_sin_argumentos_o_con_dos_da_uso_y_2(capsys: pytest.CaptureFixture[str]) -> None:
-    assert e.main([]) == 2 and "uso:" in capsys.readouterr().err
+def test_main_con_argumentos_da_uso_y_2_porque_el_destino_va_en_el_entorno(capsys: pytest.CaptureFixture[str]) -> None:
+    assert e.main(["a"]) == 2 and f"{e.DESTINO_ENV}=<carpeta-destino>" in capsys.readouterr().err
     assert e.main(["a", "b"]) == 2
 
 
 def test_main_entrega_carpeta_y_manifiesto_en_formato_sha256sum(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     ev = _raiz_falsa(tmp_path, monkeypatch)
-    destino = tmp_path / "atlas"
-    assert e.main([str(destino)]) == 0
+    destino = tmp_path / "destino"
+    monkeypatch.setenv(e.DESTINO_ENV, str(destino))
+    assert e.main([]) == 0
     assert "4 archivos escritos" in capsys.readouterr().out
-    man = (ev / "entrega_atlas_manifiesto.sha256").read_text(encoding="utf-8").splitlines()
+    man = (ev / e.MANIFIESTO).read_text(encoding="utf-8").splitlines()
     assert len(man) == 4
     for ln in man:
         h, n = ln.split("  ", 1)
@@ -161,6 +162,19 @@ def test_main_entrega_carpeta_y_manifiesto_en_formato_sha256sum(tmp_path: Path, 
 def test_main_sin_inventario_falla_sin_escribir_destino(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     ev = _raiz_falsa(tmp_path, monkeypatch)
     (ev / "inventario.json").unlink()
+    monkeypatch.setenv(e.DESTINO_ENV, str(tmp_path / "destino"))
     with pytest.raises(FileNotFoundError):
-        e.main([str(tmp_path / "atlas")])
-    assert not (tmp_path / "atlas").exists()
+        e.main([])
+    assert not (tmp_path / "destino").exists()
+
+
+def test_main_sin_variable_entrega_en_el_default_neutro(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    ev = _raiz_falsa(tmp_path, monkeypatch)
+    monkeypatch.delenv(e.DESTINO_ENV, raising=False)
+    assert e.main([]) == 0
+    defecto = tmp_path / "home" / ".local/share/blackbox/entrega-cosecha-foro"
+    assert (defecto / "00_INDICE.md").is_file() and len((ev / e.MANIFIESTO).read_text(encoding="utf-8").splitlines()) == 4
+    # control: una variable vacia cuenta como ausente, no como "la carpeta actual"
+    monkeypatch.setenv(e.DESTINO_ENV, "")
+    (defecto / "00_INDICE.md").unlink()
+    assert e.main([]) == 0 and (defecto / "00_INDICE.md").is_file()

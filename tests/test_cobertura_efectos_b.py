@@ -77,10 +77,10 @@ def test_accion_sin_systemctl_es_127_y_no_lanza(tmp_path: Path, monkeypatch: pyt
 def test_accion_carga_con_esquema_equivocado_o_que_no_es_objeto(tmp_path: Path) -> None:
     ruta = tmp_path / "carga.json"
     ruta.write_text(json.dumps({"esquema": "otro/9", "unidades": [{"unidad": "a.scope", "pausable": True}]}), encoding="utf-8")
-    assert at.lee_carga(ruta) == ([], "atlas_carga.json no es atlas-carga/1")
+    assert at.lee_carga(ruta) == ([], f"carga.json no es {' ni '.join(at.ESQUEMAS)}")
     ruta.write_text("[]", encoding="utf-8")
-    assert at.lee_carga(ruta) == ([], "atlas_carga.json no es atlas-carga/1")
-    ruta.write_text(json.dumps({"esquema": "atlas-carga/1", "unidades": [{"unidad": "a.scope", "pausable": True}]}), encoding="utf-8")
+    assert at.lee_carga(ruta) == ([], f"carga.json no es {' ni '.join(at.ESQUEMAS)}")
+    ruta.write_text(json.dumps({"esquema": at.ESQUEMA, "unidades": [{"unidad": "a.scope", "pausable": True}]}), encoding="utf-8")
     assert at.lee_carga(ruta) == (["a.scope"], "")  # control: con el esquema bueno si lee
 
 
@@ -88,7 +88,7 @@ def test_accion_log_inservible_no_tumba_la_decision(tmp_path: Path) -> None:
     estorbo = tmp_path / "es_archivo"
     estorbo.write_text("", encoding="utf-8")
     carga = tmp_path / "carga.json"
-    carga.write_text(json.dumps({"esquema": "atlas-carga/1", "unidades": []}), encoding="utf-8")
+    carga.write_text(json.dumps({"esquema": at.ESQUEMA, "unidades": []}), encoding="utf-8")
     eventos = at.aplica("sostenida", carga=carga, congeladas=tmp_path / "c.json", log=estorbo / "l.jsonl",
                         ejecutar=lambda a: (0, ""))
     assert eventos[0]["accion"] == "ninguna" and estorbo.read_text(encoding="utf-8") == ""
@@ -97,7 +97,7 @@ def test_accion_log_inservible_no_tumba_la_decision(tmp_path: Path) -> None:
 def test_accion_log_sano_si_escribe_la_fila(tmp_path: Path) -> None:
     """Control negativo del anterior: con un log escribible la misma decision deja su fila."""
     carga = tmp_path / "carga.json"
-    carga.write_text(json.dumps({"esquema": "atlas-carga/1", "unidades": []}), encoding="utf-8")
+    carga.write_text(json.dumps({"esquema": at.ESQUEMA, "unidades": []}), encoding="utf-8")
     log = tmp_path / "l.jsonl"
     at.aplica("sostenida", carga=carga, congeladas=tmp_path / "c.json", log=log, ejecutar=lambda a: (0, ""))
     assert json.loads(log.read_text(encoding="utf-8"))["accion"] == "ninguna"
@@ -142,7 +142,7 @@ def _entorno_bucle(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, estado: str)
     _bin(tmp_path / "bin", "notify-send", f'echo "$@" >> "{avisos}"')
     _solo_path(monkeypatch, tmp_path / "bin")
     carga = tmp_path / "carga.json"
-    carga.write_text(json.dumps({"esquema": "atlas-carga/1", "unidades": [{"unidad": "job.scope", "pausable": True}]}), encoding="utf-8")
+    carga.write_text(json.dumps({"esquema": at.ESQUEMA, "unidades": [{"unidad": "job.scope", "pausable": True}]}), encoding="utf-8")
     llamadas: list[tuple[str, ...]] = []
 
     def sistema(args: list[str]) -> tuple[int, str]:

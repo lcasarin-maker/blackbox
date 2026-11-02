@@ -3,7 +3,7 @@
   "clases": [
     {"clase": "laboratorio", "rango": 0, "patrones": ["bb-lab-*.scope"], "motivo": "scopes de laboratorio de bb: desechables por construccion"},
     {"clase": "suites", "rango": 1, "patrones": ["bb-portero-suite-*.scope"], "motivo": "suites de pruebas bajo el portero: reintentables (voto de Luis 2026-10-14)"},
-    {"clase": "atlas", "rango": 2, "patrones": [], "motivo": "jobs de Atlas: bb no sabe sus nombres de unidad; Atlas los declarara en atlas-carga/1 (pendiente). Hasta entonces sus unidades caen en el rango mas bajo"},
+    {"clase": "carga_externa", "rango": 2, "patrones": [], "motivo": "jobs de la cola de un consumidor: bb no sabe sus nombres de unidad; el consumidor los declarara en carga-pausable/1 (pendiente). Hasta entonces sus unidades caen en el rango mas bajo"},
     {"clase": "sesion", "rango": 3, "patrones": ["app-*.scope", "session-*.scope"], "motivo": "sesion interactiva: escritorio, aplicaciones y login"},
     {"clase": "motor", "rango": 4, "patrones": ["*vllm*", "*docker*", "*containerd*"], "motivo": "el motor de inferencia y su contenedor"}
   ]

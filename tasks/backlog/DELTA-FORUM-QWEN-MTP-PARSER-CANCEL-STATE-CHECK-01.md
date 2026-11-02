@@ -11,17 +11,22 @@ created: 2026-10-02
 close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_debt_registration_controls.py::test_delta_forum_qwen_mtp_parser_cancel_state_check_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
 ---
 
+## Trabajo en la ATOM
+
+Anadir a `tools/canario_motor.py` un caso: cancelar una generacion a media emision y verificar que la siguiente llamada de herramienta en el mismo proceso de `nemotron-local` sigue dando `finish_reason=tool_calls`.
+
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/366828/80
+- http://127.0.0.1:8000/v1/models
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01.** [366828, posts 25–26, 42, 72–74, 80–90, 96–99, 105–106](https://forums.developer.nvidia.com/t/366828/80) aporta tres señales de corrección/recuperación en Qwen3.x/vLLM: un tool-eval de Qwen3.6-35B-A3B INT4 AutoRound reporta de nuevo el fallo crítico TC-60 de sleeper injection; enlaza al delta `DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01`. Por separado, un operador de Qwen3.5-122B dice que MTP con más de 1 token rompía tool calls (`Expected function.name to be a string`) bajo vLLM `0.19.2rc1` y `qwen3_xml`; en su ensayo, MTP=1 evitó los errores, pero otro usuario reportó MTP=3 estable con vLLM 0.20.2 y luego autor atribuyó resolución a cambiar parser a `qwen3_coder`, sin A/B compartido. El autor también informa un fallo intermitente tras cancelar generación en curso: el texto continúa, pero el parser deja de producir tool calls hasta reiniciar vLLM; el wrapper descrito reinicia el proceso en bucle cuando sale. Los reportes no aíslan parser, MTP, cancelación o cambio de build como causa; imágenes externas de benchmark no fueron inspeccionadas. Añadir a la compatibilidad fijada una matriz reducida de parser × MTP × cancelación con herramienta mock: respuestas parciales/completas, una cancelación mid-stream y el siguiente tool call en el mismo proceso. Registrar salida del parser, finish reason, exit/restart y alertar en transición `HTTP 200`/inferencia viva pero 0 tool calls inesperados. Cierre: bajo un digest/version exactos, cada combinación admitida conserva llamadas correctamente tipadas antes y después de cancelar; repetir tras reinicio distingue recuperación del proceso de recuperación del parser. No convertir `MTP=1`, `qwen3_coder` ni auto-restart en arreglos universales; mantener el límite probado o bloquear el combo defectuoso con rollback fijado.
-
-Fuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.
 
 ## Criterio de cierre y control negativo
 
@@ -63,8 +68,7 @@ Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6
 
 ## Medicion contra el voto de cierre (2026-10-14): queda ABIERTA
 El voto de Luis del 2026-10-14 pedia cerrarla como `void_wontfix` porque "Qwen no se sirve aqui, solo nemotron-local". Medido en solo lectura, la premisa cubre la mitad MTP de la ficha y no la mitad parser + cancelacion, asi que no se cierra y vuelve a Luis:
-- Cierto: no hay modelo Qwen servido ni MTP. `curl -s -m 10 http://127.0.0.1:8000/v1/models | grep -qi qwen` -> rc=1; `docker logs nemotron-server 2>&1 | grep -o 'speculative_config=[A-Za-z]*' | sort -u` -> `speculative_config=None`; `docker logs nemotron-server 2>&1 | grep -ciE 'num_speculative_tokens|\bmtp\b'` -> 0.
-- No se sostiene: el motor nemotron-local corre con el MISMO parser de herramientas del reporte. `docker inspect nemotron-server --format '{{json .Config.Cmd}}' | grep -oE '"--(tool-call-parser|enable-auto-tool-choice)"(,"[a-z0-9_]+")?'` -> `"--enable-auto-tool-choice"` y `"--tool-call-parser","qwen3_xml"`. El fallo reportado tras cancelar (texto sigue, el parser deja de emitir tool calls hasta reiniciar vLLM) es del parser, y aqui hay clientes que usan herramientas contra ese motor (el investigador de Atlas, ver la medicion de `DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01`) y `tools/canario_motor.py` pide una tool call en cada ronda.
+- No se sostiene: el motor nemotron-local corre con el MISMO parser de herramientas del reporte. `docker inspect nemotron-server --format '{{json .Config.Cmd}}' | grep -oE '"--(tool-call-parser|enable-auto-tool-choice)"(,"[a-z0-9_]+")?'` -> `"--enable-auto-tool-choice"` y `"--tool-call-parser","qwen3_xml"`. El fallo reportado tras cancelar (texto sigue, el parser deja de emitir tool calls hasta reiniciar vLLM) es del parser, y aqui hay clientes que usan herramientas contra ese motor (el investigador del consumidor de conocimiento, ver la medicion de `DELTA-FORUM-CROSS-TURN-SLEEPER-INJECTION-REGRESSION-01`) y `tools/canario_motor.py` pide una tool call en cada ronda.
 Decision pendiente de Luis: cerrar solo la mitad MTP y dejar el caso "cancelar mid-stream y comprobar la siguiente tool call con `qwen3_xml`" (la version de un nodo de la adaptacion de 2026-10-13, en `tools/canario_motor.py`), o cerrarla entera como `void_wontfix` sabiendo que el parser si esta en uso.
 
 ## Medido 2026-10-20 (boleta de Luis: cerrar void_wontfix solo con AUSENCIA MEDIDA): queda ABIERTA
@@ -93,4 +97,3 @@ Veredicto: ABIERTA. Ausencia medida solo de Qwen y MTP; el motor corre con el mi
 ## Decision de Luis 2026-10-20 (boleta /vote): se cierra solo la mitad MTP; queda el caso del parser
 La mitad MTP del reporte (decodificacion especulativa) queda fuera de alcance: ausente en este equipo (medido el 2026-10-20: `speculative_config=None`, cero `--speculative-config` en el comando del contenedor). La ficha sigue abierta SOLO por el caso "cancelar a mitad del stream y comprobar que la siguiente tool call se emite con `qwen3_xml`" (version de un nodo en `tools/canario_motor.py`), porque el motor corre `--tool-call-parser qwen3_xml`, el mismo parser del reporte.
 Limite declarado: el `close_check` sigue siendo el original (evidencia real del sujeto, hoy `could_not_run`). Cuando el caso del parser tenga su prueba, el `close_check` se redefine para medirlo; hasta entonces no se relaja. Descartado por Luis: cerrarla entera como `void_wontfix` (motivo: sin motivo declarado).
-

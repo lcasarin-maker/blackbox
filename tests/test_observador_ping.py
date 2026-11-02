@@ -23,10 +23,10 @@ def _cae(args: list[str], **kw: Any) -> Any:
 
 
 def test_sondea_distingue_respuesta_de_silencio_y_de_fallo_del_comando() -> None:
-    assert o.sondea("10.0.0.1", _rc(0)) == {"ok": True}
-    assert o.sondea("10.0.0.1", _rc(1)) == {"ok": False}
-    assert o.sondea("10.0.0.1", _cae) == {"ok": False, "error": "TimeoutExpired"}
-    assert o.sondea("10.0.0.1", lambda a, **k: (_ for _ in ()).throw(FileNotFoundError("ping")))["error"] == "FileNotFoundError"
+    assert o.sondea("192.0.2.1", _rc(0)) == {"ok": True}
+    assert o.sondea("192.0.2.1", _rc(1)) == {"ok": False}
+    assert o.sondea("192.0.2.1", _cae) == {"ok": False, "error": "TimeoutExpired"}
+    assert o.sondea("192.0.2.1", lambda a, **k: (_ for _ in ()).throw(FileNotFoundError("ping")))["error"] == "FileNotFoundError"
 
 
 def test_paso_off_no_sondea_y_on_anade_filas(tmp_path: Path) -> None:
@@ -48,14 +48,27 @@ def test_ultima_respuesta_es_la_ultima_ok_antes_del_corte(tmp_path: Path) -> Non
     assert o.ultima_respuesta(ruta, 1000) is None  # solo silencios: no hay respuesta que reportar
 
 
+def test_primera_falla_es_la_primera_fila_fallida_despues_de_la_ultima_respuesta(tmp_path: Path) -> None:
+    ruta = tmp_path / "p.jsonl"
+    assert o.primera_falla(ruta, 999, 2000) is None  # sin archivo: sin prueba de que el observador siguiera vivo
+    filas = [{"epoch": 998, "ok": False}, {"epoch": 999, "ok": True}, {"epoch": 1002, "ok": False}, {"epoch": 1001, "ok": False},
+             {"epoch": 1003, "ok": True}, {"epoch": 3000, "ok": False}]
+    ruta.write_text("{roto\n" + "\n".join(json.dumps(f) for f in filas) + "\n", encoding="utf-8")
+    assert o.primera_falla(ruta, 999, 2000) == 1001  # la mas temprana aunque llegue desordenada; la de 998 es anterior
+    assert o.primera_falla(ruta, 1003, 2000) is None  # control: despues de 1003 no hay falla dentro del tope
+    assert o.primera_falla(ruta, 999, 1001) == 1001  # el tope es inclusivo
+    u = o.ultima_respuesta(ruta, 1001.5)
+    assert u == 999 and o.primera_falla(ruta, u, 1001.5) == 1001  # juntas acotan la caida en (999, 1001]
+
+
 def test_main_sin_argumentos_sin_config_y_con_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     monkeypatch.setenv("BLACKBOX_DATA", str(tmp_path))
     assert o.main([]) == 2
     assert o.main(["--paso"]) == 1 and "observador.json" in capsys.readouterr().err
     (tmp_path / "externo").mkdir()
-    (tmp_path / "externo" / "observador.json").write_text(json.dumps({"destino": "10.0.0.1"}), encoding="utf-8")
+    (tmp_path / "externo" / "observador.json").write_text(json.dumps({"destino": "192.0.2.1"}), encoding="utf-8")
     monkeypatch.setattr(o, "paso", lambda modo, destino, ruta, correr=subprocess.run, ahora=None: {"modo": modo, "destino": destino})
-    assert o.main(["--paso"]) == 0 and json.loads(capsys.readouterr().out.strip().splitlines()[-1])["destino"] == "10.0.0.1"
+    assert o.main(["--paso"]) == 0 and json.loads(capsys.readouterr().out.strip().splitlines()[-1])["destino"] == "192.0.2.1"
 
 
 # --- variante NAS: sync por smbclient ---
@@ -267,3 +280,66 @@ def test_script_entrypoint_sin_argumentos_imprime_ayuda_y_sale_con_2(tmp_path: P
         runpy.run_path(o.__file__, run_name="__main__")
     assert exc.value.code == 2
     assert "--sync" in capsys.readouterr().out
+
+
+def test_testigo_rst_es_respuesta_y_sin_red_no_es_falla_de_la_atom(tmp_path: Path) -> None:
+    """Las filas reales de bb_testigo.sondea_tcp: `ok` con RST (rechazado) y `sin_red` (la red del testigo) con ok false."""
+    from tools.testigo import bb_testigo as bt
+
+    testigo, nas = tmp_path / "testigo_ping.jsonl", tmp_path / "ping.jsonl"
+    filas = [{"epoch": 1000.0, **bt.sondea_tcp("127.0.0.1", 9, 0.5)}]  # puerto cerrado en loopback: RST real
+    assert filas[0]["estado"] == "rechazado" and filas[0]["ok"] is True
+    filas += [{"epoch": 1001.0, "fuente": "tcp", "ok": False, "estado": "sin_red", "error": "ENETUNREACH"},
+              {"epoch": 1002.0, "fuente": "tcp", "ok": False, "estado": "timeout", "error": "timeout"}]
+    testigo.write_text("".join(json.dumps(f) + "\n" for f in filas), encoding="utf-8")
+    nas.write_text(json.dumps({"epoch": 999, "ok": True, "fuente": "nas"}) + "\n", encoding="utf-8")
+    assert o.ultima_respuesta(testigo, 2000) == 1000.0
+    assert o.primera_falla(testigo, 1000.0, 2000) == 1002.0  # la de 1001 era la red del testigo, no la ATOM
+    assert o.ultima_respuesta([nas, testigo], 2000) == 1000.0 and o.ultima_respuesta([nas, testigo], 999.5) == 999
+    assert o.primera_falla([nas, tmp_path / "ausente.jsonl"], 999, 2000) is None  # ausente: sin cobertura
+
+
+def _scp_falso(remoto: dict[str, str], rc: int = 0, llamadas: list | None = None) -> Any:
+    def correr(cmd: list[str], **kw: Any) -> Any:
+        if llamadas is not None:
+            llamadas.append(cmd)
+        for nombre, texto in remoto.items():
+            (Path(cmd[-1]) / nombre).write_text(texto, encoding="utf-8")
+        return types.SimpleNamespace(returncode=rc, stdout="", stderr="")
+    return correr
+
+
+def test_trae_testigo_copia_las_series_y_refleja_lo_que_el_testigo_ya_borro(tmp_path: Path) -> None:
+    cfg, dest = tmp_path / "testigo.json", tmp_path / "externo" / "testigo"
+    cfg.write_text(json.dumps({"origen": "luis@192.0.2.20", "ruta": "/home/luis/Library/Application Support/bb-testigo/"}),
+                   encoding="utf-8")
+    dest.mkdir(parents=True)
+    (dest / "ping.jsonl.6").write_text("viejo\n", encoding="utf-8")  # una rotacion que el testigo ya no tiene
+    llamadas: list = []
+    r = o.trae_testigo(cfg, dest, _scp_falso({"ping.jsonl": "p\n", "latido.jsonl": "l\n", "ping.jsonl.1": "q\n"}, 0, llamadas))
+    assert r["estado"] == "OK" and r["archivos"] == ["latido.jsonl", "ping.jsonl", "ping.jsonl.1"]
+    assert sorted(x.name for x in dest.iterdir()) == ["latido.jsonl", "ping.jsonl", "ping.jsonl.1", "trae.json"]
+    cmd = llamadas[0]
+    assert cmd[:2] == ["scp", "-s"] and "-B" in cmd  # SFTP y sin pedir clave
+    assert cmd[-2] == "luis@192.0.2.20:/home/luis/Library/Application Support/bb-testigo/*.jsonl*"
+    assert json.loads((dest / "trae.json").read_text(encoding="utf-8"))["estado"] == "OK"
+    # control: un scp que falla no toca lo que ya habia
+    r = o.trae_testigo(cfg, dest, _scp_falso({"ping.jsonl": "a medias"}, 1))
+    assert r == {**r, "estado": "NOT_COLLECTED", "motivo": "scp rc 1"} and (dest / "ping.jsonl").read_text() == "p\n"
+    # control: sin archivos, sin configuracion o con una ruta con comodin no se concluye nada
+    assert o.trae_testigo(cfg, dest, _scp_falso({}))["motivo"].startswith("scp rc 0 sin archivos")
+    assert (dest / "latido.jsonl").exists()
+    assert o.trae_testigo(tmp_path / "no.json", dest, _scp_falso({}))["motivo"] == "falta o es ilegible no.json"
+    cfg.write_text(json.dumps({"origen": "luis@host", "ruta": "/x/*"}), encoding="utf-8")
+    assert "sin comodines" in o.trae_testigo(cfg, dest, _scp_falso({}))["motivo"]
+    cfg.write_text(json.dumps({"origen": "host; rm", "ruta": "/x"}), encoding="utf-8")
+    assert "origen" in o.trae_testigo(cfg, dest, _scp_falso({}))["motivo"]
+    assert o.trae_testigo(cfg.with_name("t2.json"), dest, _cae)["estado"] == "NOT_COLLECTED"
+
+
+def test_main_trae_testigo_sin_configuracion_sale_1(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+                                                    capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.setenv("BLACKBOX_DATA", str(tmp_path))
+    assert o.main(["--trae-testigo"]) == 1
+    assert json.loads(capsys.readouterr().out)["estado"] == "NOT_COLLECTED"
+    assert (tmp_path / "externo" / "testigo" / "trae.json").exists()
