@@ -293,7 +293,7 @@ def test_recoge_lee_journal_corrupto_del_siguiente_y_lineas_del_caido(
                 "File /var/log/journal/x/system.journal corrupted or uncleanly shut "
                 "down, renaming and replacing.",
             ),
-            ("-k", "-1"): (
+            ("-k", "a" * 32): (  # -b por boot_id: `-b -N` no es el indice de --list-boots
                 0,
                 "k: NVRM: Xid (PCI:000f:01:00): 43, pid=7, name=p\nk: normal\n",
             ),
@@ -517,7 +517,7 @@ def test_bert_registro_con_journal_que_falla_es_collection_failed(monkeypatch):
 
 
 def test_recoge_journales_ilegibles_del_caido_van_a_could_not_run(monkeypatch, tmp_path):
-    ev = _recoge(monkeypatch, tmp_path, {("500",): (1, ""), ("-k", "-1"): (1, "")})
+    ev = _recoge(monkeypatch, tmp_path, {("500",): (1, ""), ("-k", "a" * 32): (1, "")})
     assert "journal_boot_-1" in ev["no_se_pudo_leer"] and "journal_kernel_boot_-1" in ev["no_se_pudo_leer"]
     ok = _recoge(monkeypatch, tmp_path, {})
     assert "journal_boot_-1" not in ok["no_se_pudo_leer"] and "journal_kernel_boot_-1" not in ok["no_se_pudo_leer"]
@@ -972,6 +972,9 @@ CAMPOS_BB_REBOOT_1 = {
 CAMPOS_NUEVOS = {
     "causa", "causa_fuente", "watchdog_bootstatus_siguiente", "watchdog_bootstatus_fuente", "arranque_fantasma",
     "kdump", "pstore", "etapas", "netconsole", "tiempos_externos", "ultimo_aliento", "curva_termica_previa", "hora_muerte",
+    # 2026-11-02: reloj de pared desfasado y la rafaga del GSP
+    "reloj_desfasado", "desfase_s", "reloj_desfasado_siguiente", "gsp_timeout", "gsp_timeout_monotonic_s", "xid154",
+    "gpu_fullchip_reset_asserts", "gpu_reset_required_checks",
 }
 
 
@@ -1007,3 +1010,196 @@ def test_series_del_testigo_con_rotaciones_b64_y_parada(tmp_path, monkeypatch):
     lat = f["tiempos_externos"]["latido"]
     assert lat["en_el_hueco"] == 0 and lat["paradas_en_el_hueco"] == 1 and lat["ultimo_hasta_la_muerte"] == FIN - 10
     assert any("lo detuvieron" in r for r in f["razones"])
+
+
+# ------------------------------------------------- 2026-11-02: orden por journal, reloj desfasado, pendientes, GSP
+def _iso_cst(epoch):
+    from datetime import timedelta, timezone
+
+    return datetime.fromtimestamp(epoch, tz=timezone(timedelta(hours=-6))).isoformat(timespec="seconds")
+
+
+def _journal_por_boot(boots, lineas):
+    """journalctl de mentira que resuelve `-b` como systemd 255 en este host (medido el 2026-11-02): por boot_id da el
+    boot pedido; por indice relativo `-b -N` da el de la posicion -(N+1) de --list-boots (el reloj adelantado de
+    cd2e65ee lo saca del recorrido de `-b`, y todos los demas se corren uno)."""
+    import re
+
+    ids = [b["boot_id"] for b in boots]
+
+    def _j(*args):
+        if "--list-boots" in args:
+            return SimpleNamespace(returncode=0, stdout=json.dumps(boots), stderr="")
+        sel = args[args.index("-b") + 1]
+        if sel in ids:
+            bid = sel
+        else:
+            pos = len(ids) - 1 + int(sel) - (1 if int(sel) < 0 else 0)
+            bid = ids[pos] if 0 <= pos < len(ids) else None
+        ls = lineas.get(bid, [])
+        if "-k" in args:
+            ls = [x for x in ls if " kernel:" in x]
+        if "-t" in args:
+            ls = [x for x in ls if f" {args[args.index('-t') + 1]}[" in x]
+        if "--grep" in args:
+            ls = [x for x in ls if re.search(args[args.index("--grep") + 1], x)]
+        if "_PID=1" in args:
+            ls = [x for x in ls if " systemd[1]:" in x]
+        return SimpleNamespace(returncode=0, stdout="".join(x + "\n" for x in ls), stderr="")
+
+    return _j
+
+
+def _main_con_journal(monkeypatch, tmp_path, journal, actual):
+    monkeypatch.setattr(rv, "SALIDA", tmp_path / "reboots.jsonl")
+    monkeypatch.setattr(rv, "TELEMETRIA", tmp_path / "no_hay.jsonl")
+    monkeypatch.setattr(rv, "CRASH_DIR", tmp_path / "sin_crash")
+    monkeypatch.setattr(rv, "WATCHDOG_BOOTSTATUS", tmp_path / "bootstatus")
+    monkeypatch.setattr(rv, "_correr_con_codigo", lambda *a: (2, SMART_SIN_PERMISO))
+    monkeypatch.setattr(rv, "_publica_hallazgos", lambda filas: None)
+    monkeypatch.setattr(rv, "_journal", journal)
+    vivo = tmp_path / "boot_id"
+    vivo.write_text(_dashed(actual) + "\n", encoding="ascii")
+    monkeypatch.setattr(rv, "BOOT_ID_ACTUAL", vivo, raising=False)  # raising=False: el control corre sin el arreglo
+
+
+def _filas_impresas(capsys):
+    return [json.loads(ln) for ln in capsys.readouterr().out.splitlines() if ln.startswith("{")]
+
+
+def test_cada_fila_cita_el_cierre_de_su_propio_journal_aunque_menos_n_no_sea_el_indice(monkeypatch, tmp_path, capsys):
+    """Regresion de `--ultimos 32` del 2026-11-02: la fila de 452069571bff citaba el reboot de fcf02ef4 (16:20:29,
+    antes de que 452069571bff arrancara). Oraculo independiente del codigo: un boot es ordenado si y solo si SU
+    journal trae `Reached target reboot.target`, y la orden que la fila cita cae en la ventana de ESE boot."""
+    t0 = 1793395815.0  # fcf02ef4, 2026-10-30 15:30:15 CST
+    nombres = ["f" * 32, "4" * 32, "5" * 32, "7" * 32, "8" * 32, "6" * 32]  # fcf02ef4, 452069571bff, ..., 81ff05b2, vivo
+    ordenados = {"f" * 32, "7" * 32}
+    boots, lineas = [], {}
+    for k, bid in enumerate(nombres):
+        ini, fin = t0 + 1000 * k, t0 + 1000 * k + 500
+        boots.append({"index": k - len(nombres) + 1, "boot_id": bid, "first_entry": int(ini * 1e6),
+                      "last_entry": int(fin * 1e6)})
+        lineas[bid] = [f"{_iso_cst(ini + 1)} h kernel: Linux version 7.0.0-1024-nvidia"]
+        if bid in ordenados:
+            lineas[bid] += [f"{_iso_cst(fin - 8)} h systemd-logind[9]: The system will reboot now!",
+                            f"{_iso_cst(fin - 2)} h systemd[1]: Reached target reboot.target - System Reboot."]
+    _main_con_journal(monkeypatch, tmp_path, _journal_por_boot(boots, lineas), actual=nombres[-1])
+    assert rv.main(["--ultimos", "5"]) == 0
+    filas = _filas_impresas(capsys)
+    assert [f["boot_id"] for f in filas] == nombres[:-1]
+    ventana = {b["boot_id"]: (b["first_entry"] / 1e6, b["last_entry"] / 1e6) for b in boots}
+    for f in filas:
+        oraculo = any("Reached target reboot.target" in x for x in lineas[f["boot_id"]])
+        assert f["etiqueta"].startswith("CIERRE_ORDENADO") is oraculo, f["boot_id"][:4]
+        if oraculo:
+            cita = f["razones"][0].split("(", 1)[1].split(" ", 1)[0]
+            ini, fin = ventana[f["boot_id"]]
+            assert ini <= datetime.fromisoformat(cita).timestamp() <= fin, (f["boot_id"][:4], cita)
+
+
+# La lista de `--list-boots` tal como la vio la corrida de las 13:06 del 2026-11-02 (epochs reales del host): systemd
+# la ordena por hora de pared, y el vivo fc60e471 quedo ANTES de cd2e65ee, cuyo reloj iba 3.4 h adelantado.
+VIVO_ID = "fc60e471d9c149648b0d1ea922fc9e57"
+ADELANTADO_ID = "cd2e65eee13846249fc0d5a7145aa565"
+NEGATIVO_ID = "c092e563ca114b8ab921f0f2ec0d3f3f"
+NORMAL_ID = "4b386ffc62f74bb092620a69688ae8d7"
+PREVIO_ID = "709465ffc2ae4ce991a633d4c5ee0046"
+BOOTS_1306 = [
+    {"index": -5, "boot_id": "447f4342aac94fa59213d242b40812f8", "first_entry": 1793590606000000, "last_entry": 1793590637000000},
+    {"index": -4, "boot_id": NEGATIVO_ID, "first_entry": 1793658686000000, "last_entry": 1793593983000000},
+    {"index": -3, "boot_id": NORMAL_ID, "first_entry": 1793594185000000, "last_entry": 1793594198000000},
+    {"index": -2, "boot_id": PREVIO_ID, "first_entry": 1793641458133251, "last_entry": 1793641461174231},
+    {"index": -1, "boot_id": VIVO_ID, "first_entry": 1793646165803651, "last_entry": 1793646363000000},
+    {"index": 0, "boot_id": ADELANTADO_ID, "first_entry": 1793658550766215, "last_entry": 1793658561165249},
+]
+
+
+def test_el_arranque_vivo_no_se_juzga_y_el_reloj_desfasado_se_marca(monkeypatch, tmp_path, capsys):
+    """Regresion de la fila escrita a las 13:06 del 2026-11-02: `boot_id=fc60e471` (el vivo) CORTE_ABRUPTO con
+    `boot_id_siguiente=cd2e65ee` y `hueco_s=12186`."""
+    _main_con_journal(monkeypatch, tmp_path, _journal_falso({("--list-boots",): (0, json.dumps(BOOTS_1306))}), VIVO_ID)
+    assert rv.main(["--ultimos", "10"]) == 0
+    filas = {f["boot_id"]: f for f in _filas_impresas(capsys)}
+    assert VIVO_ID not in filas
+    assert filas[ADELANTADO_ID]["boot_id_siguiente"] == VIVO_ID
+    assert filas[PREVIO_ID]["boot_id_siguiente"] == ADELANTADO_ID
+    assert (filas[ADELANTADO_ID]["reloj_desfasado"], filas[ADELANTADO_ID]["desfase_s"]) == (True, 12385)
+    assert (filas[NEGATIVO_ID]["reloj_desfasado"], filas[NEGATIVO_ID]["desfase_s"]) == (True, 64703)
+    assert filas[NEGATIVO_ID]["duracion_s"] < 0  # el dato crudo se conserva; la bandera dice que no es tiempo real
+    assert filas[PREVIO_ID]["reloj_desfasado_siguiente"] is True
+    assert any("reloj de pared desfasado" in r for r in filas[ADELANTADO_ID]["razones"])
+    # control negativo: un boot con su reloj y el de su sucesor en orden no se marca
+    normal = filas[NORMAL_ID]
+    assert (normal["reloj_desfasado"], normal["desfase_s"], normal["reloj_desfasado_siguiente"]) == (False, None, False)
+    assert not any("reloj de pared desfasado" in r for r in normal["razones"])
+
+
+def test_desfases_solo_marca_inicio_posterior_al_sucesor_o_duracion_negativa():
+    assert rv.desfases(rv.ordena_boots(BOOTS_1306, VIVO_ID)) == {NEGATIVO_ID: 64703, ADELANTADO_ID: 12385}
+    assert rv.desfases(BOOTS) == {}  # control negativo: reloj en orden, nada que marcar
+    assert rv.ordena_boots(BOOTS, None) == BOOTS  # sin boot vivo conocido, el orden de --list-boots tal cual
+
+
+def test_pendientes_juzga_cada_boot_sin_fila_una_sola_vez_y_no_toca_las_viejas(monkeypatch, tmp_path, capsys):
+    """Del 2026-10-30 19:05 al 2026-11-02 11:44 hubo ~20 boots de 5-85 s y solo 8 de 32 tienen fila: `--ultimos 1`
+    a los 3 min solo juzga al anterior, y solo si el vivo dura 3 min."""
+    boots = [{"index": k - 5, "boot_id": f"{k:x}" * 32, "first_entry": (1_000 + 100 * k) * 10**6,
+              "last_entry": (1_050 + 100 * k) * 10**6} for k in range(6)]
+    vieja = json.dumps({"boot_id": boots[2]["boot_id"], "etiqueta": "ESCRITA_ANTES"}) + "\n"
+    _main_con_journal(monkeypatch, tmp_path, _journal_falso({("--list-boots",): (0, json.dumps(boots))}),
+                      boots[-1]["boot_id"])
+    (tmp_path / "reboots.jsonl").write_text(vieja, encoding="utf-8")
+    assert rv.main(["--pendientes", "--escribe"]) == 0
+    texto = (tmp_path / "reboots.jsonl").read_text(encoding="utf-8")
+    assert texto.startswith(vieja)  # append-only: la fila vieja queda byte a byte
+    ids = [json.loads(ln)["boot_id"] for ln in texto.splitlines()]
+    assert sorted(ids) == sorted(b["boot_id"] for b in boots[:-1]) and len(ids) == len(set(ids)) == 5
+    assert rv.main(["--pendientes", "--escribe"]) == 0  # idempotente
+    assert (tmp_path / "reboots.jsonl").read_text(encoding="utf-8") == texto
+    assert boots[-1]["boot_id"] not in ids  # el vivo nunca
+
+
+GSP_KERNEL = [
+    "[   24.390647] h kernel: NVRM: _issueRpcAndWait: rpcRecvPoll timedout for fn 76 sequence 483!",
+    "[   31.217065] h kernel: NVRM: _issueRpcAndWait: rpcRecvPoll timedout for fn 76 sequence 499!",
+    "[   38.046024] h kernel: NVRM: kflcnCoreDumpDestructive_IMPL: ICD: Core is booted.",
+    "[   38.093651] h kernel: NVRM: Xid (PCI:000f:01:00): 154, GPU recovery action changed from 0x0 (None) to 0x1 "
+    "(GPU Reset Required)",
+    "[   38.093973] h kernel: NVRM: nvAssertFailedNoLog: Assertion failed: (status == NV_OK) || "
+    "(status == NV_ERR_GPU_IN_FULLCHIP_RESET) @ rs_client.c:844",
+    "[   38.093999] h kernel: NVRM: nvAssertFailedNoLog: Assertion failed: (status == NV_OK) || "
+    "(status == NV_ERR_GPU_IN_FULLCHIP_RESET) @ rs_server.c:259",
+    "[   41.400639] h kernel: NVRM: nvCheckOkFailedNoLog: Check failed: Reset required [NV_ERR_RESET_REQUIRED] "
+    "(0x00000062) returned from kbusSendBusInfo",
+]
+
+
+def test_la_fila_trae_la_rafaga_del_gsp_del_journal_de_kernel_del_boot(monkeypatch, tmp_path):
+    """Lineas reales de 7cd0848b (2026-11-02): su fila decia 0 xids con 7057 asserts en su journal de kernel."""
+    ev = _recoge(monkeypatch, tmp_path, {("-k", "short-monotonic"): (0, "\n".join(GSP_KERNEL) + "\n")})
+    f = rv.forense(ev)
+    assert (f["gsp_timeout"], f["gsp_timeout_monotonic_s"], f["xid154"]) == (True, 24.390647, True)
+    assert (f["gpu_fullchip_reset_asserts"], f["gpu_reset_required_checks"]) == (2, 1)
+    # control negativo: un boot sano da False/0, y un journal ilegible None (no cero) y lo declara
+    sano = rv.forense(_recoge(monkeypatch, tmp_path, {("-k", "short-monotonic"): (0, "[    1.0] h kernel: Linux\n")}))
+    assert (sano["gsp_timeout"], sano["gsp_timeout_monotonic_s"], sano["xid154"], sano["gpu_fullchip_reset_asserts"]) == (
+        False, None, False, 0)
+    roto = _recoge(monkeypatch, tmp_path, {("-k", "short-monotonic"): (1, "")})
+    assert rv.forense(roto)["gpu_fullchip_reset_asserts"] is None
+    assert "journal_kernel_gpu_boot_-1" in roto["no_se_pudo_leer"]
+
+
+def test_journal_con_bytes_que_no_son_utf8_no_tumba_la_lectura(tmp_path, monkeypatch):
+    _ejecutable(tmp_path, "journalctl", r"printf 'NVRM: antes \377\376 despues\n'")
+    _solo_path(monkeypatch, tmp_path)
+    r = rv._journal("-b", "x", "-k")
+    assert r.returncode == 0 and "antes" in r.stdout and "despues" in r.stdout and chr(0xFFFD) in r.stdout  # U+FFFD, el reemplazo
+
+
+def test_la_unidad_corre_pendientes_temprano_y_otra_vez_a_los_3_min():
+    raiz = Path(__file__).resolve().parent.parent
+    timer = (raiz / "systemd" / "bb-reboot-verdict.timer").read_text(encoding="utf-8")
+    servicio = (raiz / "systemd" / "bb-reboot-verdict.service").read_text(encoding="utf-8")
+    assert [ln.split("=", 1)[1] for ln in timer.splitlines() if ln.startswith("OnBootSec=")] == ["20s", "3min"]
+    exec_start = [ln for ln in servicio.splitlines() if ln.startswith("ExecStart=")]
+    assert exec_start == ["ExecStart=/usr/bin/python3 -m tools.reboot_verdict --pendientes --escribe"]

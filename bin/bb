@@ -2322,7 +2322,7 @@ status_lo_que_corre() {
   chk "comparacion repo contra maquina (blackbox-drift; diaria)" "$ok" "$_por (falla tambien si vio divergencia): bb drift"
 
   # La fila de reboots.jsonl cuyo boot_id_siguiente es ESTE arranque: esa es
-  # la que bb-reboot-verdict escribe a los 3 min de arrancar.
+  # la que bb-reboot-verdict escribe a los 20 s o a los 3 min de arrancar.
   if grep -Eq "\"boot_id_siguiente\": ?\"${_bid//-/}\"" "$DATA/reboots.jsonl" 2>/dev/null; then ok=0; else ok=1; fi
   chk "veredicto del reinicio anterior (bb-reboot-verdict; una fila por arranque)" "$ok" "reboots.jsonl sin fila para este arranque: systemctl --user status bb-reboot-verdict.timer"
 
