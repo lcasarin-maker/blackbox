@@ -16,7 +16,7 @@ close_check: {"cmd": "f=tasks/evidence/DEBT-CAIDAS-DURAS-7-0-MODULO-PARCHADO-01/
 - Modulo de fabrica: arranque 15:30, estable hasta el reinicio voluntario de las 16:20 (1 h 50 min, motor vLLM de 40 GB cargado).
 - Modulo parchado (instalado en updates/ a las 16:17, cargado desde el arranque de las 16:22; dmem.capacity con region vidmem 53.8 GB):
   - 16:22:07 a 16:30:10 (8 min): corte DURO, el journal acaba en una linea rutinaria de earlyoom (66 GB libres), sin panic ni volcado. BERT nuevo (corrected, MTKID).
-    La telemetria muestra la GPU pasando de 8 % a 96 % de uso y 52 W a las 22:30:06Z, y 44 GB de memoria liberados 5 s despues; a las 16:30:00 `liberation-watchdog` habia parado `atlas-api`.
+    La telemetria muestra la GPU pasando de 8 % a 96 % de uso y 52 W a las 22:30:06Z, y 44 GB de memoria liberados 5 s despues; a las 16:30:00 `liberation-watchdog` habia parado `<servicio-ajeno>`.
   - 16:32:16 a 16:34:29 (2 min 13 s): corte DURO con la GPU en reposo (11 %, 9 W, 76 GB libres) y sin que nada la usara; el watchdog NO dispara a esa hora.
   - 16:36:51 a 16:38:34 (1 min 43 s): corte duro. Su journal acaba en una linea de `python3` de otro servicio, sin secuencia de apagado.
   - 16:41:02 a 16:42:57 (1 min 55 s): corte duro, PERO a las 16:42:26 yo (Claude) ejecute `systemctl --user disable --now` sobre 22 unidades, incluido `ai-nemotron.service`;
@@ -59,7 +59,7 @@ Evidencia preservada fuera del repo (el journal trae hostname y MAC): `~/.local/
 - Reloj de pared: el journal pierde 20 a 26 s antes del corte (la telemetria llega mas lejos: c2 +20 s, c3 +26 s). Duracion real hasta el corte: c1 8:01, c2 >=2:33, c3 >=2:09, c4 >=1:58.
 - Watchdog de PID1: `RuntimeWatchdogSec=60` con el SBSA Generic Watchdog activo. PID1 registro lineas hasta 3 a 11 s antes de los cortes c1 y c4, asi que un atasco de PID1 de 60 s no explica esos dos;
   `bootstatus=0` no es concluyente (no hay control positivo).
-- c1 empezo ~10 s despues de que `liberation-watchdog` parara `atlas-api` y lanzara un job de evaluacion contra el motor (GPU 8 -> 96 %). c3 y c4 coinciden con comandos mios (`disable` del temporizador a las 16:38:05;
+- c1 empezo ~10 s despues de que `liberation-watchdog` parara `<servicio-ajeno>` y lanzara un job de evaluacion contra el motor (GPU 8 -> 96 %). c3 y c4 coinciden con comandos mios (`disable` del temporizador a las 16:38:05;
   parada del motor a las 16:42:26). c2 no coincide con nada mio ni del watchdog.
 
 ## Donde NO estamos viendo (medido)
