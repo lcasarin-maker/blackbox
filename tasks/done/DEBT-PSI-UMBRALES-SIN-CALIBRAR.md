@@ -170,5 +170,5 @@ minuto durante las dos ventanas.
 `.simplecode/backlog_baseline.json` cubria esta ficha hasta 2026-10-08. Al
 cerrarla se saco de `entries`: una linea base que cubre algo que ya no existe se
 lee como proteccion y no protege nada -- el propio gate lo llama LINEA BASE
-MUERTA. Queda `DEBT-DGX-438-SIN-CAUSA-RAIZ`, que sigue abierta y sigue esperando
+MUERTA. Queda `DEBT-SIGTERM-SIN-CAUSA-RAIZ`, que sigue abierta y sigue esperando
 su medicion.

@@ -11,15 +11,21 @@ created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-PSTORE-KERNEL-REGRESSION --evidence tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION", "expect": "exit_zero", "porque": "Verificador específico pendiente: debe validar captura pstore, identidad de la pila, resolución del vendor y recomendación de rollback/actualización con control."}
 ---
 
-## Fuente y evidencia
+## Trabajo en la ATOM
 
-Hilo NVIDIA [354205](https://forums.developer.nvidia.com/t/random-reboots-and-00-screen/354205), especialmente posts [29–37](https://forums.developer.nvidia.com/t/random-reboots-and-00-screen/354205/29), [43–47](https://forums.developer.nvidia.com/t/random-reboots-and-00-screen/354205/43) y la lectura de pstore en [post 45](https://forums.developer.nvidia.com/t/random-reboots-and-00-screen/354205/45).
+Dar acceso de lectura a pstore (unit o sudoers de solo lectura) y registrar las firmas FPAC/PSCI/SBSA tras cada reinicio no limpio en `reboot_verdict`; sin fijar kernel.
 
-En un DGX Spark P4242 con BIOS `5.36_0ACUM018`, kernel `6.17.0-1014-nvidia` y driver `580.142`, el hilo reporta reinicios incluso en idle tras reinstalar OS y ejecutar Field Diagnostics. Se probaron cambios secundarios: `nvidia-spark-realtek-mod-options` hizo cargar `r8127` en vez de `r8169` y se arreglaron las zonas térmicas, pero los reinicios siguieron. Una lectura independiente de pstore atribuyó dos registros a una carrera FPAC/PSCI/NMI durante entrada ACPI LPI y a `SBSA Generic Watchdog timeout`; también reportó que la carrera aparecía en `6.17.0-1008` y seguía en `6.17.0-1014`. En ese mismo caso había además fallos DOE durante enumeración PCIe y enlace de GPU a x0 después de actualizar SoC/EC firmware; el soporte de NVIDIA pidió tramitar RMA.
+## Referencia pública
 
-La identificación FPAC/PSCI es un análisis de participante del foro, no una confirmación de NVIDIA ni prueba de que afecte a otros OEM. NVIDIA no publicó en el hilo una versión corregida o workaround confirmado. El host Blackbox actual informa kernel `6.17.0-1032-nvidia`, por lo que no coincide con el kernel reportado; la exposición del firmware local queda sin comprobar.
+Hilos de los que salió esta ficha (URL pública):
 
-`FEATURE-KDUMP-PSTORE-PREAPAGADO` lee capturas de kdump, pero deja pstore sin evaluar porque `/sys/fs/pstore` no era legible sin privilegios. `bb hw` conserva la versión de kernel, pero Blackbox no interpreta pstore para relacionar una firma persistente con la pila que la produjo. Esa brecha impide verificar el mecanismo y decidir entre actualización de vendor, selección temporal de kernel conocido o RMA.
+- https://forums.developer.nvidia.com/t/random-reboots-and-00-screen/354205
+- https://forums.developer.nvidia.com/t/random-reboots-and-00-screen/354205/29
+- https://forums.developer.nvidia.com/t/random-reboots-and-00-screen/354205/43
+- https://forums.developer.nvidia.com/t/random-reboots-and-00-screen/354205/45
+- https://forums.developer.nvidia.com/t/spark-abruptly-shuts-down/377478
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
 
 ## Trabajo
 
@@ -38,13 +44,6 @@ Cerrar solo después de leer evidencia real de pstore, comprobar la identidad co
 bb recovery conserva boot/kernel/sysctl, fingerprints de pstore y firmas FPAC/PSCI/NMI/SBSA/DOE/RCU independientes si son legibles. Lectura local pstore denegada: 0 registros inspeccionados, could_not_run=1 para ese interfaz. Falta confirmación vendor aplicable y prueba persistente, no pinnear kernel ni recomendar versión corregida sin fuente.
 
 Evidencia y pendientes: `tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION/progress.txt`. Conserva `open`; la captura de estado verifica el instrumento y deja pendiente el ensayo de recuperación/prevención requerido.
-
-**Correlación del hallazgo `BB-FIELDDIAG-REAL-WORKLOAD-COVERAGE-GAP`.** En el hilo [354205, posts 43–47](https://forums.developer.nvidia.com/t/random-reboots-and-00-screen/354205/43), hay texto pstore pegado en post45 para kernel `6.17.0-1014-nvidia`: registros separados de FPAC/PSCI/NMI y `SBSA Generic Watchdog timeout`; una lectura del participante relaciona DOE/mailbox y PCIe x0 con GPU sin cargar. NVIDIA no confirma el análisis y al final deriva el caso a RMA. Se probaron updates, reinicio en frío y binding `r8127`, pero persiste el fallo. Adjuntos SOS, pstore y journal del hilo no se inspeccionaron; no presentar como root cause confirmada ni como bug universal.
-
-
-## Índice de propuestas del lote 00
-
-- `FORUM-00-ABRUPT-RESET-OFFBOX-TELEMETRY` — [Pair local reset evidence with durable receiver-side telemetry](https://forums.developer.nvidia.com/t/spark-abruptly-shuts-down/377478); detalle, confidence y close check en `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_00.json`.
 
 ## Avance de ejecución 2026-10-03
 

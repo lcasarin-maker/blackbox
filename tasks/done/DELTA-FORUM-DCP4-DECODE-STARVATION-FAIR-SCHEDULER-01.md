@@ -15,17 +15,17 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01.md", "expect": "exit_zero", "porque": "Cerrada por aplicabilidad (void_wontfix, decision de Luis 2026-10-13): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a un test por ficha que se retiro con la deprecacion."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/376831/10
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-DCP4-DECODE-STARVATION-FAIR-SCHEDULER-01.** En GLM-5.2 sobre TP8/DCP4 en ocho GB10, un operador reporta que prefills simultáneos hacen caer decode activo a 0–0.2 tok/s hasta que termina el prefill; describe un parche scheduler decode-aware con budget de prefill 16,384 tokens en idle y 1,024 bajo decode activo, máximo un long-prefill por step y rotación round-robin. El autor reporta para vLLM `local-inference-lab` commit `a663653d8cf3a66ee3c0060aea8c2fd28e3f1362`: 3 tests nuevos, 7 regresiones, ruff y 4 checks CLI pasando; prueba de hardware reportada: 4/4 prefills terminan, máximo stall 1.64 s, decode 2.74 tok/s bajo presión (no 0.0–0.2), luego 26 tok/s al acabar; idle prefill 831.6 t/s y pressure prefill 735.8 t/s ([376831, posts 7, 10–11](https://forums.developer.nvidia.com/t/376831/10)). Evidencia del foro; el patch adjunto y repo externo no se auditaron ni ejecutaron en BB. Evaluar como alternativa específica a DCP4, comparar fairness y throughput en la revisión fijada del runtime con un decode largo + 4 prefills ~8K, además de calidad/errores, máximos stalls y todos los completions; rollback configurado con `ENABLE_DECODE_AWARE_PREFILL=0`. No reclamar aumento de capacidad ni adoptar budgets como universales.
-
-Fuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.
 
 ## Criterio de cierre y control negativo
 

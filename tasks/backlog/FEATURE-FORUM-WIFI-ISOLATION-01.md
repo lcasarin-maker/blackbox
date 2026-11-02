@@ -11,11 +11,20 @@ created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_wifi_isolation --evidence tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01", "expect": "exit_zero", "porque": "Must prove the recorded NetworkManager and supplicant failure is distinguished from a host freeze, test a bounded recovery policy on the cited stack, and preserve rollback evidence."}
 ---
 
-## Failure and evidence
+## Trabajo en la ATOM
 
-In [NVIDIA forum thread 358951, post 14](https://forums.developer.nvidia.com/t/spark-hangs-requires-a-hard-reset-physically-unplugging/358951/14), an ASUS Ascent GX10 (GB10), DGX OS 7.5.0, driver 580.173.02, kernel 6.17.0-1029-nvidia, MediaTek MT7925/`mt7925e`, NetworkManager, and `wpa_supplicant` lost Wi-Fi after an AP band-steer roam from 2.4 to 5 GHz. The author reports an association handshake timeout classified as `WRONG_KEY`, followed by NetworkManager `failed (reason 'no-secrets')` on a headless host with no agent to answer. No further reconnect attempts occurred. A local fsyncing logger recorded 1,473 healthy samples for about 90 minutes while SSH was unreachable; the operator power-cycled the machine.
+Registrar en la ATOM un estado de usabilidad de red que separe host vivo con Wi-Fi aislado (asociacion, razon del supplicant, `no-secrets` de NetworkManager, ruta por defecto, endpoint de gestion) de un cuelgue real; recuperacion opt-in con rollback y A/B de cada workaround antes de recomendarlo.
 
-The report supports network isolation, not an idle host freeze. Its separate genuine host freeze occurred during a deep-context vLLM run and is covered by the existing unified-memory investigation. The author proposed wired Ethernet, pinning one BSSID or disabling band steering, and unlimited autoconnect retries with a dispatcher fallback; those workarounds were proposals, not reported A/B results. NVIDIA later linked the Wi-Fi case to another investigation in post 15.
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/spark-hangs-requires-a-hard-reset-physically-unplugging/358951/14
+- https://forums.developer.nvidia.com/t/364326
+- https://forums.developer.nvidia.com/t/354604
+- https://forums.developer.nvidia.com/t/374231
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
 
 ## Blackbox gap
 
@@ -34,16 +43,6 @@ Provide a captured or faithful fixture sequence for (1) the cited WPA handshake 
 ## Limits
 
 Evidence is one owner's report and one identified hardware/software stack. The Wi-Fi workaround and firmware/driver fix remain unvalidated. Other OEMs and Wi-Fi chipsets need separate evidence.
-
-[364326](https://forums.developer.nvidia.com/t/364326) añade recovery1.120.38 en OOBE Wi-Fi loop incluso con Ethernet; NVIDIA lo relaciona con caída del connectivity-check Canonical el21-Mar. Distinguir dependencia externa del chequeo frente a NIC/ruta/host; comprobar consola y alternativa local antes de reimage o reset de red.
-
-[354604](https://forums.developer.nvidia.com/t/354604) reports a Netplan/NetworkManager YAML file with NUL corruption; applying a QSFP network update removed management SSH, and renaming the damaged file restored access. NVIDIA asks for port references, with no final fix in the thread. Add a recoverable network configuration path: preserve original bytes/mode, validate before apply, use a separate management channel, and schedule a timed rollback that the operator cancels only after connectivity is verified. Do not replace or rewrite files automatically based on this report.
-
-
-## Índice de propuestas del lote 00
-
-- `FORUM-00-MT7925-PTK-AND-5GHZ-FAILURE-DIAGNOSTIC` — [Distinguish MT7925 pairwise-key installation failure and 5 GHz roam loops from wrong-password or host failure](https://forums.developer.nvidia.com/t/374231); detalle, confidence y close check en `tasks/evidence/SWARM-LUNA-FORUM-2026-10-02/findings_00.json`.
-
 
 ## Defecto de entrada CLI detectado (2026-10-04)
 

@@ -11,9 +11,17 @@ created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-SBSA-WATCHDOG-STATE-01 --evidence tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01", "expect": "exit_zero", "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."}
 ---
 
-## Fuente y evidencia
+## Trabajo en la ATOM
 
-[360564](https://forums.developer.nvidia.com/t/360564). El hilo relata resets incluso durante FieldDiag y una respuesta muestra SBSA timeout 10s. El autor afirma lsmod vacío y estabilidad posterior sin explicar acción ni duración. La causalidad sigue pendiente; un driver built-in puede faltar de lsmod.
+Leer con root, sin abrir el dispositivo, el propietario efectivo de `/dev/watchdog*` (`adopted/root-scripts/watchdog-propietario.sh`) junto a identidad, timeout y nowayout de sysfs, en vez de inferirlo de `RuntimeWatchdogUSec`.
+
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/360564
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
 
 ## Delta y prevención/resolución
 
@@ -32,7 +40,6 @@ El verificador de close_check todavía debe implementarse; ejecutar esta ficha e
 Sysfs informa SBSA Generic Watchdog, active, timeout=60, nowayout=0; systemd RuntimeWatchdogUSec=1min. No se abrió /dev/watchdog. Sysfs no acredita PID propietario; queda lectura de ownership y validación OEM/recuperación.
 
 Evidencia y pendientes: `tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01/progress.txt`. Conserva `open`; la captura de estado verifica el instrumento y deja pendiente el ensayo de recuperación/prevención requerido.
-
 
 ## Avance de instrumentación 2026-10-03
 

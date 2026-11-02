@@ -15,17 +15,17 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.md", "expect": "exit_zero", "porque": "Cerrada por aplicabilidad (void_wontfix, decision de Luis 2026-10-13): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a un test por ficha que se retiro con la deprecacion."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/365296/15
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-3NODE-NCCL-IMAGE-AND-FIRST-REQUEST-01.** En una malla de tres Spark con PP, un operador reporta SIGTERM silencioso del worker en la primera inferencia usando el contenedor `vllm-node` con NCCL estándar; en el ensayo incremental, varias variables NCCL, Ray, allocator y loader no cambiaron el fallo. El operador reporta éxito posterior con imagen TF5 que llevaba NCCL de mesh; el mantenedor responde que la funcionalidad ya se integró en NCCL main y que la receta se actualizó ([365296, posts 15–16](https://forums.developer.nvidia.com/t/365296/15)). Validar build/image digest/NCCL por rank y una inferencia PP entre etapas en el topology real; load/HTTP ready no basta. Las fuentes externas no fueron auditadas y la corrección es declarada por usuarios; no tratar el caso como bug driver ni trasladar el umbral 0.85 de Grace Hopper a Spark.
-
-Fuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.
 
 ## Criterio de cierre y control negativo
 

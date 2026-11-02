@@ -11,7 +11,7 @@ created: 2026-10-11
 close_check: {"cmd": "grep -q 'scaling_max_freq' tasks/evidence/FEATURE-BB-EVALUAR-CAP-DE-CPU-01/ab.md", "expect": "exit_zero", "porque": "Solo cierra con el A/B medido aqui (misma carga, zona termica y tiempo de pared con y sin cap), con rollback. Hoy el archivo no existe."}
 ---
 
-Conocimiento en Atlas: `knowledge/investigations/gb10_cortes_2026-10-11/hilos/hilo_380238_*` (L41 y L69): cap de CPU a 2400000 kHz en `cpufreq/policy*/scaling_max_freq`, A/B con la misma carga: zonas sostenidas 92 a 84 C y 85 a 80 C, mismo tiempo de pared (n=2 nodos, Founders Edition). El mismo hilo trae el comando exacto (L212).
+Conocimiento: una referencia externa (L41 y L69): cap de CPU a 2400000 kHz en `cpufreq/policy*/scaling_max_freq`, A/B con la misma carga: zonas sostenidas 92 a 84 C y 85 a 80 C, mismo tiempo de pared (n=2 nodos, Founders Edition). El mismo hilo trae el comando exacto (L212).
 
 Por que aqui: en esta unidad la zona ACPI sostiene 94-96 C con la GPU en 84 C y el trip critico es 104.8 C (telemetria del 11-oct 11:50 a 12:13); el calor esta en el SoC, no en la GPU. Es una palanca que el cap de GPU no toca.
 

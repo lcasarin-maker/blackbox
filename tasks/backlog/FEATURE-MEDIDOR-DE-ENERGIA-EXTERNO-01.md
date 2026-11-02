@@ -8,7 +8,7 @@ severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-11
-close_check: {"cmd": "grep -q . /home/<usuario>/.local/share/blackbox/externo/energia.jsonl", "expect": "exit_zero", "porque": "Un corte de energia mata al propio instrumento: solo un medidor de voltaje y watts en la entrada distingue CORTE_DE_RED de APAGADO_INTERNO en los 4 cortes abruptos bajo carga del 06, 07, 08 y 11-oct."}
+close_check: {"cmd": "grep -q . $HOME/.local/share/blackbox/externo/energia.jsonl", "expect": "exit_zero", "porque": "Un corte de energia mata al propio instrumento: solo un medidor de voltaje y watts en la entrada distingue CORTE_DE_RED de APAGADO_INTERNO en los 4 cortes abruptos bajo carga del 06, 07, 08 y 11-oct."}
 ---
 
 ## Por que

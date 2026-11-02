@@ -17,7 +17,7 @@ close_check: {"cmd": "grep -qx residentes_medido tasks/evidence/FEATURE-RESIDENT
 
 ## Idea de origen y hueco propio
 
-Athena carga cada servicio la primera vez que se pide y lo devuelve cuando lleva un rato en reposo (`Atlas/knowledge/references/github_com_xangel82_Athena_Engine.md`). El hueco de bb esta en `FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION`: el hilo 348760 reporta, con la medicion de un solo autor y adjuntos sin revisar, que detener tres modelos residentes inactivos baja la temperatura y sube el rendimiento. En esta maquina no hay medicion local: la ficha dice "0 cambios de compuerta, 0 A/B y 0 claims de throughput".
+Athena carga cada servicio la primera vez que se pide y lo devuelve cuando lleva un rato en reposo (una referencia externa). El hueco de bb esta en `FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION`: el hilo 348760 reporta, con la medicion de un solo autor y adjuntos sin revisar, que detener tres modelos residentes inactivos baja la temperatura y sube el rendimiento. En esta maquina no hay medicion local: la ficha dice "0 cambios de compuerta, 0 A/B y 0 claims de throughput".
 
 ## Adaptacion
 
@@ -27,7 +27,7 @@ bb ya guarda lo necesario por separado: `tools/gpumem_historial.py` escribe quie
 
 1. Definir la inactividad con una senal que ya se mida (utilizacion de GPU del proceso o peticiones del motor), a elegir en la ficha y escribir cual.
 2. Cruzar residencia x inactividad x temperatura sobre el historico y reportar el resultado aunque sea nulo. Un cruce sin efecto es un resultado valido y se documenta como tal.
-3. Solo si hay efecto medido, abrir una ficha de accion (descargar tras reposo); descargar un modelo de Atlas o del motor es decision de Luis.
+3. Solo si hay efecto medido, abrir una ficha de accion (descargar tras reposo); descargar un modelo del consumidor de conocimiento o del motor es decision de Luis.
 
 ## Limites declarados
 

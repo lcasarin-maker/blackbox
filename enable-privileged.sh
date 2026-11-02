@@ -73,7 +73,7 @@ if [ "$REVERT" = 1 ]; then
   if [ -f /etc/audit/rules.d/10-blackbox-signals.rules ]; then
     run rm -f /etc/audit/rules.d/10-blackbox-signals.rules
     run augenrules --load
-    echo "  regla de auditoria de senales retirada (DGX-438 se queda sin instrumento)"
+    echo "  regla de auditoria de senales retirada (DEBT-SIGTERM-SIN-CAUSA-RAIZ se queda sin instrumento)"
   fi
   if [ -f /etc/audit/rules.d/zz-blackbox-backlog.rules ]; then
     run rm -f /etc/audit/rules.d/zz-blackbox-backlog.rules
@@ -351,8 +351,20 @@ echo "-- 5. vigilante de usabilidad --"
 # tocandolos. Ver bin/bb-usable para la calibracion y sus margenes.
 # Esto NO desarma el watchdog de PID 1: convive con el.
 SELF_DIR="$(cd "$(dirname "$0")" && pwd)"
+# La unit versionada es una PLANTILLA (el repo es publico, boleta #23 A de Luis):
+# lleva @BB_HOME@ donde va el home de $DUENO. Primero se sustituye el checkout
+# (@BB_HOME@/projects/blackbox -> el de quien instala) y despues el resto del
+# home; `bb drift` renderiza la copia adoptada con los mismos valores.
+HOME_DUENO="$(getent passwd "$DUENO" | cut -d: -f6)" || HOME_DUENO=""
+case "$HOME_DUENO" in
+  /*) ;;
+  *) echo "  sin home para '$DUENO' en getent passwd: no se instala bb-usable" >&2; exit 1 ;;
+esac
+case "$HOME_DUENO$SELF_DIR" in
+  *"|"*|*"&"*|*\\*) echo "  ruta con | & o \\ (rompe el sed): no se instala bb-usable" >&2; exit 1 ;;
+esac
 if [ "$DRY" = 0 ]; then
-  sed "s|/home/<usuario>/projects/blackbox|$SELF_DIR|g" \
+  sed -e "s|@BB_HOME@/projects/blackbox|$SELF_DIR|g" -e "s|@BB_HOME@|$HOME_DUENO|g" \
       "$SELF_DIR/systemd/bb-usable.service" > /etc/systemd/system/bb-usable.service
   systemctl daemon-reload
   systemctl enable --now bb-usable.service
@@ -410,10 +422,10 @@ else
   echo "  /etc/default/earlyoom no existe, se omite"
 fi
 
-# --- 7. quien manda el SIGTERM (DEBT-DGX-438) ----------------------------
+# --- 7. quien manda el SIGTERM (DEBT-SIGTERM-SIN-CAUSA-RAIZ) -------------
 echo
 echo "-- 7. auditoria de senales: quien mata a quien --"
-# Por que: DEBT-DGX-438 lleva abierta desde el 2026-09-08. Algo mata procesos
+# Por que: DEBT-SIGTERM-SIN-CAUSA-RAIZ lleva abierta desde el 2026-09-08. Algo mata procesos
 # python de fondo con SIGTERM a intervalos irregulares (10-15 min) y no se
 # sabe que. Descartados CON evidencia: systemd-oomd (`is-enabled` -> not-found,
 # ni instalado), la mitigacion de atom_gpu_telemetry.py (usa SIGSTOP/SIGCONT,
@@ -425,12 +437,12 @@ echo "-- 7. auditoria de senales: quien mata a quien --"
 # 4 h 08 min que cubria el anillo. No es que nadie matara: es que nadie
 # miraba. Falta la regla, no el demonio.
 if [ "$DRY" = 0 ] && ! command -v auditctl >/dev/null 2>&1; then
-  echo "  auditctl no esta: se omite (instala auditd para cerrar DGX-438)"
+  echo "  auditctl no esta: se omite (instala auditd para cerrar DEBT-SIGTERM-SIN-CAUSA-RAIZ)"
 else
   run mkdir -p /etc/audit/rules.d
   if [ "$DRY" = 0 ]; then
     cat >/etc/audit/rules.d/10-blackbox-signals.rules <<'RULES'
-## blackbox -- DEBT-DGX-438: quien manda la senal que mata.
+## blackbox -- DEBT-SIGTERM-SIN-CAUSA-RAIZ: quien manda la senal que mata.
 ## Se carga con `augenrules --load`. El numero 10 es para entrar ANTES que la
 ## regla estandar que genera el diluvio de abajo: auditd resuelve por primera
 ## coincidencia, asi que un `never` posterior no serviria de nada.
@@ -490,7 +502,7 @@ RULES
       echo "  Algo las esta borrando despues de cargarlas -- lo tipico es un -D"
       echo "  en un fichero de /etc/audit/rules.d que ordene despues de 10-."
       echo "  Comprueba:  grep -rn '^-D' /etc/audit/rules.d/"
-      echo "  Hasta que aparezcan ahi, DGX-438 sigue sin instrumento y"
+      echo "  Hasta que aparezcan ahi, DEBT-SIGTERM-SIN-CAUSA-RAIZ sigue sin instrumento y"
       echo "  'bb sigterm' te lo dira en vez de darte un cero limpio."
     fi
     echo
@@ -785,10 +797,10 @@ DESK_BASE="$(getent passwd "$DUENO" | cut -d: -f6)/.config/systemd/user"
 # Los tres ultimos niveles son unidades del GESTOR DE USUARIO: su sitio canonico
 # es el drop-in de usuario, igual que el techo de app.slice que ya vive ahi.
 for par in \
-  "session.slice.d:home_<usuario>_.config_systemd_user_session.slice.d_99-blackbox-escritorio.conf" \
-  "app.slice.d:home_<usuario>_.config_systemd_user_app.slice.d_99-blackbox-escritorio.conf" \
-  "app-gnome-.scope.d:home_<usuario>_.config_systemd_user_app-gnome-.scope.d_99-blackbox-escritorio.conf" \
-  "snap.antigravity.antigravity-.scope.d:home_<usuario>_.config_systemd_user_snap.antigravity.antigravity-.scope.d_99-blackbox-escritorio.conf"
+  "session.slice.d:home_@BB_USUARIO@_.config_systemd_user_session.slice.d_99-blackbox-escritorio.conf" \
+  "app.slice.d:home_@BB_USUARIO@_.config_systemd_user_app.slice.d_99-blackbox-escritorio.conf" \
+  "app-gnome-.scope.d:home_@BB_USUARIO@_.config_systemd_user_app-gnome-.scope.d_99-blackbox-escritorio.conf" \
+  "snap.antigravity.antigravity-.scope.d:home_@BB_USUARIO@_.config_systemd_user_snap.antigravity.antigravity-.scope.d_99-blackbox-escritorio.conf"
 do
   run mkdir -p "$DESK_BASE/${par%%:*}"
   run cp "adopted/system-config/${par#*:}" "$DESK_BASE/${par%%:*}/99-blackbox-escritorio.conf"
@@ -805,12 +817,12 @@ done
 # que el de partida, y desde el repo no habia forma de verlo. Se cerro
 # copiandolo a mano, fuera de todo script.
 run mkdir -p "$DESK_BASE/app.slice.d"
-run cp adopted/system-config/home_<usuario>_.config_systemd_user_app.slice.d_99-blackbox.conf \
+run cp adopted/system-config/home_@BB_USUARIO@_.config_systemd_user_app.slice.d_99-blackbox.conf \
        "$DESK_BASE/app.slice.d/99-blackbox.conf"
 # MemoryHigh=infinity: la prueba de 38G (2026-10-16, voto de Luis tras el colapso confinado a app.slice,
 # DEBT-COLAPSO-CONFINADO-A-APP-SLICE-REINICIA-LA-MAQUINA-ENTERA-01): que el slice reclame
 # cache antes de llegar al techo de 42G. Lo puso Luis a mano; aqui queda reproducible.
-run cp adopted/system-config/home_<usuario>_.config_systemd_user_app.slice.d_memory-high.conf \
+run cp adopted/system-config/home_@BB_USUARIO@_.config_systemd_user_app.slice.d_memory-high.conf \
        "$DESK_BASE/app.slice.d/memory-high.conf"
 run chown -R "$DUENO": "$DESK_BASE"
 echo "  techo de app.slice puesto: MemoryMax=42G"

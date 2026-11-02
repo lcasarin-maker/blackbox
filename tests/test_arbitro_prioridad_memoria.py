@@ -106,9 +106,9 @@ def test_una_unidad_protegida_en_el_rango_mas_bajo_sigue_rechazada():
 
 
 def test_unidad_sin_rango_declarado_cae_en_el_mas_bajo_nunca_en_uno_alto():
-    atlas = v.Unidad("liberation_job.scope", "/cg/a", 2 * GIB)  # Atlas aun no declara su rango
-    assert v.RANGOS.rango(atlas.nombre) == min(r for _, r, _ in v.RANGOS.clases) == 0
-    assert v.elige_culpable([atlas, LAB], elegibles=TODO)["unidad"]["nombre"] == atlas.nombre  # mas memoria, mismo rango
+    externa = v.Unidad("liberation_job.scope", "/cg/a", 2 * GIB)  # la cola externa aun no declara su rango
+    assert v.RANGOS.rango(externa.nombre) == min(r for _, r, _ in v.RANGOS.clases) == 0
+    assert v.elige_culpable([externa, LAB], elegibles=TODO)["unidad"]["nombre"] == externa.nombre  # mas memoria, mismo rango
 
 
 # ------------------------------------------------------------------ (d) respaldo identico al fichero
@@ -122,7 +122,7 @@ def test_el_respaldo_es_identico_al_fichero():
 
 def test_las_clases_de_la_ficha_en_orden_ascendente():
     assert [c for c, _, _ in sorted(v.RESPALDO_RANGOS, key=lambda x: x[1])] == [
-        "laboratorio", "suites", "atlas", "sesion", "motor"]
+        "laboratorio", "suites", "carga_externa", "sesion", "motor"]
 
 
 # ------------------------------------------------------------------ (e) fichero ausente o roto: respaldo, sin lanzar

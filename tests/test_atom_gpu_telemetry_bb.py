@@ -1,7 +1,7 @@
-"""Las ramas que la suite heredada de Atlas no ejercía.
+"""Las ramas que la suite heredada del consumidor no ejercía.
 
 Este fichero nace de la migración de DGX-585: `tools/atom_gpu_telemetry.py`
-pasó de Atlas a blackbox el 2026-09-24, y llegó con 458 sentencias al **87 %**.
+pasó del consumidor a blackbox el 2026-09-24, y llegó con 458 sentencias al **87 %**.
 Este repo exige 100 % sobre `tools/`, así que las 59 que faltaban se cubren
 aquí en vez de bajarle el listón al gate.
 
@@ -550,8 +550,8 @@ def test_el_bucle_sale_limpio_con_Ctrl_C(monkeypatch, tmp_path, capsys):
 
 
 # ------------------------------------------------------- el gate como comando
-# Atlas consulta la decision termica por PROCESO, no por import (contrato de
-# los dos repos, DGX-585). Si este contrato se rompe, el encolador de Atlas
+# El consumidor consulta la decision termica por PROCESO, no por import (contrato
+# de los dos repos, DGX-585). Si este contrato se rompe, el encolador del consumidor
 # decide con otro numero que el sampler, y dos "temperatura alta" en la misma
 # maquina se desacuerdan en silencio.
 
@@ -603,9 +603,9 @@ def test_el_gate_por_comando_NO_se_relaja_sin_telemetria_fresca(monkeypatch, cap
 
 
 # ------------------------------------------- procesos de GPU como comando
-# Atlas preguntaba "quien esta en la GPU" invocando nvidia-smi por su cuenta.
+# El consumidor preguntaba "quien esta en la GPU" invocando nvidia-smi por su cuenta.
 # Con la frontera de DGX-585 el driver lo interroga quien gobierna el hardware
-# y Atlas decide con la respuesta: el HECHO aqui, la POLITICA alli.
+# y el consumidor decide con la respuesta: el HECHO aqui, la POLITICA alli.
 
 
 def test_procesos_gpu_como_comando_devuelve_el_hecho(monkeypatch, capsys):

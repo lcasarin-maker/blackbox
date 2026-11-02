@@ -1,0 +1,13 @@
+# /etc/blackbox/netconsole.conf -- parametros de las capas netconsole-runtime y netconsole-arranque.
+# Se copia a mano (sudo install -m 0644 ...) y se rellena; la herramienta lo LEE, nunca lo escribe ni lo borra.
+# No se ejecuta: solo CLAVE=valor, solo estas claves, cada valor validado. Con un valor <...> sin rellenar, se niega.
+#
+# Interfaz de la ATOM por la que sale netconsole (la NIC de la LAN, o la ConnectX-7 si la Realtek no soporta netpoll).
+DEV=<interfaz>
+# IPv4 de la ATOM en esa interfaz.
+LOCAL_IP=<ip-de-la-atom>
+# IPv4 y MAC del testigo que escucha en UDP 6666 (la MAC del siguiente salto si el testigo no esta en la misma LAN).
+REMOTE_IP=<ip-del-testigo>
+REMOTE_MAC=<mac-del-testigo>
+# Modulo del driver de DEV: solo lo usa netconsole-arranque, que lo mete en el initramfs antes de netconsole.
+DRIVER=<modulo-del-driver>

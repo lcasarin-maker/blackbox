@@ -4,7 +4,7 @@
 Decision de Luis 2026-10-12: la ATOM se queda en DGX OS oficial y se MONITOREAN las distros alternas. Este modulo compara,
 por cada fuente de `data/distros_alternas.json`, la cabeza del repo (`git ls-remote`, sin descargar codigo) o el numero de
 mensajes del hilo del foro (JSON publico de Discourse) contra la lectura anterior. Una fuente con cambio publica un hallazgo
-`bb-hallazgo/1` (tipo `medicion`) en la bandeja de bb; Atlas lo recoge por su cuenta. Las guias y articulos no tienen
+`bb-hallazgo/2` (tipo `medicion`) en la bandeja de bb; el consumidor lo recoge por su cuenta. Las guias y articulos no tienen
 comparador: salen `NOT_COLLECTED`, nunca "sin cambio".
 Limite declarado: detecta ACTIVIDAD, no juzga si el mecanismo sirve; eso lo mide una ficha propia con control negativo.
 """
@@ -69,7 +69,7 @@ def _hallazgo(fuente: dict[str, Any], previo: str, ahora: str, hoy: str) -> str:
     slug = re.sub(r"[^a-z0-9]+", "-", str(fuente["id"]).lower()).strip("-")[:40]
     return hallazgo.construye(hallazgo.Hallazgo(
         id=f"bb-{hoy}-distros-{slug}", tipo="medicion", confianza="medido", generado=hoy, por="tools/monitor_distros.py",
-        nodo=hallazgo.nodo_anonimo(), datos=f"{fuente['id']}: {previo} -> {ahora}", atlas_refs=(),
+        nodo=hallazgo.nodo_anonimo(), datos=f"{fuente['id']}: {previo} -> {ahora}", refs=(),
         fuentes=f"- La fuente `{fuente['id']}` ({fuente.get('url')}) cambio de `{previo}` a `{ahora}`; lista en `data/distros_alternas.json`.",
         inferencia="- [inferencia] Hay actividad nueva en la fuente; si trae un mecanismo cosechable para la ATOM lo decide una ficha propia con control negativo."))
 

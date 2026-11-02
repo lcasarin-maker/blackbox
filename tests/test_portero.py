@@ -140,8 +140,8 @@ def test_fuera_de_app_slice_no_actua():
 
 @pytest.mark.unit
 def test_proceso_con_tope_propio_no_se_mueve():
-    atlas = arbol(1, 60, tope_propio_kb=8 * G, cgroup=APP + "/run-u5.scope")
-    acc = po.decide([atlas], estado())
+    externo = arbol(1, 60, tope_propio_kb=8 * G, cgroup=APP + "/run-u5.scope")
+    acc = po.decide([externo], estado())
     assert [a.tipo for a in acc] == ["no_actua"] and "tope propio" in acc[0].motivo
 
 
@@ -151,7 +151,7 @@ def test_control_negativo_tope_propio_mas_holgado_que_la_clase_si_es_candidato()
 
 
 @pytest.mark.unit
-def test_jobs_de_atlas_docker_y_bb_cap_excluidos_aunque_no_tengan_tope():
+def test_jobs_de_la_cola_externa_docker_y_bb_cap_excluidos_aunque_no_tengan_tope():
     casos = [
         arbol(1, 60, cgroup=APP + "/liberation_job.scope"),
         arbol(2, 60, cgroup=APP + "/liberation_job_test_7.scope"),
@@ -161,6 +161,59 @@ def test_jobs_de_atlas_docker_y_bb_cap_excluidos_aunque_no_tengan_tope():
     acc = po.decide(casos, estado())
     assert {a.tipo for a in acc} == {"no_actua"} and len(acc) == 4
     assert all("excluido" in a.motivo for a in acc)
+
+
+# --- exclusiones como DATO (data/cargas_externas.json, 2026-11-01) ----------------------------------------
+# Los nombres de arriba (scope y ancestro de la cola externa) son la PINZA: si el dato los pierde, el test de
+# arriba falla. Estos prueban que el dato es la unica fuente y que su ausencia falla cerrado.
+
+
+@pytest.mark.unit
+def test_la_exclusion_externa_sale_del_archivo_de_datos_y_no_del_codigo():
+    datos = json.loads(po.CARGAS_EXTERNAS_RUTA.read_text(encoding="utf-8"))
+    assert po.CARGAS_EXTERNAS.error is None
+    assert po.CARGAS_EXTERNAS.ancestros == tuple(datos["ancestros_excluidos"])
+    assert po.CARGAS_EXTERNAS.contenedores == (*po.CONTENEDORES_EXCLUIDOS_PROPIOS, *datos["contenedores_excluidos"])
+    fuente = Path(po.__file__).read_text(encoding="utf-8")
+    for x in (*datos["cgroups_excluidos"], *datos["ancestros_excluidos"], *datos["contenedores_excluidos"]):
+        assert x not in fuente, x  # el nombre ajeno vive solo en el dato
+
+
+@pytest.mark.unit
+def test_cada_contenedor_externo_declarado_queda_fuera_del_acotado():
+    datos = json.loads(po.CARGAS_EXTERNAS_RUTA.read_text(encoding="utf-8"))
+    assert datos["contenedores_excluidos"]  # la exclusion de antes sigue: un contenedor externo con tope propio
+    acc = {a.objetivo: a for a in po.decide_contenedores(
+        [_ct(n) for n in datos["contenedores_excluidos"]] + [_ct("libre")], 14 * G)}
+    assert all(acc[n].tipo == "no_actua" for n in datos["contenedores_excluidos"])
+    assert acc["libre"].tipo == "acotar"  # control: el reparto si actua sobre lo no declarado
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("contenido", [None, "{roto", '{"esquema": "otro/1"}',
+                                       '{"esquema": "bb-cargas-externas/1", "cgroups_excluidos": ["("],'
+                                       ' "ancestros_excluidos": [], "contenedores_excluidos": []}',
+                                       '{"esquema": "bb-cargas-externas/1", "cgroups_excluidos": [3],'
+                                       ' "ancestros_excluidos": [], "contenedores_excluidos": []}'],
+                         ids=["ausente", "ilegible", "esquema_ajeno", "regex_invalida", "lista_mal_formada"])
+def test_sin_dato_legible_el_portero_no_actua_y_lo_declara(tmp_path, monkeypatch, contenido):
+    ruta = tmp_path / "cargas_externas.json"
+    if contenido is not None:
+        ruta.write_text(contenido, encoding="utf-8")
+    cargas = po.cargar_cargas_externas(ruta)
+    assert cargas.error and cargas.cgroup.search(APP + "/bb-cap-x.scope")  # las propias siguen
+    monkeypatch.setattr(po, "CARGAS_EXTERNAS", cargas)
+    acc = po.decide([arbol(1, 60)], estado())
+    assert [a.tipo for a in acc] == ["no_actua"] and "ilegibles" in acc[0].motivo
+    assert {a.tipo for a in po.decide_contenedores([_ct("libre")], 14 * G)} == {"no_actua"}
+
+
+@pytest.mark.unit
+def test_control_negativo_con_el_dato_bueno_el_mismo_arbol_si_se_admite(tmp_path, monkeypatch):
+    ruta = tmp_path / "cargas_externas.json"
+    ruta.write_text(po.CARGAS_EXTERNAS_RUTA.read_text(encoding="utf-8"), encoding="utf-8")
+    monkeypatch.setattr(po, "CARGAS_EXTERNAS", po.cargar_cargas_externas(ruta))
+    assert tipos(po.decide([arbol(1, 60)], estado())) == {(1, "admitir")}
 
 
 # --- Presupuesto ------------------------------------------------------------------------------------------------

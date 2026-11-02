@@ -1,0 +1,17 @@
+# /etc/systemd/system/bb-netconsole.service -- capa netconsole-runtime (blackbox adopted/opt-in).
+# La instala `tools/opt_in_captura.sh aplica netconsole-runtime`; la quita `... retrocede netconsole-runtime`.
+# No toca el arranque: carga netconsole cuando la red ya esta arriba y configura el destino "bb" por configfs.
+[Unit]
+Description=bb: destino netconsole por configfs hacia el testigo (opt-in)
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/etc/blackbox/netconsole.conf
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/bb-netconsole-configfs arranca
+ExecStop=/usr/local/sbin/bb-netconsole-configfs para
+
+[Install]
+WantedBy=multi-user.target

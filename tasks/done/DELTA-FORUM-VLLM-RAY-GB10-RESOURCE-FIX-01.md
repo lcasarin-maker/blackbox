@@ -15,17 +15,17 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01.md", "expect": "exit_zero", "porque": "Cerrada por aplicabilidad (void_wontfix, decision de Luis 2026-10-13): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a un test por ficha que se retiro con la deprecacion."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/355126/36
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-VLLM-RAY-GB10-RESOURCE-FIX-01.** Un reporte de diciembre de 2025 dijo que Ray marcaba GB10 solo como `accelerator_type:GB10`, sin clave genérica `GPU`, y que vLLM devolvía “Current node has no GPU available”; el mismo hilo contiene confusión sobre imágenes usadas y una respuesta señala que el nodo del autor corría `nvcr.io/nvidia/vllm:25.11-py3`, no el contenedor de la receta referenciada. TensorRT-LLM NVFP4 también falló por kernel SM121 ausente en ese stack. Un update posterior indica que el playbook se actualizó y el fix se verificó con vLLM 26.01 ([355126, post 36](https://forums.developer.nvidia.com/t/355126/36)). Registrar como regresión/corrección por versión, no como estado presente: el verificador debe guardar imagen digest/tag, Ray resource map por nodo, backend vLLM, SM, kernel y resultado de smoke. No mantener como verdad actual el fallo de 25.11 ni declarar resuelto en otros tags sin ejecutar el caso positivo/negativo con el tuple elegido. El adjunto de benchmark NCCL de 35.5 MB y repos/scripts comunitarios no se inspeccionaron.
-
-Fuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.
 
 ## Criterio de cierre y control negativo
 

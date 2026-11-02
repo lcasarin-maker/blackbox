@@ -17,7 +17,7 @@ close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider --runxfail tests/
 ---
 
 ## Medido
-- 2026-10-17, tras 3 pushes fallidos: `ps` mostro 13 procesos `soffice.bin --headless` (perfiles `soffice_perfil_preparacion_*`, tanda del proyecto otro proyecto) mas las suites `pre-push` de Atlas y Twiner. Carga 27-31 y `MemAvailable` 15 %.
+- 2026-10-17, tras 3 pushes fallidos: `ps` mostro 13 procesos `soffice.bin --headless` (perfiles `soffice_perfil_preparacion_*`, tanda del proyecto otro proyecto) mas las suites `pre-push` del consumidor de conocimiento y otro proyecto. Carga 27-31 y `MemAvailable` 15 %.
 - `journalctl -u earlyoom` 23:36:28: SIGTERM a un `python` de 1522 MiB (worker de xdist del push de este repo). Dos pushes cayeron por `worker crashed`, sin que ningun test fallara (pasan solos).
 - `tools/portero.py::clasifica` clasifica por la forma del comando: pytest y hooks pre-push/pre-commit -> `suite`, de cualquier proyecto. `soffice` devuelve `None`: sin clase, sin cola y sin tope.
 
@@ -50,7 +50,7 @@ Arreglo (tools/portero.py):
 - `tests/test_portero_caracterizacion_suite.py` (commit 10db38c4, ANTES del arreglo): `decide()` y `aplica()`
   (observar, off, y actuar sin efecto) de la clase `suite` en 16 escenarios (admitir; cola de dos y tres; turno
   ocupado congela al nuevo; al liberarse descongela al mas antiguo; index.lock no se congela; pre-push si; fuera de
-  app.slice; ligero; PSI; freno termico; holgura; presupuesto; excluido Atlas; NOT_COLLECTED; /proc ilegible),
+  app.slice; ligero; PSI; freno termico; holgura; presupuesto; excluido el consumidor de conocimiento; NOT_COLLECTED; /proc ilegible),
   grabados en `tests/fixtures/portero_suite_caracterizacion.json` contra el portero sin modificar. Control
   negativo: con 2 turnos en suite sale rojo.
 - `tests/test_portero_clase_trabajo_ajeno.py`: clasifica (4 formas si, 5 no: shell que la nombra, GUI sin

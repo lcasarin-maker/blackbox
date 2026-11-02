@@ -152,13 +152,13 @@ def test_adoptado_por_init_se_queda_init_pero_lo_dice(proc, monkeypatch):
 
 
 def test_systemd_se_lee_del_propio_proceso_y_sobrevive_al_corte(proc):
-    _proc(proc, 60, "atlas", ppid=1, sid=60, cgroup="/system.slice/atlas-api.service")
-    assert op.origen(60, proc)["fuente"] == {"tipo": "systemd", "nombre": "atlas-api.service"}
+    _proc(proc, 60, "kb-api", ppid=1, sid=60, cgroup="/system.slice/kb-api.service")
+    assert op.origen(60, proc)["fuente"] == {"tipo": "systemd", "nombre": "kb-api.service"}
 
 
 def test_systemd_user_manager_no_explica_a_un_huerfano():
     assert not op._explica_huerfano({"tipo": "systemd", "nombre": "user@1000.service"}, [])
-    assert op._explica_huerfano({"tipo": "systemd", "nombre": "atlas-api.service"}, [])
+    assert op._explica_huerfano({"tipo": "systemd", "nombre": "kb-api.service"}, [])
 
 
 def test_contenedor_solo_con_id_y_no_el_servicio_del_runtime(proc):

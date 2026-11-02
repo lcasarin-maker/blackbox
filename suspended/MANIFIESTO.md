@@ -15,12 +15,12 @@ vuelve permanente en silencio, así que cada entrada lleva la suya y quién vigi
 | **Caduca** | **2026-11-07** — si sigue suspendido sin decisión, se revisa |
 | **Vigila** | `bb status`, que comprueba la frescura de la telemetría absorbida |
 
-**Por qué.** Sus campos los absorbió `Atlas/tools/atom_gpu_telemetry.py` el
+**Por qué.** Sus campos los absorbió una referencia externa el
 mismo día: `sm_clk_mhz`, `pstate` y `throttle` entran en la misma
 invocación de `nvidia-smi` (coste cero), `mem_free_mb`/`mem_avail_mb` salen
 de `/proc/meminfo` sin subproceso, y `gpu_procs`/`gpu_mem_total_mib` se
 piden 1 de cada 3 muestras para conservar su cadencia de 15 s. Cubierto por 6
-tests nuevos en `Atlas/tests/test_atom_gpu_telemetry.py` (105 pasando).
+tests nuevos en una referencia externa (105 pasando).
 
 Verificado en producción antes de suspender, no después: la muestra de las
 04:14:38Z ya traía los cinco campos, y la de 04:14:33Z traía
@@ -36,11 +36,11 @@ mv /srv/ai/gpu_governance/gpu_sampler.sh.suspendido-2026-09-07 \
 systemctl --user enable --now ai-gpu-telemetry.service
 ```
 
-## own-chats-classify.timer — suspendido y REACTIVADO el 2026-09-08
+## Timer clasificador de otro proyecto — suspendido y REACTIVADO el 2026-09-08
 
 | | |
 |---|---|
-| **Unit** | `own-chats-classify.timer` → `~/projects/own_chats/daemon/` |
+| **Unit** | un timer de otro proyecto |
 | **Estado** | **REACTIVADO** el mismo día, tras arreglar la causa: `enabled` + `active` |
 | **Ficheros del repo** | intactos, nunca se tocaron |
 | **Caduca** | **2026-10-08** — o antes, en cuanto ollama vuelva a servir |
@@ -65,7 +65,7 @@ symlink de instalación además del enlace de arranque, y la unit desaparece
 **Cerrado el mismo día.** La causa era `ollama serve` corriendo con el cwd
 borrado (lo heredó de un worktree de agente que luego se limpió), así que cada
 `llama-server` moría en `getcwd()`. Relanzado desde `~`, el modelo
-carga y responde. Además `own_chats` pasó a usar el gateway ya cargado
+carga y responde. Además otro proyecto pasó a usar el gateway ya cargado
 (nemotron en `:8000`) en vez de levantar un segundo modelo en ollama, y
 `classify_fine.py` corta tras 20 fallos consecutivos.
 

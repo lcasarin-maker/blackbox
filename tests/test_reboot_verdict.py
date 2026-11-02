@@ -3,16 +3,27 @@
 import json
 import os
 from datetime import datetime
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 from tools import reboot_verdict as rv
+from tools import ultimo_aliento
 from tools.reboot_verdict import disparador, veredicto
 
 pytestmark = pytest.mark.unit
 
 BASE = {"telemetria": {"psi_mem_full_avg10": 0.0}}
+
+
+@pytest.fixture(autouse=True)
+def _sin_fuentes_de_la_maquina(tmp_path, monkeypatch):
+    """Ningun test lee /var/lib/blackbox ni el $BLACKBOX_DATA real: cada fuente apunta a un tmp vacio."""
+    monkeypatch.setattr(rv, "PSTORE_DIR", tmp_path / "sin_pstore")
+    monkeypatch.setattr(rv, "ETAPAS", tmp_path / "sin_etapas.jsonl")
+    monkeypatch.setattr(rv, "ANILLO", tmp_path / "sin_anillo.bin")
+    monkeypatch.setattr(rv, "EXTERNO", tmp_path / "sin_externo")
 
 
 def etiqueta(**kw):
@@ -100,7 +111,7 @@ def test_disparador_reconoce_las_frases_reales_de_logind_medidas_el_2026_10_10()
     assert disparador([real]) is not None
     assert disparador(["h systemd-logind[2452]: System is powering down."]) is not None
     assert (
-        disparador(["h systemd-logind[2452]: New session 3 of user <usuario>."]) is None
+        disparador(["h systemd-logind[2452]: New session 3 of user u."]) is None
     )  # no es cierre
 
 
@@ -123,8 +134,8 @@ def test_la_fila_lleva_la_palabra_bert_0x14_del_arranque_siguiente_y_nada_si_no_
     )  # control: sin registro no se inventa una palabra
 
 
-# ------------------------------------------------- forense movido desde Atlas (detect_atom_crash)
-# DEBT-CONTRATO-ATLAS-INSTRUMENTOS-EN-BLACKBOX-01: la medicion vive en bb; Atlas solo lee la fila.
+# ------------------------------------------------- forense movido desde el detector de un consumidor externo
+# Una ficha reubicada al consumidor de conocimiento: la medicion vive en bb; el consumidor externo solo lee la fila.
 SMART_SIN_PERMISO = (
     "smartctl 7.4 2023-08-01 r5530 [aarch64-linux-6.17.0-1031-nvidia] (local build)\n"
     "Copyright (C) 2002-23, Bruce Allen, Christian Franke, www.smartmontools.org\n"
@@ -230,7 +241,7 @@ def test_vmcore_solo_el_volcado_escrito_en_el_hueco_del_corte(tmp_path, monkeypa
     (crash / "kexec_cmd").write_text("no es volcado", encoding="utf-8")
     monkeypatch.setattr(rv, "CRASH_DIR", crash)
     assert rv.vmcore_en(4000, 6000) == str(dentro)
-    # control negativo: el volcado viejo NO se atribuye a un corte posterior (Atlas si lo hacia)
+    # control negativo: el volcado viejo NO se atribuye a un corte posterior (el consumidor externo si lo hacia)
     assert rv.vmcore_en(7000, 9000) is None
     monkeypatch.setattr(rv, "CRASH_DIR", tmp_path / "sin_crash")
     assert rv.vmcore_en(0, None) is None
@@ -569,6 +580,12 @@ def test_main_con_journalctl_que_falla_sale_con_2_y_lo_dice(monkeypatch, tmp_pat
     assert "COULD_NOT_RUN: journalctl --list-boots fallo: no hay journal" in capsys.readouterr().err
 
 
+def test_main_con_list_boots_vacio_sale_con_2_y_lo_dice_en_vez_de_un_traceback(monkeypatch, tmp_path, capsys):
+    monkeypatch.setattr(rv, "_journal", lambda *a: SimpleNamespace(returncode=0, stdout="", stderr=""))
+    assert rv.main(["--ultimos", "1"]) == 2
+    assert "COULD_NOT_RUN: journalctl --list-boots no devolvio JSON" in capsys.readouterr().err
+
+
 def test_publica_hallazgos_publica_es_idempotente_y_declara_lo_que_no_pudo(monkeypatch, tmp_path, capsys):
     monkeypatch.setenv("BLACKBOX_DATA", str(tmp_path))
     ev = {"boot_id": "c" * 32, "fin_epoch": 4600.0, "hueco_s": 100, "inicio_epoch": 1000.0}
@@ -596,3 +613,393 @@ def test_script_entrypoint_sale_con_el_codigo_de_main(monkeypatch, tmp_path):
     with pytest.raises(SystemExit) as exc:
         runpy.run_path(rv.__file__, run_name="__main__")
     assert exc.value.code == 2
+
+
+# ------------------------------------------------- fuentes fuera del journal (2026-11-01): fixtures en tests/fixtures/reboot_verdict
+FX = Path(__file__).parent / "fixtures" / "reboot_verdict"
+T0, FIN = 1791900000.0, 1791903600.0  # inicio y ultima entrada del boot que muere (los de las fixtures)
+SIG = FIN + 120  # primera entrada del boot siguiente
+A_ID, G_ID, B_ID = "a" * 32, "9" * 32, "b" * 32
+BOOTS_FX = [
+    {"index": -1, "boot_id": A_ID, "first_entry": int(T0 * 1e6), "last_entry": int(FIN * 1e6)},
+    {"index": 0, "boot_id": B_ID, "first_entry": int(SIG * 1e6), "last_entry": int((SIG + 100) * 1e6)},
+]
+COLA_MUDA = {("500",): (0, "2026-10-13T08:59:59-06:00 h kernel: linea normal\n")}  # journal con lineas y sin cierre
+
+
+def _dashed(bid):
+    return f"{bid[:8]}-{bid[8:12]}-{bid[12:16]}-{bid[16:20]}-{bid[20:]}"
+
+
+def _crash(tmp_path, nombre, mtime, archivos):
+    d = tmp_path / "crash" / nombre
+    d.mkdir(parents=True)
+    for a, contenido in archivos.items():
+        (d / a).write_text(contenido, encoding="utf-8")
+    os.utime(d, (mtime, mtime))
+    return d
+
+
+def _fx(monkeypatch, tmp_path, externo=None, etapas=True, anillo=False, journal=COLA_MUDA):
+    monkeypatch.setattr(rv, "TELEMETRIA", tmp_path / "no_hay.jsonl")
+    monkeypatch.setattr(rv, "CRASH_DIR", tmp_path / "crash")
+    monkeypatch.setattr(rv, "WATCHDOG_BOOTSTATUS", tmp_path / "bootstatus")
+    monkeypatch.setattr(rv, "_journal", _journal_falso(journal))
+    if externo:
+        monkeypatch.setattr(rv, "EXTERNO", FX / externo)
+    if etapas:
+        monkeypatch.setattr(rv, "ETAPAS", FX / "etapas.jsonl")
+    if anillo:
+        monkeypatch.setattr(rv, "ANILLO", _anillo_real(tmp_path))
+
+
+def _anillo_real(tmp_path):
+    """Un anillo de verdad, escrito con `ultimo_aliento.Anillo`: 65 s del boot A subiendo hasta 95 C, cada
+    250 ms, hasta FIN + 2.25; el arranque B a 40 C, con UNA muestra de B fechada dentro de la ventana de A
+    (reloj sin NTP) que el filtro por `boot` no debe atribuirle."""
+    ruta = tmp_path / "anillo.bin"
+    a = ultimo_aliento.Anillo(str(ruta), tamano=4096 + 1024 * 400)
+    a.abrir()
+    pasos = 261  # FIN + 2.25 - 65 ... FIN + 2.25
+    for k in range(pasos):
+        t = FIN + 2.25 - 0.25 * (pasos - 1 - k)
+        a.escribir({"ts": t, "boot": A_ID, "tipo": "muestra", "temp_c": {"0": round(70.0 + 25.0 * k / (pasos - 1), 2)}})
+    a.escribir({"ts": FIN - 10, "boot": B_ID, "tipo": "muestra", "temp_c": {"0": 40.0}})
+    for k in range(8):
+        a.escribir({"ts": SIG + 30 + 0.25 * k, "boot": B_ID, "tipo": "muestra", "temp_c": {"0": 40.0}})
+    a.cerrar()
+    return ruta
+
+
+def _fila(ev):
+    return {**veredicto(ev), **rv.forense(ev)}
+
+
+def test_kdump_se_detecta_con_solo_dmesg_y_trae_su_linea_de_panico(tmp_path, monkeypatch):
+    monkeypatch.setattr(rv, "CRASH_DIR", tmp_path / "crash")
+    d = _crash(tmp_path, "202610131500", FIN + 20, {"dmesg.202610131500": (FX / "kdump_dmesg.txt").read_text(encoding="utf-8")})
+    k = rv.kdump_en(FIN, SIG)
+    assert k is not None and k["directorio"] == str(d) and k["vmcore"] is False
+    assert k["linea_panico"] == "[ 3601.130000] Kernel panic - not syncing: Oops: Fatal exception"
+    assert k["fuente_panico"] == f"{d / 'dmesg.202610131500'}:6"
+    # el punto ciego: con KDUMP_SKIP_VMCORE=1 no hay dump.*, y el lector viejo decia "ninguno"
+    assert rv.vmcore_en(FIN, SIG) is None
+
+
+def test_kdump_ilegible_se_declara_y_no_se_lee_como_sin_panic(tmp_path, monkeypatch):
+    monkeypatch.setattr(rv, "CRASH_DIR", tmp_path / "crash")
+    d = _crash(tmp_path, "202610131500", FIN + 20, {"dmesg.202610131500": "x"})
+    real_open = Path.open
+
+    def sin_permiso(self, *a, **k):
+        if self.name.startswith("dmesg."):
+            raise PermissionError(13, "Permission denied")
+        return real_open(self, *a, **k)
+
+    monkeypatch.setattr(Path, "open", sin_permiso)  # los tests corren como root: el permiso se simula
+    k = rv.kdump_en(FIN, SIG)
+    assert k["linea_panico"] is None and "Permission denied" in k["ilegibles"][0]
+    v = veredicto({**BASE, "kdump": k})
+    assert v["causa"] == "PANICO_KDUMP" and any("no se pudo leer" in r for r in v["razones"])
+    assert not any("no trae" in r for r in v["razones"])  # control: ilegible no es "sin linea de panic"
+    monkeypatch.setattr(rv.os, "access", lambda *a: False)  # directorio que ni se puede listar
+    k = rv.kdump_en(FIN, SIG)
+    assert k["directorio"] == str(d) and k["archivos"] == [] and "sin permiso" in k["ilegibles"][0]
+
+
+def test_kdump_fuera_de_la_ventana_no_se_atribuye(tmp_path, monkeypatch):
+    monkeypatch.setattr(rv, "CRASH_DIR", tmp_path / "crash")
+    texto = (FX / "kdump_dmesg.txt").read_text(encoding="utf-8")
+    _crash(tmp_path, "202610130500", T0 - 500, {"dmesg.202610130500": texto})  # de un corte anterior
+    _crash(tmp_path, "202610131600", SIG + 60, {"dmesg.202610131600": texto})  # escrito ya en el boot siguiente
+    _crash(tmp_path, "202610131510", FIN + 30, {"kexec_cmd": "no es volcado"})  # en la ventana, sin dmesg ni dump
+    assert rv.kdump_en(FIN, SIG) is None
+
+
+def test_recoge_con_kdump_de_solo_dmesg_da_PANICO_KDUMP_con_la_fuente_citada(tmp_path, monkeypatch):
+    _fx(monkeypatch, tmp_path)
+    d = _crash(tmp_path, "202610131500", FIN + 20, {"dmesg.202610131500": (FX / "kdump_dmesg.txt").read_text(encoding="utf-8")})
+    f = _fila(rv.recoge(BOOTS_FX, 0))
+    assert f["etiqueta"] == "CORTE_ABRUPTO"  # la etiqueta sigue diciendo lo que dice el journal
+    assert f["causa"] == "PANICO_KDUMP" and f["causa_fuente"] == f"{d / 'dmesg.202610131500'}:6"
+    assert f["kdump"]["vmcore"] is False and f["vmcore"] is None
+    assert any("kdump guardo el dmesg del panic" in r for r in f["razones"])
+    assert not any(r.startswith("causa INDETERMINADA") for r in f["razones"])
+
+
+def test_con_todas_las_fuentes_vacias_sale_INDETERMINADO(tmp_path, monkeypatch):
+    _fx(monkeypatch, tmp_path, etapas=False, journal={})
+    ev = rv.recoge(BOOTS_FX, 0)
+    f = _fila(ev)
+    assert (f["etiqueta"], f["causa"], f["causa_fuente"]) == ("INDETERMINADO", "INDETERMINADO", None)
+    assert "observador_externo" in f["could_not_run"]
+    assert any("etapas_arranque" in x for x in f["could_not_run"]) and any("pstore_arranque" in x for x in f["could_not_run"])
+    assert f["kdump"] is None and f["pstore"] is None and f["etapas"] is None and f["netconsole"] is None
+    # control: el mismo boot con lineas en el journal y sin cierre si es CORTE_ABRUPTO (el silencio se leyo)
+    _fx(monkeypatch, tmp_path, etapas=False)
+    assert _fila(rv.recoge(BOOTS_FX, 0))["etiqueta"] == "CORTE_ABRUPTO"
+
+
+def test_sin_datos_de_ping_ni_de_enchufe_no_se_concluye_corte_de_energia(tmp_path, monkeypatch):
+    _fx(monkeypatch, tmp_path)  # EXTERNO apunta a un directorio vacio
+    f = _fila(rv.recoge(BOOTS_FX, 0))
+    assert f["causa"] == "INDETERMINADO" and "observador_externo" in f["could_not_run"]
+    # solo el enchufe, sin ping: que el enchufe enmudezca puede ser su Wi-Fi, no la pared
+    ext = tmp_path / "solo_enchufe"
+    ext.mkdir()
+    (ext / "energia.jsonl").write_text((FX / "externo_corte" / "energia.jsonl").read_text(encoding="utf-8"), encoding="utf-8")
+    monkeypatch.setattr(rv, "EXTERNO", ext)
+    f = _fila(rv.recoge(BOOTS_FX, 0))
+    assert f["causa"] != "CORTE_DE_ENERGIA" and f["causa"] == "INDETERMINADO"
+    assert f["tiempos_externos"]["ping"]["ultima_respuesta"] is None
+    # la regla pura tampoco concluye con el enchufe solo, aunque el recolector le pasara su caida
+    solo = {"ping": {"ultima_respuesta": None, "primera_falla": None}, "enchufe": {"ultima_ok": FIN, "primera_falla": FIN + 1}}
+    assert rv._causa_por_tiempos(solo) is None
+    # un ping que respondio por ultima vez en el boot ANTERIOR no da cobertura a este
+    (ext / "ping.jsonl").write_text(
+        "\n".join(json.dumps({"epoch": T0 - 100 + k, "ok": k == 0}) for k in range(5)) + "\n", encoding="utf-8"
+    )
+    f = _fila(rv.recoge(BOOTS_FX, 0))
+    assert f["tiempos_externos"]["ping"]["ultima_respuesta"] is None and f["hora_muerte"]["fuente"] == "journal"
+
+
+def test_corte_de_energia_si_el_enchufe_cae_antes_que_el_tcp(tmp_path, monkeypatch):
+    _fx(monkeypatch, tmp_path, externo="externo_corte")
+    f = _fila(rv.recoge(BOOTS_FX, 0))
+    assert f["causa"] == "CORTE_DE_ENERGIA"
+    assert f"{FX / 'externo_corte' / 'energia.jsonl'}:9" in f["causa_fuente"] and "ping.jsonl" in f["causa_fuente"]
+    t = f["tiempos_externos"]
+    assert t["ping"]["ultima_respuesta"] == FIN + 2 and t["ping"]["primera_falla"] == FIN + 3
+    assert t["enchufe"]["primera_falla"] == pytest.approx(FIN + 2.6) and t["latido"]["en_el_hueco"] > 0
+    assert "observador_externo" not in f["could_not_run"]
+
+
+def test_enchufe_mudo_desde_mucho_antes_no_prueba_un_corte_de_energia(tmp_path, monkeypatch):
+    ext = tmp_path / "ext"
+    ext.mkdir()
+    (ext / "ping.jsonl").write_text((FX / "externo_corte" / "ping.jsonl").read_text(encoding="utf-8"), encoding="utf-8")
+    filas = [{"epoch": FIN - 600 + k, "ok": True, "voltaje_v": 121.0, "potencia_w": 148.0} for k in range(5)]
+    filas += [{"epoch": FIN - 590 + k, "ok": False} for k in range(620)]  # el Wi-Fi del enchufe cayo 10 min antes
+    (ext / "energia.jsonl").write_text("\n".join(json.dumps(x) for x in filas) + "\n", encoding="utf-8")
+    _fx(monkeypatch, tmp_path)
+    monkeypatch.setattr(rv, "EXTERNO", ext)
+    f = _fila(rv.recoge(BOOTS_FX, 0))
+    assert f["tiempos_externos"]["enchufe"]["primera_falla"] <= FIN + 3  # cae "a tiempo" de la falla del TCP...
+    assert f["causa"] != "CORTE_DE_ENERGIA"  # ...pero ya estaba mudo: su ultima lectura buena es de 10 min antes
+
+
+def test_cuelgue_si_el_tcp_cae_y_el_enchufe_sigue_con_consumo(tmp_path, monkeypatch):
+    _fx(monkeypatch, tmp_path, externo="externo_cuelgue")
+    f = _fila(rv.recoge(BOOTS_FX, 0))
+    assert f["causa"] == "CUELGUE" and "ping.jsonl" in f["causa_fuente"] and "energia.jsonl" in f["causa_fuente"]
+    assert all(r["potencia_w"] >= 20 for r in f["tiempos_externos"]["enchufe"]["tras_caida_tcp"])
+    # control: si despues de caer el TCP el enchufe mide 10 W (ni encendida ni apagada) no hay cuelgue que afirmar
+    ext = tmp_path / "ext"
+    ext.mkdir()
+    (ext / "ping.jsonl").write_text((FX / "externo_cuelgue" / "ping.jsonl").read_text(encoding="utf-8"), encoding="utf-8")
+    bajo = (FX / "externo_cuelgue" / "energia.jsonl").read_text(encoding="utf-8").replace('"potencia_w": 95.0', '"potencia_w": 10.0')
+    (ext / "energia.jsonl").write_text(bajo, encoding="utf-8")
+    monkeypatch.setattr(rv, "EXTERNO", ext)
+    assert _fila(rv.recoge(BOOTS_FX, 0))["causa"] == "INDETERMINADO"
+
+
+def test_pstore_del_arranque_siguiente_da_PANICO_PSTORE_y_un_registro_repetido_no(tmp_path, monkeypatch):
+    _fx(monkeypatch, tmp_path)
+    ps = tmp_path / "pstore"
+    ps.mkdir()
+    (ps / "arranque.jsonl").write_text((FX / "arranque.jsonl").read_text(encoding="utf-8"), encoding="utf-8")
+    nuevo = ps / f"{_dashed(B_ID)}-dmesg-ramoops-0"
+    nuevo.write_text((FX / "pstore_dmesg.txt").read_text(encoding="utf-8"), encoding="utf-8")
+    monkeypatch.setattr(rv, "PSTORE_DIR", ps)
+    f = _fila(rv.recoge(BOOTS_FX, 0))
+    assert f["causa"] == "PANICO_PSTORE" and f["causa_fuente"] == f"{nuevo}:3"
+    assert f["pstore"]["fila_arranque_siguiente"]["pstore_archivos"] == 1
+    assert f["pstore"]["fila_arranque_propia"]["linea_jsonl"] == 1
+    # control: la misma copia ya existia, mas vieja, en el arranque anterior: es un registro que nadie borro
+    viejo = ps / f"{_dashed(A_ID)}-dmesg-ramoops-0"
+    viejo.write_bytes(nuevo.read_bytes())
+    os.utime(viejo, (T0 + 20, T0 + 20))
+    os.utime(nuevo, (SIG + 20, SIG + 20))
+    f = _fila(rv.recoge(BOOTS_FX, 0))
+    assert f["causa"] != "PANICO_PSTORE" and f["pstore"]["repetidos"] == [nuevo.name]
+    # control: un registro de pstore sin linea de panic no inventa un panic
+    nuevo.write_text((FX / "pstore_dmesg_sin_panic.txt").read_text(encoding="utf-8"), encoding="utf-8")
+    assert _fila(rv.recoge(BOOTS_FX, 0))["pstore"]["linea_panico"] is None
+
+
+def test_netconsole_atribuye_el_panic_de_la_ventana_y_no_el_del_boot_anterior(tmp_path, monkeypatch):
+    _fx(monkeypatch, tmp_path, externo="externo_netconsole")
+    f = _fila(rv.recoge(BOOTS_FX, 0))
+    assert f["causa"] == "PANICO_NETCONSOLE"
+    assert f["causa_fuente"] == f"{FX / 'externo_netconsole' / 'testigo' / 'netconsole.jsonl'}:4"  # no la linea 1 (otro boot)
+    assert f["netconsole"]["lineas_en_ventana"] == 3
+
+
+def test_etapas_dicen_hasta_donde_llego_y_solo_un_arranque_trunco_es_fallo():
+    # las ramas (gpu-lista corre junto a basic) no cuentan para la etapa maxima: el arranque se quedo en basic
+    vistas = {"local-fs": (100.0, 4, "e:1"), "basic": (102.0, 6, "e:2"), "gpu-lista": (101.0, 5, "e:3")}
+    r = rv.resumen_etapas(vistas)
+    assert (r["maxima"], r["faltante"], r["ultima_epoch"]) == ("basic", "multi-user", 102.0)
+    assert r["ramas"] == {"network-online": None, "gpu-lista": 5} and r["fuente"] == "e:2"
+    ev = {**BASE, "etapas": r, "fin_epoch": 160.0}
+    v = veredicto(ev)
+    assert v["causa"] == "FALLO_DE_ARRANQUE_EN_BASIC" and v["etiqueta"] == "CORTE_ABRUPTO"
+    assert v["causa_fuente"].startswith("e:2") and any("nunca a 'multi-user'" in x for x in v["razones"])
+    # control: vivio una hora despues de su ultima etapa: el que fallo fue el escritor, no el arranque
+    assert veredicto({**ev, "fin_epoch": 102.0 + 3600})["causa"] == "INDETERMINADO"
+    # control: sin gdm (arranque sin pantalla) y sin red, pero llego a graphical: completo
+    completo = {e: (100.0 + n, n, f"e:{n}") for n, e in enumerate(rv.ETAPAS_ORDEN) if e not in ("gdm", "sesion-usuario")}
+    rc = rv.resumen_etapas(completo)
+    assert rc["faltante"] is None and rc["saltadas"] == ["gdm"] and rc["ramas"]["network-online"] is None
+    assert veredicto({**BASE, "etapas": rc, "fin_epoch": 110.0})["causa"] == "INDETERMINADO"
+    # sesion-<uid> entra a la cadena por etapas_arranque.canonica; la de GDM (uid < 1000) no es de una persona
+    assert rv.resumen_etapas({"sesion-1000": (1.0, 1, "e:1")})["alcanzadas"] == ["sesion-usuario"]
+    assert rv.resumen_etapas({"sesion-120": (1.0, 1, "e:1")})["alcanzadas"] == []
+    # control: solo etapas que no conoce no son un fallo en local-fs
+    assert veredicto({**BASE, "etapas": rv.resumen_etapas({"tpm": (1.0, 1, "e:1")}), "fin_epoch": 2.0})["causa"] == "INDETERMINADO"
+
+
+def test_etapas_leen_la_rotacion_y_toleran_realtime_null(tmp_path, monkeypatch):
+    """El esquema real de etapa-marca.sh: `.1` es la generacion vieja, y `realtime: null` es una etapa sin hora."""
+    e = tmp_path / "etapas.jsonl"
+    (tmp_path / "etapas.jsonl.1").write_text(
+        json.dumps({"boot_id": _dashed(A_ID), "etapa": "local-fs", "monotonic": 3.91, "realtime": T0 + 4.1}) + "\n", encoding="utf-8"
+    )
+    e.write_text(
+        json.dumps({"boot_id": _dashed(A_ID), "etapa": "basic", "monotonic": None, "realtime": None}) + "\n"
+        + json.dumps({"boot_id": _dashed(A_ID), "etapa": "multi-user", "monotonic": "9", "realtime": T0 + 9}) + "\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(rv, "ETAPAS", e)
+    vistas = rv.etapas_de()[A_ID]
+    assert set(vistas) == {"local-fs", "basic"}  # multi-user trae monotonic de texto: se descarta como en etapas_arranque
+    assert vistas["local-fs"] == (T0 + 4.1, 3.91, f"{e}.1:1") and vistas["basic"] == (None, None, f"{e}:1")
+    r = rv.resumen_etapas(vistas)
+    assert r["maxima"] == "basic" and r["ultima_epoch"] == T0 + 4.1 and r["fuente"] == f"{e}:1"
+
+
+def test_arranque_fantasma_con_etapas_y_sin_journal_aparece_como_fila(monkeypatch, tmp_path, capsys):
+    _main_aislado(monkeypatch, tmp_path, boots=BOOTS_FX)
+    monkeypatch.setattr(rv, "_publica_hallazgos", lambda filas: None)
+    monkeypatch.setattr(rv, "ETAPAS", FX / "etapas.jsonl")
+    assert rv.main(["--ultimos", "1", "--escribe"]) == 0
+    filas = [json.loads(x) for x in (tmp_path / "reboots.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert [f["boot_id"] for f in filas] == [A_ID, G_ID]
+    a, g = filas
+    assert a["boot_id_siguiente"] == G_ID and g["boot_id_siguiente"] == B_ID
+    assert a["arranque_fantasma"] is False and a["etapas"]["maxima"] == "sesion-usuario"
+    assert g["arranque_fantasma"] is True and g["boot_idx"] is None and g["esquema"] == "bb-reboot/1"
+    assert g["etapas"]["maxima"] == "basic" and g["causa"] == "FALLO_DE_ARRANQUE_EN_BASIC"
+    assert g["etiqueta"] == "INDETERMINADO" and "etapas.jsonl" in g["causa_fuente"]
+    assert a["hueco_s"] == 60  # la ventana de A acaba donde empieza G, no en B
+    assert any("arranque fantasma 99999999 se interpone" in r for r in a["razones"])  # su BERT es de G
+    # control negativo: sin etapas no hay fantasma que inventar
+    (tmp_path / "reboots.jsonl").unlink()
+    monkeypatch.setattr(rv, "ETAPAS", tmp_path / "sin_etapas.jsonl")
+    assert rv.main(["--ultimos", "1", "--escribe"]) == 0
+    assert [json.loads(x)["boot_id"] for x in (tmp_path / "reboots.jsonl").read_text(encoding="utf-8").splitlines()] == [A_ID]
+
+
+def test_arranque_fantasma_solo_dentro_del_tramo_del_journal():
+    etapas = {"1" * 32: {"local-fs": (T0 - 9000, 4, "e:1")}, G_ID: {"local-fs": (FIN + 60, 4, "e:2")}, A_ID: {"basic": (T0 + 6, 6, "e:3")}}
+    assert [g["boot_id"] for g in rv.arranques_fantasma(BOOTS_FX, etapas)] == [G_ID]  # el viejo es journal rotado
+
+
+def test_anillo_da_la_hora_de_muerte_al_segundo_y_la_curva_termica_previa(tmp_path, monkeypatch):
+    _fx(monkeypatch, tmp_path, externo="externo_corte", anillo=True)
+    f = _fila(rv.recoge(BOOTS_FX, 0))
+    h = f["hora_muerte"]
+    assert h["fuente"] == "anillo" and h["ultima_senal_epoch"] == FIN + 2.25
+    assert h["cota_superior_fuente"] == "ping" and h["cota_superior_epoch"] == FIN + 3
+    assert h["incertidumbre_s"] <= 1.0 and h["periodo_anillo_s"] == 0.25
+    curva = f["curva_termica_previa"]
+    assert 55 <= len(curva) <= 61 and curva[-1]["termica"] == {"0": 95.0}
+    assert curva[0]["termica"]["0"] < curva[-1]["termica"]["0"]  # la curva sube
+    assert all(FIN + 2.25 - 60 - 1 <= p["epoch"] <= FIN + 2.25 for p in curva)
+    # las muestras del arranque siguiente (40 C), incluida la fechada dentro de la ventana, no son del muerto
+    assert f["ultimo_aliento"]["temp_c"] == {"0": 95.0} and f["ultimo_aliento"]["boot"] == A_ID
+    assert all(p["termica"]["0"] > 40.0 for p in curva)
+    # control: sin anillo, la hora la da el ping y se declara la fuente que falto
+    _fx(monkeypatch, tmp_path, externo="externo_corte")
+    monkeypatch.setattr(rv, "ANILLO", tmp_path / "sin_anillo.bin")
+    f = _fila(rv.recoge(BOOTS_FX, 0))
+    assert f["hora_muerte"]["fuente"] == "ping" and f["curva_termica_previa"] is None
+    assert any("anillo_ultimo_aliento" in x for x in f["could_not_run"])
+
+
+def test_testigo_que_calla_con_la_atom_se_dice_y_no_concluye(tmp_path, monkeypatch):
+    ext = tmp_path / "ext"
+    ext.mkdir()
+    (ext / "testigo").mkdir()
+    (ext / "testigo" / "latido.jsonl").write_text(
+        "\n".join(json.dumps({"epoch": FIN - 30 + 5 * k, "evento": "latido"}) for k in range(7)) + "\n", encoding="utf-8"
+    )
+    _fx(monkeypatch, tmp_path)
+    monkeypatch.setattr(rv, "EXTERNO", ext)
+    f = _fila(rv.recoge(BOOTS_FX, 0))
+    assert f["causa"] == "INDETERMINADO" and f["tiempos_externos"]["latido"]["en_el_hueco"] == 0
+    assert any("el testigo externo callo junto con la ATOM" in r for r in f["razones"])
+
+
+def test_bootstatus_de_un_arranque_que_no_es_el_vivo_sale_de_su_journal(tmp_path, monkeypatch):
+    tres = [BOOTS_FX[0], dict(BOOTS_FX[1], index=-1, boot_id="c" * 32), dict(BOOTS_FX[1], index=0, first_entry=int((SIG + 500) * 1e6))]
+    tres[0] = dict(tres[0], index=-2)
+    wdt = "sbsa-gwdt sbsa-gwdt.0: System reset by WDT."
+    _fx(monkeypatch, tmp_path, journal={**COLA_MUDA, ("-k", "cat"): (0, f"k: algo\n{wdt}\n")})
+    f = _fila(rv.recoge(tres, 0))
+    assert f["watchdog_bootstatus_siguiente"] == 32 and wdt in f["watchdog_bootstatus_fuente"]
+    assert any("bootstatus=32" in r for r in f["razones"])
+    probe = "sbsa-gwdt sbsa-gwdt.0: Initialized with 10s timeout @ 1000000000 Hz, action=0."
+    _fx(monkeypatch, tmp_path, journal={**COLA_MUDA, ("-k", "cat"): (0, probe + "\n")})
+    f = _fila(rv.recoge(tres, 0))
+    assert f["watchdog_bootstatus_siguiente"] == 0 and "watchdog_bootstatus" not in f["could_not_run"]
+    # control: sin linea del driver no se supone 0
+    _fx(monkeypatch, tmp_path)
+    f = _fila(rv.recoge(tres, 0))
+    assert f["watchdog_bootstatus_siguiente"] is None and "watchdog_bootstatus" in f["could_not_run"]
+
+
+CAMPOS_BB_REBOOT_1 = {
+    "boot_idx", "boot_id", "boot_id_siguiente", "etiqueta", "razones", "bert_siguiente", "bert_palabra_0x14",
+    "bert_guid", "hueco_s", "could_not_run", "esquema", "hora_inicio", "hora_fin_registrada", "duracion_s",
+    "journal_danado", "panic_linea", "cierre_pid1", "crash_confirmado", "lineas_diagnostico", "xids", "vmcore",
+    "almacenamiento",
+}
+CAMPOS_NUEVOS = {
+    "causa", "causa_fuente", "watchdog_bootstatus_siguiente", "watchdog_bootstatus_fuente", "arranque_fantasma",
+    "kdump", "pstore", "etapas", "netconsole", "tiempos_externos", "ultimo_aliento", "curva_termica_previa", "hora_muerte",
+}
+
+
+def test_la_fila_conserva_cada_campo_de_bb_reboot_1_y_solo_anade(monkeypatch, tmp_path):
+    _main_aislado(monkeypatch, tmp_path)
+    monkeypatch.setattr(rv, "_publica_hallazgos", lambda filas: None)
+    assert rv.main(["--ultimos", "1", "--escribe"]) == 0
+    fila = json.loads((tmp_path / "reboots.jsonl").read_text(encoding="utf-8"))
+    assert set(fila) == CAMPOS_BB_REBOOT_1 | CAMPOS_NUEVOS and fila["esquema"] == "bb-reboot/1"
+
+
+def test_series_del_testigo_con_rotaciones_b64_y_parada(tmp_path, monkeypatch):
+    """Los nombres y campos reales de bb_testigo en `externo/testigo/`: rotaciones .N, netconsole en `b64` cuando el
+    datagrama no era UTF-8, y `evento: parada` (testigo detenido) que no cuenta como latido."""
+    import base64
+
+    ext = tmp_path / "ext"
+    t = ext / "testigo"
+    t.mkdir(parents=True)
+    panic = "Kernel panic - not syncing: Fatal exception \xff".encode("latin-1")
+    (t / "netconsole.jsonl.1").write_text(json.dumps({"epoch": FIN - 5, "texto": "linea vieja"}) + "\n", encoding="utf-8")
+    (t / "netconsole.jsonl").write_text(json.dumps({"epoch": FIN + 1, "b64": base64.b64encode(panic).decode()}) + "\n", encoding="utf-8")
+    (t / "latido.jsonl").write_text(
+        json.dumps({"epoch": FIN - 10, "evento": "latido"}) + "\n" + json.dumps({"epoch": FIN + 20, "evento": "parada"}) + "\n",
+        encoding="utf-8",
+    )
+    _fx(monkeypatch, tmp_path)
+    monkeypatch.setattr(rv, "EXTERNO", ext)
+    assert [p.name for p in rv._serie("netconsole", en_la_atom=False)] == ["netconsole.jsonl.1", "netconsole.jsonl"]
+    f = _fila(rv.recoge(BOOTS_FX, 0))
+    assert f["causa"] == "PANICO_NETCONSOLE" and f["causa_fuente"] == f"{t / 'netconsole.jsonl'}:1"
+    assert f["netconsole"]["lineas_en_ventana"] == 2
+    lat = f["tiempos_externos"]["latido"]
+    assert lat["en_el_hueco"] == 0 and lat["paradas_en_el_hueco"] == 1 and lat["ultimo_hasta_la_muerte"] == FIN - 10
+    assert any("lo detuvieron" in r for r in f["razones"])

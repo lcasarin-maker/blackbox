@@ -3,7 +3,7 @@
     "id": "SPEC-L94",
     "claim_id": "SPEC-L94",
     "verdict": "PASS",
-    "evidence": "SPEC.md:94-97 states the no-cross-import contract and telemetry JSONL boundary. blackbox/tools/atom_gpu_telemetry.py:65-80 defines `_argv_tokens` locally and has no sys.path manipulation, which is source duplication rather than an import. Atlas/tools/atom_degradacion_resuelta.py:65-70 consumes the blackbox telemetry JSONL; Atlas/tools/bb_consulta.py:30,39,74 accesses the CLI through subprocess, showing the JSONL boundary is a documented data contract rather than the sole interface. Searches across both repositories found no cross-repository Python imports for this boundary. No refuting import found.",
+    "evidence": "SPEC.md:94-97 states the no-cross-import contract and telemetry JSONL boundary. blackbox/tools/atom_gpu_telemetry.py:65-80 defines `_argv_tokens` locally and has no sys.path manipulation, which is source duplication rather than an import. [externo]/tools/atom_degradacion_resuelta.py:65-70 consumes the blackbox telemetry JSONL; [externo]/tools/bb_consulta.py:30,39,74 accesses the CLI through subprocess, showing the JSONL boundary is a documented data contract rather than the sole interface. Searches across both repositories found no cross-repository Python imports for this boundary. No refuting import found.",
     "fix": null
   },
   {

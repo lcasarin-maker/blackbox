@@ -23,7 +23,7 @@ El gate nativo configurado `python3 .simplecode/run.py simplecode.verification.c
 
 El gate `finding_backlog --gate` terminó rc1 y registra 96 fichas abiertas fuera de la línea base. La configuración pre-push exige este gate y cobertura. La clasificación por impedimento no cambia esos gates ni habilita publicación. Recibo: `publication-ship-freeze-current.json`.
 
-Además siguen pendientes la decisión sobre el derivado redactado de Simplecode y la captura sudo. No hay commit ni push nuevos.
+Además siguen pendientes la decisión sobre el derivado redactado del kit de guardrails y la captura sudo. No hay commit ni push nuevos.
 
 ## Contrato de publicación propuesto para decisión
 
@@ -139,7 +139,7 @@ El requisito de publicación sigue pendiente. Las 96 fichas permanecen abiertas;
 - El control focal del servicio produjo `9 passed, 77 deselected`; salida y alcance en `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/heartbeat-and-sunset-correction-root.json`.
 - El gate Python `simplecode.worktree.zero_debt --root .` produjo 140 ficheros examinados, cero hallazgos y cero `could_not_run`; tres ficheros ignorados quedan fuera de ese alcance. Recibo: `zero-debt-after-renewals-root.json`.
 - Se corrigió la cifra histórica de sondeo de 109 a 130 en el comentario; la salida cruda original se conserva. La prueba de cleanup con terminación demorada se reprodujo: cuatro consultas con pausa, 50 neutralizándola, mismo resultado de desaparición. Estos números describen esa ejecución, no una garantía de rendimiento. Recibo: `publication-sunset/renderer-delayed-root.log`.
-- El contrato actual de Simplecode permite versionar runner, runtime y lock; `.gitignore` ahora los rescata explícitamente y conserva la caché y los claims como estado local. Seis controles de inclusión/exclusión pasan. Ambos hashes coinciden con el lock de 9.3.4; la comprobación del ZIP encuentra cero errores CRC. Recibos: `publication-sunset/runtime-ignore-root.json` e `installed-kit-root-integrity.json`.
+- El contrato actual del kit de guardrails permite versionar runner, runtime y lock; `.gitignore` ahora los rescata explícitamente y conserva la caché y los claims como estado local. Seis controles de inclusión/exclusión pasan. Ambos hashes coinciden con el lock de 9.3.4; la comprobación del ZIP encuentra cero errores CRC. Recibos: `publication-sunset/runtime-ignore-root.json` e `installed-kit-root-integrity.json`.
 - Revisión sunset frente a 2.4.0: 23 excepciones vigentes, cero caducadas, cero sin etiqueta y cero sin fecha interpretable. El resultado del lector no contiene error de ejecución. Recibo: `publication-sunset/target-2.4-final-root.json`.
 - SPEC distingue ahora la conclusión archivada sobre fechas de creación de los stdout que faltan, y atribuye el rango de cobertura histórica al snapshot de SPEC en vez de al mensaje del commit. El timer de deriva actual está loaded/active/enabled. H1 espera la re-auditoría de las afirmaciones corregidas antes de registrar el ledger.
 - El barrido actual de privacidad registra 758 candidatos, 730 textos examinados, 92 coincidencias de correo, 28 binarios sin inspección textual y cero errores de lectura. La revisión de procedencia adicional está en curso; este informe mantiene `report_clean=false`. Recibo: `publication-privacy-current.json`.

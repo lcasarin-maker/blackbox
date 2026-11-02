@@ -15,17 +15,17 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01.md", "expect": "exit_zero", "porque": "Cerrada sin sujeto en este equipo (void_wontfix, decision de Luis 2026-10-14): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior era `python3 -m pytest -q tests/test_debt_registration_controls.py::test_delta_forum_thermal_telemetry_coverage_01`, que sin captura real del sujeto no puede pasar; sin sujeto aqui no hay captura posible."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/377044
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01.** Un dueño de ASUS GX10 EC 0x02000005/UEFI 0x03000006 publica telemetría a 1 s con GPU ~90°C, dos zonas ACPI hasta 96.6°C y `tviol=1` en 68 muestras; fan telemetry aparece N/A y no encuentra evento térmico en journal. El hilo reúne también apagados bajo carga, un caso con reloj limitado a 2GHz y temperaturas distintas; adjuntos de zonas, logs, ZIP y cápsulas no se leyeron, y la causa térmica frente a OOM/potencia queda sin resolver ([377044](https://forums.developer.nvidia.com/t/377044)). Verificar canales efectivos por OEM/versión y registrar muestra/frescura, temperatura CPU/GPU/zonas, fan, clocks, potencia y motivo de apagado durante soak; no fijar umbral comunitario como política universal.
-
-Fuentes: tasks/backlog/FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION.md.
 
 ## Criterio de cierre y control negativo
 

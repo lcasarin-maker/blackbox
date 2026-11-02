@@ -115,7 +115,7 @@ timeline, control table and mitigation matrix other reporters added):
   state at the moment of the scan;
 - the signatures in `rules/firmas_gb10.json`, with known noise counted apart from
   incidents, and the state of each mitigation on this machine with a pointer to
-  where Atlas documents its evidence.
+  where the knowledge consumer documents its evidence.
 
 `bb reboots` classifies every finished boot (`CIERRE_ORDENADO_*`,
 `COLAPSO_MEMORIA`, `PANIC_KERNEL`, `CORTE_ABRUPTO`...). A silent cut with no
@@ -125,9 +125,9 @@ tool too.
 
 Knowledge does not live here. The research behind these checks (423 NVIDIA forum
 threads, NVIDIA issue 1358, official replies, mitigations with their evidence
-level) is in Atlas, under `knowledge/investigations/gb10_cortes_2026-10-11/`.
+level) is in the knowledge consumer, under an external reference.
 `rules/firmas_gb10.json` lists only the signatures `bb incident` searches for;
-each one points at the Atlas document that backs it. Entries describe what other
+each one points at the external document that backs it. Entries describe what other
 operators measured on their own units: they are not recommendations for this one.
 
 ## Evidence for GB10 allocation failures

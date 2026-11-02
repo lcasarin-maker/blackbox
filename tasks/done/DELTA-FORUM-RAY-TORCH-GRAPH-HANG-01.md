@@ -15,17 +15,17 @@ created: 2026-10-02
 close_check: {"cmd": "python -m tools.check_harvest_accepted tasks/done/DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01.md", "expect": "exit_zero", "porque": "Cerrada por aplicabilidad (void_wontfix, decision de Luis 2026-10-13): no hay fix que probar, lo verificable por maquina es que la decision quedo registrada (closure_type y reason). El close_check anterior apuntaba a un test por ficha que se retiro con la deprecacion."}
 ---
 
+## Referencia pública
+
+Hilos de los que salió esta ficha (URL pública):
+
+- https://forums.developer.nvidia.com/t/358755
+
+El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conocimiento del dueño, por decisión del dueño: el conocimiento vive en el consumidor de conocimiento. Esta ficha conserva sólo el trabajo sobre la máquina y su registro de verificación; su `close_check` no cambió.
+
 ## Registro y responsable
 
 Registro solicitado por Luis el 2026-10-02. Responsable: coordinación de Blackbox. Trabajo o revisión pendiente; la presencia del marcador no demuestra por sí sola un defecto.
-
-## Evidencia y alcance
-
-Trabajo separado del ámbito de su ficha madre, conservando la fuente original. Los reportes de foro siguen sin validación local y no se convierten en recomendaciones automáticas.
-
-**DELTA-FORUM-RAY-TORCH-GRAPH-HANG-01.** En un clúster de dos Spark, un dueño reporta que Ray/vLLM tensor-parallel perdía un nodo tras el primer prompt mientras el peer quedaba con GPU al 100% sin progreso; `--enforce-eager` alteró el síntoma y luego el autor identificó torch 2.10.0 en vez de 2.9.1 en su build, tras lo cual informó que funcionó ([358755](https://forums.developer.nvidia.com/t/358755)). No hay A/B repetido ni digest exacto para atribución independiente. Gatear combinaciones host/container Torch-CUDA-vLLM-Ray-NCCL verificadas y capturar progreso por rank/collective junto al uso GPU; 100% GPU por sí solo no prueba cuelgue. Eager es diagnóstico A/B, no default.
-
-Fuentes: tasks/backlog/FEATURE-FORUM-GB10-RUNTIME-COMPAT-01.md.
 
 ## Criterio de cierre y control negativo
 

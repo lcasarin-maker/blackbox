@@ -65,13 +65,13 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 
-# (sin sys.path: al venir de Atlas traia un solo acoplamiento, _argv_tokens,
+# (sin sys.path: al venir del consumidor traia un solo acoplamiento, _argv_tokens,
 #  y esta abajo copiado -- 8 lineas. Ver DGX-585.)
 
 # `_argv_tokens` es la lectura token a token de /proc/<pid>/cmdline que el job
 # nocturno ya endureció contra el falso positivo de `pgrep -f` (self-match y
 # vecinos, pagado dos veces). Aqui es una COPIA (DGX-585: blackbox no importa codigo
-# de Atlas), no un import: importarla costaba +36 MB de RSS en el sampler
+# de otro repo), no un import: importarla costaba +36 MB de RSS en el sampler
 # (9,992 -> 46,660 KB de ru_maxrss) y +0.36 s de arranque, y este proceso vive
 # semanas y muestrea cada 5 s. El riesgo de la copia es que diverja de la original en
 # la primera correccion que se le haga a una de las dos.
@@ -79,8 +79,8 @@ def _argv_tokens(pid: str) -> list[str]:
     """argv real de un proceso desde /proc/<pid>/cmdline (separado por NUL).
     Lista vacia si el proceso murio entre el listado y la lectura.
 
-    Copiado de `tools/nightly_kb_consolidation.py` de Atlas al traer este
-    modulo el 2026-09-24 (DGX-585). Era el UNICO acoplamiento a Atlas de este
+    Copiado de `tools/nightly_kb_consolidation.py` del consumidor al traer este
+    modulo el 2026-09-24 (DGX-585). Era el UNICO acoplamiento a ese repo de este
     fichero -- el dictamen de DGX-483 afirmo que importaba `tools.durable_log`
     y `tools.tool_limits`, y contra el fichero de ese mismo dia (66fb9e57) eso
     era falso: importaba esto y nada mas."""
@@ -92,8 +92,8 @@ def _argv_tokens(pid: str) -> list[str]:
 
 REPO = Path(__file__).resolve().parent.parent
 # Los datos NO viven en el repo: van al directorio de datos de blackbox, que es
-# de donde Atlas los lee ahora ("que atlas consuma lo que bb produce", Luis
-# 2026-09-24). Se respeta BLACKBOX_DATA, igual que el resto de esta caja.
+# de donde el consumidor los lee ahora ("que el consumidor consuma lo que bb
+# produce", Luis 2026-09-24). Se respeta BLACKBOX_DATA, igual que el resto de esta caja.
 DATA_DIR = Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blackbox"))
 JSONL_PATH = Path(os.environ.get("ATOM_TELEMETRY_JSONL", DATA_DIR / "atom_gpu_telemetry.jsonl"))
 MITIGACION_STATE_PATH = DATA_DIR / "atom_gpu_mitigacion.json"
@@ -211,7 +211,7 @@ COLA_BYTES = 64 * 1024
 # en los 27 minutos previos, coincidiendo con GPU al 92-96% sostenido -- la
 # alarma detectaba y logueaba pero no hacía nada, y la máquina murió 8s
 # después del último cruce. Estos son los ÚNICOS procesos que la mitigación
-# puede pausar: lotes por lote propios de Atlas, medidos esta noche como la
+# puede pausar: lotes por lote propios del consumidor, medidos esta noche como la
 # carga sostenida real (build_incremental.py con ~14 núcleos, remine_harvest_lens.py
 # llamando al LLM local en bucle). NUNCA vLLM ni nada fuera de esta lista --
 # vLLM es infraestructura compartida de toda la flota (CLAUDE.md), pausarlo
@@ -735,7 +735,7 @@ def leer_vllm_metrics(url: str = VLLM_METRICS_URL_DEFAULT,
         "vllm_prompt_tokens_total": None,
     }
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Atlas-Telemetry/1.0"})
+        req = urllib.request.Request(url, headers={"User-Agent": "blackbox-telemetry/1.0"})
         with urllib.request.urlopen(req, timeout=timeout_s) as resp:
             if resp.status != 200:
                 return {**campos_vacios, "vllm_ausente": f"HTTP status {resp.status}"}
@@ -1443,7 +1443,7 @@ def argv_es_mitigable(tokens: list[str],
     un editor cuentan como «el lote de re-minado está corriendo». Aquí no se
     mira la cmdline sino argv, token por token, y un token satisface un patrón
     sólo cuando sus ÚLTIMOS segmentos de ruta son EXACTAMENTE los del patrón:
-    `tools/ingest.py` matchea `/home/<usuario>/projects/Atlas/tools/ingest.py`
+    `tools/ingest.py` matchea `/home/usuario/projects/kb/tools/ingest.py`
     pero no un `ingest.py` de otro directorio, y `remine_harvest_lens.py` no
     matchea `algo_remine_harvest_lens.py.md`.
 
@@ -1739,10 +1739,10 @@ def muestrear(umbrales: dict, estado: dict, *, escribir: bool = True,
 
 def _comando_procesos_gpu() -> int:
     # El HECHO fisico -- quien tiene memoria de GPU ahora mismo -- separado
-    # de la POLITICA, que es de quien encola trabajo. Atlas preguntaba esto
-    # invocando `nvidia-smi` por su cuenta; con la frontera de DGX-585 el
-    # driver lo interroga quien gobierna el hardware, y Atlas decide con la
-    # respuesta. Sale 1 si NO se pudo averiguar: quien no sabe, no pasa.
+    # de la POLITICA, que es de quien encola trabajo. El consumidor preguntaba
+    # esto invocando `nvidia-smi` por su cuenta; con la frontera de DGX-585 el
+    # driver lo interroga quien gobierna el hardware, y el consumidor decide con
+    # la respuesta. Sale 1 si NO se pudo averiguar: quien no sabe, no pasa.
     datos = leer_procesos_gpu()
     print(json.dumps(datos, ensure_ascii=False))
     return 1 if datos.get("gpu_procs") is None else 0
@@ -1768,7 +1768,7 @@ def _motivo_estado_termico(ruta: Path | None = None, ahora: datetime | None = No
 
 
 def _comando_gate_termico() -> int:
-    # Una sola fuente para el 94.8 C. Atlas llamaba a `presupuesto_termico`
+    # Una sola fuente para el 94.8 C. El consumidor llamaba a `presupuesto_termico`
     # por import; ahora llama a este proceso. El numero no se copia, y la
     # ausencia de telemetria fresca sigue BLOQUEANDO (DGX-383): quien no
     # sabe, no pasa.
@@ -1848,7 +1848,7 @@ def main() -> int:
                           "usarla es de quien encola trabajo (DGX-585)."))
     ap.add_argument("--gate-termico", action="store_true",
                     help=("imprime {bloquea, motivo} y sale 1 si NO se le debe "
-                          "sumar carga a la maquina. Es la via por la que Atlas "
+                          "sumar carga a la maquina. Es la via por la que el consumidor "
                           "consulta esta decision sin importar codigo de aqui "
                           "(contrato de los dos repos, DGX-585)."))
     args = ap.parse_args()

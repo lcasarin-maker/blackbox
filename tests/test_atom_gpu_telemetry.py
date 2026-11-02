@@ -724,10 +724,10 @@ def test_pids_mitigables_junta_y_deduplica_los_tres_patrones(monkeypatch, tmp_pa
     """Control positivo: los procesos legítimos SÍ se eligen, una vez cada uno
     aunque dos patrones distintos vivan en el mismo árbol."""
     _proc_falso(monkeypatch, tmp_path, {
-        "111": ["/usr/bin/python3", "/home/l/Atlas/tools/remine_harvest_lens.py",
+        "111": ["/usr/bin/python3", "/home/l/kb/tools/remine_harvest_lens.py",
                 "--lote", "9"],
         "333": [".venv/bin/python3", "tools/build_incremental.py", "--full"],
-        "555": ["/usr/bin/python3", "/home/l/Atlas/tools/ingest.py",
+        "555": ["/usr/bin/python3", "/home/l/kb/tools/ingest.py",
                 "https://example.com/x"],
         "777": ["/usr/bin/python3", "tools/kb_ask.py", "¿qué es el GB10?"],
     })
@@ -774,7 +774,7 @@ def test_las_formas_reales_de_invocacion_si_se_eligen(monkeypatch, tmp_path):
     puede costar ninguna de ellas."""
     _proc_falso(monkeypatch, tmp_path, {
         "111": ["./tools/ingest.py", "https://example.com/x"],
-        "222": ["/home/l/Atlas/.venv/bin/python3", "-u",
+        "222": ["/home/l/kb/.venv/bin/python3", "-u",
                 "tools/build_incremental.py", "--full"],
         "333": ["systemd-run", "--user", "--scope", "-p", "MemoryMax=8G",
                 ".venv/bin/python3", "tools/remine_harvest_lens.py"],
@@ -788,7 +788,7 @@ def test_control_negativo_un_bash_c_con_el_patron_dentro_no_es_un_blanco(
     """Un `bash -c '<script>'` mete el script entero en UN argv. Ese blob nunca
     es una invocación real -- misma regla que `matches_heavy_job`."""
     _proc_falso(monkeypatch, tmp_path, {
-        "111": ["bash", "-c", "cd /home/l/Atlas && echo tools/ingest.py > /tmp/x"],
+        "111": ["bash", "-c", "cd /home/l/kb && echo tools/ingest.py > /tmp/x"],
     })
 
     assert agt.pids_mitigables() == []
@@ -838,7 +838,7 @@ def test_argv_es_mitigable_devuelve_que_patron_satisfizo():
     criterio que se puede probar sola (mismo motivo que `matches_heavy_job`)."""
     assert agt.argv_es_mitigable(["python", "tools/ingest.py"]) == "tools/ingest.py"
     assert agt.argv_es_mitigable(
-        ["python", "/home/l/Atlas/tools/remine_harvest_lens.py"]
+        ["python", "/home/l/kb/tools/remine_harvest_lens.py"]
     ) == "remine_harvest_lens.py"
     assert agt.argv_es_mitigable([]) is None
     assert agt.argv_es_mitigable(["python", "remine_harvest_lens.py"],

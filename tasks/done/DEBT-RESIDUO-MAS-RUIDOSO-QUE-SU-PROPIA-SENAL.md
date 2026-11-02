@@ -14,7 +14,7 @@ origin: detected
 detector: {"rule": "sunset-audit 1.7", "confidence": 1.0}
 satd_family: UNCALIBRATED_THRESHOLD
 created: 2026-09-25
-close_check: {"cmd": "grep -q 'ruido de residuo_mb MEDIDO' tasks/done/DEBT-RESIDUO-MAS-RUIDOSO-QUE-SU-PROPIA-SENAL.md", "expect": "exit_zero", "porque": "cerrar esto pide decidir que afirma `residuo_mb` de verdad, y eso no se puede hacer sin medir su ruido a varios intervalos y contra una reserva con dueno conocido. No es codigo que se escriba hoy: es una caracterizacion. El patron de escribirlo es el de DGX-438."}
+close_check: {"cmd": "grep -q 'ruido de residuo_mb MEDIDO' tasks/done/DEBT-RESIDUO-MAS-RUIDOSO-QUE-SU-PROPIA-SENAL.md", "expect": "exit_zero", "porque": "cerrar esto pide decidir que afirma `residuo_mb` de verdad, y eso no se puede hacer sin medir su ruido a varios intervalos y contra una reserva con dueno conocido. No es codigo que se escriba hoy: es una caracterizacion. El patron de escribirlo es el de DEBT-SIGTERM-SIN-CAUSA-RAIZ."}
 ---
 
 ## Como salio

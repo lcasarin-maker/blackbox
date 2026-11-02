@@ -31,7 +31,8 @@ DATOS = RAIZ / "data" / "procesos_protegidos.json"
 EARLYOOM = RAIZ / "adopted" / "system-config" / "etc_default_earlyoom"
 # Desplegado por Luis con `sudo -n bb-root-run earlyoom-proteger` el 2026-10-16 (DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01):
 # el contenido nuevo vive ya en system-config/ y el que estuvo desplegado desde el 2026-10-14 queda como fixture, para que
-# las pruebas "solo amplia" y el control negativo sigan midiendo contra el estado anterior real (sha 89fe78da...).
+# las pruebas "solo amplia" y el control negativo sigan midiendo contra el estado anterior real (sha 89fe78da...; desde el
+# 2026-11-01 la copia lleva neutralizado el comentario de la linea 1, boleta #35 A, y su sha256 es otro).
 EARLYOOM_PENDIENTE = EARLYOOM
 EARLYOOM_VIEJO = RAIZ / "tests" / "fixtures" / "etc_default_earlyoom.viejo"
 

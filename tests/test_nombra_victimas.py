@@ -1,9 +1,9 @@
-"""Suite de `tools/nombra_victimas.py` (DEBT-DGX-438-SIN-CAUSA-RAIZ).
+"""Suite de `tools/nombra_victimas.py` (DEBT-SIGTERM-SIN-CAUSA-RAIZ).
 
 El modulo existe porque `auditd` no emite `type=OBJ_PID` para las reglas de
 senal de este repo, asi que la victima solo se conoce por su pid. Lo que se
 prueba aqui, sobre todo, es que NO atribuye de mas: su primera version reporto
-12 capturas como "sujeto de DGX-438" cuando eran `rustdesk` limpiando sus hijos
+12 capturas como "sujeto de DEBT-SIGTERM-SIN-CAUSA-RAIZ" cuando eran `rustdesk` limpiando sus hijos
 a traves de `pkill`, y eso manda a buscar un culpable llamado `kill`.
 """
 
@@ -133,7 +133,7 @@ def test_el_informe_separa_sujeto_de_autolimpieza_y_de_incompleta(tmp_path, caps
     assert rc == 0
     assert "autolimpieza" in salida
     assert "ATRIBUCION INCOMPLETA" in salida
-    assert "SUJETO DE DGX-438 (emisor demonio, victima ajena y nombrada): 1" in salida, salida
+    assert "SUJETO DE DEBT-SIGTERM-SIN-CAUSA-RAIZ (emisor demonio, victima ajena y nombrada): 1" in salida, salida
 
 
 def test_la_marca_del_grupo_cuenta_cuantas_no_dice_alguna(tmp_path, capsys):

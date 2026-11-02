@@ -1,0 +1,45 @@
+[Unit]
+Description=blackbox: ultimo aliento (PSI, memoria, termica y hwmon cada 250 ms, fdatasync cada segundo)
+Documentation=file:/usr/local/lib/blackbox/ultimo_aliento.py
+# Unit de SISTEMA (root): se instala con sudo segun el docstring del modulo; nada la activa sola.
+After=local-fs.target
+
+[Service]
+Type=simple
+# El script es una COPIA en /usr/local/lib: un demonio root no ejecuta codigo de un directorio que un usuario escribe.
+# -I: sin sitio de usuario ni directorio actual en sys.path.
+ExecStart=/usr/bin/python3 -I /usr/local/lib/blackbox/ultimo_aliento.py
+# /var/lib/bb-ultimo-aliento/anillo.bin (4 MiB fijos, sobrevive al corte) y /run/bb-ultimo-aliento/estado_maquina.json
+# (describe ESTE boot). 0755: los consumidores sin privilegios leen los dos.
+StateDirectory=bb-ultimo-aliento
+StateDirectoryMode=0755
+RuntimeDirectory=bb-ultimo-aliento
+RuntimeDirectoryMode=0755
+RuntimeDirectoryPreserve=restart
+# Con mlockall(MCL_FUTURE) cada arena de malloc que nace queda bloqueada: una sola arena acota la memoria fija.
+Environment=MALLOC_ARENA_MAX=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+# Testigo externo opcional (`systemctl edit`): Environment=BB_ULTIMO_ALIENTO_UDP=<ip>:<puerto>
+
+# El instrumento no puede ser la victima: el OOM killer no lo elige nunca, y su memoria no se reclama bajo presion.
+# Medido 2026-11-01 en un contenedor x86 (no la ATOM), como root con mlockall: VmRSS = VmLck = 41.9 MB, 2 hilos.
+# El tope deja margen para eso mas los 4 MiB de cache de paginas del anillo, que se cargan a este cgroup.
+OOMScoreAdjust=-1000
+MemoryMin=48M
+MemoryMax=96M
+# Medido en el mismo contenedor, 10 s de bucle a 250 ms: 0.22-0.27 % de un nucleo (con 7 zonas y 12 hwmon falsos).
+# El tope (20 veces eso) lo acota si un sysfs lento lo dispara. Nice negativo para no perder vueltas bajo carga:
+# CPUQuota impide que esa prioridad robe CPU.
+CPUQuota=5%
+Nice=-5
+
+Restart=always
+RestartSec=1
+
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

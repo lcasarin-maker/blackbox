@@ -1,6 +1,6 @@
 """El laboratorio de Docker no puede tocar el puente de produccion (incidente 2026-10-12 07:55:30).
 
-`dockerd --bridge=none` elimino `docker0` del host al arrancar el segundo dockerd del laboratorio; `atlas-pgvector`
+`dockerd --bridge=none` elimino `docker0` del host al arrancar el segundo dockerd del laboratorio; `proyecto-B-pg`
 (red bridge) quedo sin red hasta que se reinicio Docker de produccion a las 13:16. Estas pruebas leen el script,
 porque levantar un dockerd real exige root; el limite esta declarado en la ficha.
 """
