@@ -86,6 +86,7 @@ import threading
 import time
 import zlib
 from datetime import datetime, timezone
+from typing import Any
 
 FORMATO_ANILLO = "bb-ultimo-aliento-anillo/1"
 FORMATO_ESTADO = "bb-estado-maquina/1"
@@ -185,7 +186,7 @@ def descubrir(raiz: str) -> dict:
     dirs = sorted(glob.glob(_en(raiz, "sys/class/thermal/thermal_zone*")), key=orden)
     for d in dirs:
         n = _numero(os.path.basename(d), "thermal_zone")
-        zona = {"trips": []}
+        zona: dict[str, Any] = {"trips": []}
         try:
             zona["tipo"] = _leer(os.path.join(d, "type")).strip()
         except OSError as exc:
@@ -195,7 +196,7 @@ def descubrir(raiz: str) -> dict:
                    for r in glob.glob(os.path.join(d, "trip_point_*_temp"))]
         for i in sorted(indices, key=lambda i: (not i.isdigit(), int(i) if i.isdigit() else 0, i)):
             ruta = os.path.join(d, f"trip_point_{i}_temp")
-            trip = {"n": int(i) if i.isdigit() else i}
+            trip: dict[str, Any] = {"n": int(i) if i.isdigit() else i}
             try:
                 trip["temp_c"] = int(_leer(ruta).strip()) / 1000
                 trip["tipo"] = _leer(os.path.join(d, f"trip_point_{i}_type")).strip()
@@ -595,7 +596,7 @@ class UltimoAliento:
             self._escribir(registro)
 
     def _enviar_udp(self, registro: dict) -> None:
-        if self._sock is None:
+        if self._sock is None or self._udp_dir is None:
             return
         try:
             self._sock.sendto(udp_payload(registro), self._udp_dir)

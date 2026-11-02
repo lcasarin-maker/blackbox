@@ -276,6 +276,7 @@ def _atiende(d: Path, ruta: Path, unidad: str, ahora: datetime, previa: tuple[st
         tomada.unlink()
         return f"SOLICITUD {nombre} {accion}: rechazada ({motivo})", previa
     assert isinstance(sol, dict)
+    accion = str(accion)  # valida() ya garantizo que es una de ACCIONES
     responde(d, nombre, accion, "aceptada")
     if accion == "ventana":
         estado, campos = _ventana(d, sol, unidad, ahora)
@@ -322,7 +323,7 @@ def atender(d: Path, unidad: str, reloj=lambda: datetime.now(timezone.utc)) -> l
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="motor_solicitudes", description=__doc__.splitlines()[0])
+    ap = argparse.ArgumentParser(prog="motor_solicitudes", description=(__doc__ or "").splitlines()[0])
     ap.add_argument("--dir", type=Path, default=None, help="default: $BLACKBOX_DATA/motor")
     ap.add_argument("--unidad", default=os.environ.get("VIGILANTE_UNIDAD", "ai-nemotron.service"))
     ap.add_argument("orden", choices=("atender", "ventana"),

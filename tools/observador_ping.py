@@ -215,7 +215,7 @@ def trae_testigo(cfg_ruta: Path, destino: Path, correr: Correr = subprocess.run,
         motivo = f"{cfg_ruta.name}: 'origen' debe ser <usuario>@<host>"
     elif not isinstance(cfg.get("ruta"), str) or not cfg["ruta"].strip() or any(c in cfg["ruta"] for c in "\n\r\"*?["):
         motivo = f"{cfg_ruta.name}: 'ruta' debe ser el directorio de datos del testigo, sin comodines ni comillas"
-    if motivo is None:
+    if motivo is None and isinstance(cfg, dict):  # motivo None implica cfg dict
         destino.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=destino.parent, prefix=".trae-testigo-") as d:
             fuente = f"{cfg['origen']}:{cfg['ruta'].rstrip('/')}/{PATRON_TESTIGO}"

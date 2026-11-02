@@ -698,12 +698,14 @@ def test_kdump_ilegible_se_declara_y_no_se_lee_como_sin_panic(tmp_path, monkeypa
 
     monkeypatch.setattr(Path, "open", sin_permiso)  # los tests corren como root: el permiso se simula
     k = rv.kdump_en(FIN, SIG)
+    assert k is not None
     assert k["linea_panico"] is None and "Permission denied" in k["ilegibles"][0]
     v = veredicto({**BASE, "kdump": k})
     assert v["causa"] == "PANICO_KDUMP" and any("no se pudo leer" in r for r in v["razones"])
     assert not any("no trae" in r for r in v["razones"])  # control: ilegible no es "sin linea de panic"
     monkeypatch.setattr(rv.os, "access", lambda *a: False)  # directorio que ni se puede listar
     k = rv.kdump_en(FIN, SIG)
+    assert k is not None
     assert k["directorio"] == str(d) and k["archivos"] == [] and "sin permiso" in k["ilegibles"][0]
 
 
@@ -871,7 +873,9 @@ def test_etapas_leen_la_rotacion_y_toleran_realtime_null(tmp_path, monkeypatch):
         encoding="utf-8",
     )
     monkeypatch.setattr(rv, "ETAPAS", e)
-    vistas = rv.etapas_de()[A_ID]
+    todas = rv.etapas_de()
+    assert todas is not None
+    vistas = todas[A_ID]
     assert set(vistas) == {"local-fs", "basic"}  # multi-user trae monotonic de texto: se descarta como en etapas_arranque
     assert vistas["local-fs"] == (T0 + 4.1, 3.91, f"{e}.1:1") and vistas["basic"] == (None, None, f"{e}:1")
     r = rv.resumen_etapas(vistas)

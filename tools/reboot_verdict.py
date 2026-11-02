@@ -91,7 +91,7 @@ import statistics
 import subprocess
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 from tools import etapas_arranque, hallazgo, medidor_energia, observador_ping, ultimo_aliento
 
@@ -693,7 +693,7 @@ def etapas_de() -> dict[str, dict[str, tuple[float | None, Any, str]]] | None:
     return out
 
 
-def resumen_etapas(vistas: dict[str, tuple[float | None, Any, str]]) -> dict[str, Any]:
+def resumen_etapas(vistas: Mapping[str, tuple[float | None, Any, Any]]) -> dict[str, Any]:
     """Hasta donde llego el arranque por la cadena de etapa-marca.sh. `faltante` es la etapa de la cadena
     que sigue a la mas avanzada mientras no llego a ETAPA_ARRANQUE_COMPLETO; una intermedia ausente (gdm en
     un arranque sin pantalla) va a `saltadas` y no cuenta como fallo. Las ramas (network-online, gpu-lista)
@@ -720,7 +720,7 @@ def resumen_etapas(vistas: dict[str, tuple[float | None, Any, str]]) -> dict[str
 
 
 def arranques_fantasma(
-    boots: list[dict[str, Any]], etapas: dict[str, dict[str, tuple[float, Any, int]]] | None
+    boots: list[dict[str, Any]], etapas: Mapping[str, Mapping[str, tuple[float | None, Any, Any]]] | None
 ) -> list[dict[str, Any]]:
     """Arranques que dejaron etapas o fila en arranque.jsonl pero que `journalctl --list-boots` no
     tiene (murieron antes de que journald volcara a disco, o su journal no se puede leer). Solo los
@@ -732,7 +732,7 @@ def arranques_fantasma(
     desde, hasta = boots[0]["first_entry"] / 1e6, boots[-1]["first_entry"] / 1e6
     vistos: dict[str, dict[str, Any]] = {}
     for bid, vistas in (etapas or {}).items():
-        con_hora = [v for v in vistas.values() if v[0] is not None]
+        con_hora: list[tuple[float, Any, Any]] = [(v[0], v[1], v[2]) for v in vistas.values() if v[0] is not None]
         if not con_hora:
             continue  # sin ninguna hora no se puede ubicar en el tramo del journal
         primera = min(con_hora, key=lambda v: v[0])
@@ -796,7 +796,7 @@ def _lectura_buena(f: dict[str, Any]) -> bool:
         return False
     v, w = f.get("voltaje_v"), f.get("potencia_w")
     if v is None:
-        return _es_num(w) and w >= medidor_energia.APAGADA_W
+        return w is not None and _es_num(w) and w >= medidor_energia.APAGADA_W
     return _es_num(v) and v >= medidor_energia.VOLTAJE_CAIDO_V
 
 

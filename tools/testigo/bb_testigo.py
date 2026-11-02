@@ -542,7 +542,7 @@ def causa_ventana(ep: Mapping[str, Any], energia: List[Dict[str, Any]], cfg: Map
     b = next((f for f in medidas if baja(f) and f["epoch"] >= ref - tol), None)
     if b is not None and b["epoch"] <= desde + tol:
         v = b.get("voltaje_v")
-        origen = "atom_o_adaptador" if _es_num(v) and v >= VOLTAJE_NORMAL_V else "sin_voltaje"
+        origen = "atom_o_adaptador" if v is not None and _es_num(v) and v >= VOLTAJE_NORMAL_V else "sin_voltaje"
         detalle = (f"la pared siguio dando {v:g} V: se corto la ATOM o su adaptador" if origen == "atom_o_adaptador"
                    else "el enchufe no mide voltaje: no se distingue la pared del adaptador")
         return {"causa": "corte_energia", "origen": origen, "epoch": b["epoch"], "texto": f"corte de energia: la potencia cayo a "
@@ -585,7 +585,7 @@ def veredicto(ping: List[Dict[str, Any]], energia: List[Dict[str, Any]], latido:
     fin = _ultimo(latido)
     parado = fin is not None and fin.get("evento") == "parada" and (lat is None or fin["epoch"] >= lat["epoch"])
     if edad_latido is None or edad_latido > max(3.0 * cfg["latido_s"], 30.0) or parado:
-        cuando = ("nunca latio" if edad_latido is None else f"se detuvo limpiamente a las {_local(fin['epoch'])}" if parado
+        cuando = ("nunca latio" if edad_latido is None else f"se detuvo limpiamente a las {_local(fin['epoch'])}" if parado and fin is not None
                   else f"su ultimo latido fue hace {edad_latido:.0f} s")
         return {**out, "codigo": "testigo_sin_latido", "texto": f"el testigo no esta corriendo ({cuando}): sus filas no prueban "
                 "nada sobre la ATOM; arrancalo y vuelve a mirar"}

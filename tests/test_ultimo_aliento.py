@@ -310,6 +310,7 @@ def test_el_demonio_publica_el_estado_con_sello_y_formato(tmp_path):
     ruta = str(tmp_path / "estado_maquina.json")
     correr_mientras(d, lambda: os.path.exists(ruta) and (ua.leer_estado(ruta)[0] or {}).get("ultima") is not None)
     dato, motivo = ua.leer_estado(ruta)
+    assert dato is not None
     assert motivo is None and dato["formato"] == "bb-estado-maquina/1" and dato["boot"] == BOOT
     assert dato["ultima"]["tipo"] == "muestra" and dato["ultima"]["temp_c"] == {"0": 93.0, "1": 93.5}
     assert dato["zonas"]["0"]["trips"][0] == {"n": 0, "temp_c": 104.8, "tipo": "critical"}
@@ -321,8 +322,8 @@ def test_leer_estado_rechaza_un_sello_viejo_o_del_futuro(tmp_path):
     ruta = str(tmp_path / "estado_maquina.json")
     ua.escribir_estado(ruta, {"formato": ua.FORMATO_ESTADO, "ts": 1000.0})
     assert ua.leer_estado(ruta, ahora=1002.0)[1] is None
-    assert ua.leer_estado(ruta, ahora=1006.0)[1].startswith("sello viejo")  # control: 6 s > 5 s
-    assert ua.leer_estado(ruta, ahora=990.0)[1].startswith("sello en el futuro")
+    assert (ua.leer_estado(ruta, ahora=1006.0)[1] or "").startswith("sello viejo")  # control: 6 s > 5 s
+    assert (ua.leer_estado(ruta, ahora=990.0)[1] or "").startswith("sello en el futuro")
     ua.escribir_estado(ruta, {"formato": "otro/1", "ts": 1000.0})
     assert ua.leer_estado(ruta, ahora=1000.0) == (None, "formato distinto de bb-estado-maquina/1")
     assert ua.leer_estado(str(tmp_path / "no_existe.json"))[0] is None
@@ -451,7 +452,7 @@ def test_control_un_destino_udp_invalido_no_frena_el_muestreo(tmp_path):
 
 def test_la_unidad_declara_los_topes_y_la_prioridad():
     unidad = configparser.ConfigParser(strict=False, interpolation=None)
-    unidad.optionxform = str
+    setattr(unidad, "optionxform", str)
     unidad.read(ROOT / "systemd/bb-ultimo-aliento.service", encoding="utf-8")
     servicio = unidad["Service"]
     assert servicio["OOMScoreAdjust"] == "-1000" and servicio["Restart"] == "always"
@@ -467,7 +468,7 @@ def test_el_demonio_no_lanza_subprocesos_ni_nombra_nvidia_smi():
     importados = {a.name.split(".")[0] for n in ast.walk(arbol) if isinstance(n, ast.Import) for a in n.names}
     importados |= {n.module.split(".")[0] for n in ast.walk(arbol) if isinstance(n, ast.ImportFrom) and n.module}
     assert not importados & {"subprocess", "multiprocessing", "pty"}
-    assert fuente.count("nvidia-smi") == ast.get_docstring(arbol).count("nvidia-smi")  # solo la prohibicion escrita
+    assert fuente.count("nvidia-smi") == (ast.get_docstring(arbol) or "").count("nvidia-smi")  # solo la prohibicion escrita
     assert "os.system" not in fuente and "os.popen" not in fuente and "os.exec" not in fuente
     # Solo biblioteca estandar: el demonio root no arrastra dependencias del repo.
     assert not [m for m in importados if m == "tools"]
@@ -498,6 +499,7 @@ def test_extremo_a_extremo_el_cli_muestrea_para_con_sigterm_y_vuelca(tmp_path):
     time.sleep(0.5)
     proceso.send_signal(signal.SIGTERM)
     assert proceso.wait(timeout=5) == 0
+    assert proceso.stderr is not None
     proceso.stderr.close()
     volcado = subprocess.run([sys.executable, "-I", str(ROOT / "tools/ultimo_aliento.py"), "--volcar", *rutas],
                              capture_output=True, text=True, timeout=30)

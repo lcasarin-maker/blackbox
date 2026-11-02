@@ -27,6 +27,7 @@ NS = {"t": "http://schemas.microsoft.com/windows/2004/02/mit/task"}
 
 def _carga(ruta=RUTA, nombre="bb_testigo_bajo_prueba"):
     spec = importlib.util.spec_from_file_location(nombre, ruta)
+    assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -37,7 +38,7 @@ CFG = bt.valida_config({"atom_host": "192.0.2.10"})
 
 
 class _R:
-    def __init__(self, rc, stdout=b"", stderr=""):
+    def __init__(self, rc, stdout: object = b"", stderr=""):
         self.returncode, self.stdout, self.stderr = rc, stdout, stderr
 
 
@@ -410,7 +411,7 @@ PY, SCRIPT, DATOS = "/usr/bin/python3", "/h/.local/share/bb-testigo/bb_testigo.p
 def test_unidad_systemd_correcta_y_con_rutas_escapadas():
     u = bt.unidad_systemd(PY, SCRIPT, DATOS)
     ini = configparser.ConfigParser(interpolation=None, strict=True)
-    ini.optionxform = str
+    setattr(ini, "optionxform", str)
     ini.read_string(u)
     assert ini.sections() == ["Unit", "Service", "Install"]
     assert ini["Service"]["ExecStart"] == f'"{PY}" "{SCRIPT}" run --datos "{DATOS}"'
@@ -431,7 +432,11 @@ def test_plist_launchd_correcto():
 def test_tarea_windows_sin_las_trampas_de_schtasks():
     py, sc, d = r"C:\Py\pythonw.exe", r"C:\U\AppData\Local\bb-testigo\bb_testigo.py", r"C:\U\AppData\Local\bb-testigo"
     raiz = ET.fromstring(bt.tarea_windows_xml(py, sc, d, "PC\\A&B").encode("utf-16"))
-    v = lambda ruta: raiz.find(ruta, NS).text  # noqa: E731
+    def v(ruta):
+        el = raiz.find(ruta, NS)
+        assert el is not None
+        return el.text
+
     assert v("t:Settings/t:ExecutionTimeLimit") == "PT0S"  # schtasks /SC ONLOGON la mataria a las 72 h
     assert v("t:Settings/t:DisallowStartIfOnBatteries") == "false" and v("t:Settings/t:StopIfGoingOnBatteries") == "false"
     assert v("t:Triggers/t:LogonTrigger/t:UserId") == "PC\\A&B"  # escapado en el XML, literal al leerlo

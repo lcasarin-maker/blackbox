@@ -106,8 +106,11 @@ def test_ventana_mezcla_varias_series_por_hora(tmp_path: Path) -> None:
     a, b = tmp_path / "medidor.jsonl", tmp_path / "testigo.jsonl"
     _escribe(a, [(999, 120, 40)])
     _escribe(b, [(1001, 120, 0.3), (1002, 121, 0.3), (1003, 120, 0.2)])
-    assert m.ventana_de_corte([b, a], 1000, 255)["voltaje_perdido"] is False  # el orden de los archivos no importa
-    assert m.ventana_de_corte([b, tmp_path / "no.jsonl"], 1000, 255)["voltaje_perdido"] is None  # sin "antes": no concluye
+    r1 = m.ventana_de_corte([b, a], 1000, 255)
+    r2 = m.ventana_de_corte([b, tmp_path / "no.jsonl"], 1000, 255)
+    assert r1 is not None and r2 is not None
+    assert r1["voltaje_perdido"] is False  # el orden de los archivos no importa
+    assert r2["voltaje_perdido"] is None  # sin "antes": no concluye
 
 
 def test_ventana_ignora_lineas_corruptas(tmp_path: Path) -> None:

@@ -221,7 +221,8 @@ def test_abrir_una_ventana_la_deja_vigente_y_en_el_latido(motor):
     pide(d, "v", "ventana", **ventana(600))
     vuelta(d)
     assert respuesta(d, "v")["estado"] == "hecha" and llamadas == []
-    assert ms.ventana_vigente(d, T0 + timedelta(seconds=599))["id"] == "v"
+    vigente = ms.ventana_vigente(d, T0 + timedelta(seconds=599))
+    assert vigente is not None and vigente["id"] == "v"
     assert ms.ventana_vigente(d, T0 + timedelta(seconds=600)) is None
     lat = json.loads((d / "manejador.json").read_text(encoding="utf-8"))
     assert lat["ventana"]["id"] == "v" and lat["latido_s"] == ms.LATIDO_S
