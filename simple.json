@@ -34,8 +34,8 @@
       "argv": [
         "sh",
         "-c",
-        "n=$(git rev-list --count \"$SIMPLE_BASE\"..HEAD)\necho \"range_commits=$n\"\nexec \"$0\" git --no-banner --redact --exit-code 23 --log-opts=\"$SIMPLE_BASE..HEAD\" .",
-        "../../.local/bin/gitleaks"
+        "n=$(git rev-list --count \"$SIMPLE_BASE\"..HEAD)\necho \"range_commits=$n\"\nexec \"$(getent passwd \"$(id -u)\" | cut -d: -f6)/.local/bin/gitleaks\" git --no-banner --redact --exit-code 23 --log-opts=\"$SIMPLE_BASE..HEAD\" .",
+        "gitleaks"
       ],
       "timeout_ms": 300000,
       "cache": false,
@@ -133,8 +133,8 @@
       "argv": [
         "sh",
         "-c",
-        "n=$(git rev-list --count \"$SIMPLE_BASE\"..HEAD)\necho \"range_commits=$n\"\nexec \"$0\" git --no-banner --redact --exit-code 23 --log-opts=\"$SIMPLE_BASE..HEAD\" .",
-        "../../.local/bin/gitleaks"
+        "n=$(git rev-list --count \"$SIMPLE_BASE\"..HEAD)\necho \"range_commits=$n\"\nexec \"$(getent passwd \"$(id -u)\" | cut -d: -f6)/.local/bin/gitleaks\" git --no-banner --redact --exit-code 23 --log-opts=\"$SIMPLE_BASE..HEAD\" .",
+        "gitleaks"
       ],
       "timeout_ms": 300000,
       "cache": false,

@@ -45,3 +45,10 @@ Pasos de Luis (nada de esto se ejecuto aqui):
 4. Instalar: copiar `systemd/bb-observador-ping-sync.{service,timer}` a `~/.config/systemd/user/`, `systemctl --user daemon-reload && systemctl --user enable --now bb-observador-ping-sync.timer`. No instalar `bb-observador-ping.{service,timer}` (ese corre en la ATOM y muere con ella).
 
 Sigue sin verificar: el NAS real nunca se toco (ni SMB, ni busybox del QNAP, ni el nombre real de share/ruta, ni que su `ping -W 1` acepte esos flags); el reloj del NAS (un desvio mueve `ultima_respuesta` entera; verificar NTP en QTS y comparar `date +%s` del NAS con el de la ATOM); `smbclient` real contra el NAS (las pruebas usan un stub); y el enlace con `reboot_verdict`: `reboot_verdict` aun no llama a `ultima_respuesta`, solo se probo `ultima_respuesta` sobre el archivo mezclado.
+
+## 2026-11-02: receptor externo armado, falta activar el emisor y el enchufe
+
+- Receptor UDP 6666 en un PC Windows de la LAN (Python, una linea por datagrama con hora de recepcion y fsync), lanzado desacoplado de la sesion SSH (`Win32_Process.Create`; con `Start-Process` murio al cerrar la sesion y no registro nada).
+- Control: sin receptor vivo, el datagrama de prueba de la ATOM no deja rastro; con el receptor desacoplado, `prueba-atom-final` aparece con hora e IP origen.
+- Emisor: capa `netconsole-runtime` de `tools/opt_in_captura.sh` (necesita sudo en terminal). Pendiente de que Luis teclee la contrasena.
+- Pendiente: enchufe inteligente con medicion de energia (en camino) para distinguir corte de energia de reset interno; hasta entonces el veredicto por arranque sigue `INDETERMINADA (energia vs hardware interno)`.
