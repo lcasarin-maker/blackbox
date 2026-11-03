@@ -22,6 +22,7 @@ close_check: {"cmd": "grep -q '\"gsp_timeout\"' ~/.local/share/blackbox/reboots.
 - En el arranque 39e2f667 el hilo `pr/ttyS0` consume un nucleo al 101 % en la ultima muestra: la consola serie esta a `console=ttyS0,921600` y la inundacion de mensajes NVRM pasa por ella. Es una pista, no una causa: no hay prueba de que esa carga reinicie nada.
 
 - **Modulo cargado en esos arranques: no consta.** `dmem_parche.jsonl` no tiene entradas despues de 2026-10-30 22:25 UTC (el monitor estaba suspendido), el journal de kernel de los arranques del bucle no trae lineas `dmem` ni `memacct`, y hoy `/lib/modules/7.0.0-1024-nvidia/updates/` no existe. No se puede afirmar si el bucle corrio con el modulo parchado o con el de fabrica; si fue el de fabrica, la hipotesis "el parche causa los cortes" pierde fuerza. Falta un registro por arranque de la ruta del `nvidia.ko` cargado (`/sys/module/nvidia/` + `modinfo -n`) y de su sha256.
+  Escrito el 2026-11-02: `tools/modulo_nvidia_registro.py` + `reboot_verdict` (`modulo_nvidia_*`, `NOT_COLLECTED` sin registro). Rige desde el primer arranque con la unidad instalada (DEBT-BB-MODULO-NVIDIA-REGISTRO-UNIDAD-SIN-INSTALAR-01); los arranques del bucle ya pasados quedan `NOT_COLLECTED` para siempre.
 
 ## Lo que corrige
 
