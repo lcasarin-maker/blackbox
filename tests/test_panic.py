@@ -297,6 +297,17 @@ def test_conserva_tres_y_suelta_el_hold_del_kernel_que_ningun_punto_usa(atom):
     assert ["apt-mark", "unhold", f"linux-image-{MALO}"] in atom.llamadas("apt-mark")
 
 
+def test_la_poda_no_suelta_el_kernel_que_un_punto_que_queda_sigue_usando(atom):
+    """Cuatro puntos con el mismo kernel: se poda el mas viejo, y su kernel sigue retenido por los otros tres."""
+    for i in range(4):
+        escribe(atom.raiz / "etc/default/grub.d/93-otro.cfg", f"GRUB_TIMEOUT={i}\n")
+        assert crea() == 0
+    assert len(atom.puntos()) == 3
+    assert f"linux-image-{BUENO}" in atom.st()["holds"]
+    assert not [a for a in atom.llamadas("apt-mark") if a[1] == "unhold"]
+    assert all(json.loads((d / "punto.json").read_text())["hold_por_bb"] for d in atom.puntos())  # heredado
+
+
 def test_un_hold_que_puso_luis_no_lo_suelta_la_poda(atom):
     atom.pon({"holds": [f"linux-image-{MALO}"]})
     escribe(atom.raiz / "proc/sys/kernel/osrelease", MALO + "\n")
