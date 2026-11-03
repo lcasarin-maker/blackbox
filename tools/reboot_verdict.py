@@ -76,6 +76,17 @@ o la etiqueta misma; INDETERMINADO sin evidencia) con
 su cita en `causa_fuente`. Las filas de arranques fantasma traen `boot_idx: null` y
 `arranque_fantasma: true`; un consumidor que solo espera boots del journal las
 distingue por ese campo.
+
+Orden y reloj (2026-11-02): cada boot se lee con `journalctl -b <boot_id>`, nunca con `-b <index>`. En systemd 255
+el indice relativo de `-b -N` NO es el `index` de `--list-boots` cuando un boot tuvo el reloj de pared adelantado
+(medido: con cd2e65ee 3.4 h por delante, `-b -1` daba 709465ff y todos los demas se corrian uno, y las filas de
+`--ultimos 32` citaban el cierre del boot anterior). El arranque vivo (`/proc/sys/kernel/random/boot_id`) va al final
+de la lista y nunca se juzga. Un boot cuyo `first_entry` es posterior al de su sucesor, o con duracion negativa, sale
+con `reloj_desfasado: true` y `desfase_s`; `reloj_desfasado_siguiente` marca la fila cuyo `hueco_s` sale del reloj
+desfasado del siguiente. `--pendientes` juzga TODO boot terminado sin fila en `reboots.jsonl` (append-only:
+las filas viejas no se reescriben). Los campos `gsp_timeout`, `gsp_timeout_monotonic_s`, `xid154`,
+`gpu_fullchip_reset_asserts` y `gpu_reset_required_checks` informan la rafaga del GSP de 7.0.0-1024-nvidia; no
+entran en la `etiqueta`.
 """
 
 from __future__ import annotations
@@ -150,6 +161,13 @@ PATRONES_DIAGNOSTICO = re.compile(
 # `NVRM: Xid (PCI:000f:01:00): 13, ...`: el numero va DESPUES del parentesis; `Xid\s+\d+` casa
 # 0 de las 145 lineas reales de la rafaga del 2026-08-30 (medido por el consumidor externo).
 PATRON_XID = re.compile(r"\bXid\s*(?:\([^)]*\))?\s*:?\s*(\d+)")
+# La rafaga del GSP medida el 2026-11-02 en los boots con 7.0.0-1024-nvidia desde el 2026-10-30 19:05 (7cd0848b:
+# 3 timeouts desde el segundo 24, un Xid 154 en el 38, 7057 asserts y 244 "Reset required"). Solo se informan.
+PATRON_GSP_TIMEOUT = re.compile(r"NVRM: _issueRpcAndWait: rpcRecvPoll timedout")
+PATRON_FULLCHIP_ASSERT = re.compile(r"Assertion failed: \(status == NV_OK\) \|\| \(status == NV_ERR_GPU_IN_FULLCHIP_RESET\)")
+PATRON_RESET_REQUIRED = re.compile(r"Check failed: Reset required \[NV_ERR_RESET_REQUIRED\]")
+MONOTONIC = re.compile(r"^\[\s*(\d+\.\d+)\]")  # prefijo de `journalctl -o short-monotonic`
+BOOT_ID_ACTUAL = Path("/proc/sys/kernel/random/boot_id")
 DISPARADOR = re.compile(
     r"sudo\b.*COMMAND=\S*(?:reboot|poweroff|shutdown|halt)"
     r"|systemd-logind\[\d+\]: (?:Power key pressed|The system will (?:reboot|power off|halt) now!"
@@ -429,6 +447,65 @@ def xids_del_boot(lineas: list[str]) -> list[dict[str, Any]]:
     return encontrados
 
 
+def gpu_del_boot(lineas: list[str]) -> dict[str, Any]:
+    """Hechos de la rafaga del GSP en el journal de kernel de un boot (`-o short-monotonic`): timeout de RPC con su
+    primer segundo monotonic, Xid 154 y cuantos asserts de reset de chip completo y "Reset required" dejo. Lineas
+    vacias dan False/0: un journal ilegible se declara aparte y sale None, no cero."""
+    primer = next((ln for ln in lineas if PATRON_GSP_TIMEOUT.search(ln)), None)
+    m = MONOTONIC.match(primer) if primer else None
+    return {
+        "gsp_timeout": primer is not None,
+        "gsp_timeout_monotonic_s": float(m.group(1)) if m else None,
+        "xid154": any(x["xid"] == 154 for x in xids_del_boot(lineas)),
+        "gpu_fullchip_reset_asserts": sum(1 for ln in lineas if PATRON_FULLCHIP_ASSERT.search(ln)),
+        "gpu_reset_required_checks": sum(1 for ln in lineas if PATRON_RESET_REQUIRED.search(ln)),
+    }
+
+
+GPU_SIN_LEER = dict.fromkeys(
+    ("gsp_timeout", "gsp_timeout_monotonic_s", "xid154", "gpu_fullchip_reset_asserts", "gpu_reset_required_checks")
+)
+
+
+def _boot_actual() -> str | None:
+    """boot_id del arranque vivo, sin guiones; None si no se puede leer."""
+    try:
+        return _norm(BOOT_ID_ACTUAL.read_text(encoding="ascii").strip())
+    except OSError:
+        return None
+
+
+def _es_vivo(boots: list[dict[str, Any]], j: int) -> bool:
+    """boots[j] es el arranque vivo. Sin boot_id legible o ausente del journal, el ultimo de la lista (lo de antes)."""
+    actual = _boot_actual()
+    if actual is not None and any(_norm(b["boot_id"]) == actual for b in boots):
+        return _norm(boots[j]["boot_id"]) == actual
+    return j == len(boots) - 1
+
+
+def ordena_boots(boots: list[dict[str, Any]], actual: str | None) -> list[dict[str, Any]]:
+    """El orden de `--list-boots` con el arranque vivo AL FINAL: es el mas reciente por definicion. systemd 255
+    ordena la lista por hora de pared; con el reloj adelantado de cd2e65ee (2026-11-02: 16:29 de pared, y arranco entre 709465ff
+    de las 11:44 y fc60e471 de las 13:02) la corrida de las 13:06 puso al vivo fc60e471 ANTES que el y lo juzgo CORTE_ABRUPTO."""
+    vivo = [b for b in boots if actual is not None and _norm(b["boot_id"]) == actual]
+    return [b for b in boots if b not in vivo] + vivo
+
+
+def desfases(boots: list[dict[str, Any]]) -> dict[str, int]:
+    """boot_id -> segundos de reloj de pared adelantado, para los boots cuyo `first_entry` es POSTERIOR al de su
+    sucesor en el journal o cuya `last_entry` es anterior a su `first_entry` (duracion negativa). Medido el
+    2026-11-02: c092e563 con duracion -64702 s y cd2e65ee 12405 s por delante de fc60e471, que arranco despues."""
+    out: dict[str, int] = {}
+    for i, b in enumerate(boots):
+        candidatos = [b["first_entry"] - b["last_entry"]]
+        if i + 1 < len(boots):
+            candidatos.append(b["first_entry"] - boots[i + 1]["first_entry"])
+        d = max(candidatos) / 1e6
+        if d > 0:
+            out[b["boot_id"]] = round(d)
+    return out
+
+
 def _iso(epoch: float | None) -> str:
     if not epoch:
         return ""
@@ -455,6 +532,7 @@ def forense(ev: dict[str, Any]) -> dict[str, Any]:
         "crash_confirmado": bool(ev.get("journal_danado") or ev.get("panic_linea")),
         "lineas_diagnostico": lineas,
         "xids": xids_del_boot(lineas),
+        **(ev.get("gpu") or GPU_SIN_LEER),
         "vmcore": ev.get("vmcore"),
         "arranque_fantasma": bool(ev.get("fantasma")),
         "kdump": ev.get("kdump"),
@@ -918,7 +996,7 @@ def aliento_en(boot_id: str, inicio: float, siguiente_inicio: float) -> dict[str
     }
 
 
-def bootstatus_por_journal(idx: int) -> tuple[int | None, str | None]:
+def bootstatus_por_journal(idx: int | str) -> tuple[int | None, str | None]:
     """bootstatus del watchdog con que arranco el boot `idx`, leido de SU journal de kernel: sysfs
     solo sirve para el arranque vivo. (None, None) si el journal no se lee o sbsa_gwdt no aparece."""
     r = _journal("-b", str(idx), "-k", "-o", "cat")
@@ -995,10 +1073,13 @@ def salud_de_almacenamiento(dispositivo: str = DISPOSITIVO_NVME) -> dict[str, An
 
 
 def _journal(*args: str) -> subprocess.CompletedProcess[str]:
+    """`errors="replace"`: el journal de kernel trae bytes que no son UTF-8 (medido el 2026-11-02: tumbo un
+    script con UnicodeDecodeError); un byte malo no puede costar la lectura entera del boot."""
     return subprocess.run(
         ["journalctl", "--no-pager", *args],
         capture_output=True,
         text=True,
+        errors="replace",
         timeout=60,
         check=False,
     )
@@ -1020,7 +1101,7 @@ def _ultima_telemetria(boot_id: str) -> dict[str, Any] | None:
     return json.loads(ultima) if ultima else None
 
 
-def _disparador_boot(idx: int) -> str | None:
+def _disparador_boot(idx: int | str) -> str | None:
     """logind y sudo por identificador: el cierre escribe cientos de lineas y `-n 500` las pierde."""
     lineas: list[str] = []
     for ident in ("systemd-logind", "sudo"):
@@ -1036,7 +1117,7 @@ BERT_VOLCADO = re.compile(
 )
 
 
-def bert_registro(idx_siguiente: int) -> dict[str, Any]:
+def bert_registro(idx_siguiente: int | str) -> dict[str, Any]:
     """Registro BERT que el firmware deja para el arranque SIGUIENTE al corte. El payload es del
     fabricante (creador MTKID) y Linux no lo decodifica (NVIDIA staff, hilo 384436): se informa
     cada campo tal cual, mas la palabra en 0x14, que es la que cambia entre cortes."""
@@ -1109,13 +1190,17 @@ def _evidencia_forense(
     """Lo que el detector del consumidor externo media hasta el 2026-10-11: kernel del boot caido, PID 1, y
     la linea de journald y el vmcore que deja el arranque siguiente. Lo ilegible va a `no_leido`."""
     fin = b["last_entry"] / 1e6
-    k = _journal("-b", str(b["index"]), "-k")
+    k = _journal("-b", b["boot_id"], "-k")
     if k.returncode != 0:
         no_leido.append(f"journal_kernel_boot_{b['index']}")
     kernel = k.stdout.splitlines()
     # `_PID=1` a proposito: sin el filtro, uvicorn o GNOME Shell tambien escriben "Shutting down."
     # (8 falsos positivos medidos por el consumidor externo el 2026-09-29 sobre el panic de `07db1a8a`).
-    p1 = _journal("-b", str(b["index"]), "-o", "cat", "_PID=1")
+    # aparte y con monotonic: la hora del GSP se cuenta desde el arranque, y `lineas_diagnostico` conserva su formato
+    g = _journal("-b", b["boot_id"], "-k", "-o", "short-monotonic")
+    if g.returncode != 0:
+        no_leido.append(f"journal_kernel_gpu_boot_{b['index']}")
+    p1 = _journal("-b", b["boot_id"], "-o", "cat", "_PID=1")
     if p1.returncode != 0:
         no_leido.append(f"journal_pid1_boot_{b['index']}")
     ev: dict[str, Any] = {
@@ -1127,10 +1212,11 @@ def _evidencia_forense(
         "cierre_pid1": "Shutting down." in p1.stdout if p1.returncode == 0 else None,
         "journal_danado": None,
         "vmcore": None,
+        "gpu": gpu_del_boot(g.stdout.splitlines()) if g.returncode == 0 else None,
     }
     if sig is not None:
         jd = _journal(
-            "-b", str(sig["index"]), "-o", "cat", "-u", "systemd-journald.service"
+            "-b", sig["boot_id"], "-o", "cat", "-u", "systemd-journald.service"
         )
         if jd.returncode != 0:
             no_leido.append(f"journal_journald_boot_{sig['index']}")
@@ -1169,7 +1255,7 @@ def recoge(
     `fantasmas` (los arranques fantasma entre i e i+1, en orden) se interpongan."""
     b = boots[i]
     no_leido: list[str] = []
-    r = _journal("-b", str(b["index"]), "-o", "short-iso", "-n", "500")
+    r = _journal("-b", b["boot_id"], "-o", "short-iso", "-n", "500")
     if r.returncode != 0:
         no_leido.append(f"journal_boot_{b['index']}")
     cola = r.stdout.splitlines()
@@ -1190,14 +1276,14 @@ def recoge(
                 <= VENTANA_COLAPSO_S
             )
     p = _journal(
-        "-b", str(b["index"]), "-k", "--grep", "Kernel panic - not syncing", "-n", "1"
+        "-b", b["boot_id"], "-k", "--grep", "Kernel panic - not syncing", "-n", "1"
     )
     ev: dict[str, Any] = {
         "boot_id": b["boot_id"],
         "fin_epoch": fin,
         "cierre": cierre,
         "journal_parado": any(JOURNAL_PARADO.search(ln) for ln in cola),
-        "disparador": _disparador_boot(b["index"]) if cierre else None,
+        "disparador": _disparador_boot(b["boot_id"]) if cierre else None,
         "colapso_en_ventana": colapso,
         "panic": p.returncode == 0 and "Kernel panic" in p.stdout,
         "telemetria": _ultima_telemetria(b["boot_id"]),
@@ -1219,14 +1305,14 @@ def recoge(
             ev["bert_siguiente"] = None
             ev["bert"] = {"estado": f"no atribuido: el arranque fantasma {proximo['boot_id'][:8]} se interpone"}
         else:
-            _anade_arranque_siguiente(ev, sig["index"], i + 1 == len(boots) - 1)
+            _anade_arranque_siguiente(ev, sig["boot_id"], _es_vivo(boots, i + 1))
         _anade_fuera_del_journal(
             ev, b["first_entry"] / 1e6, fin, proximo["boot_id"] if proximo else sig["boot_id"], hasta
         )
     return ev
 
 
-def _anade_arranque_siguiente(ev: dict[str, Any], idx: int, vivo: bool) -> None:
+def _anade_arranque_siguiente(ev: dict[str, Any], idx: int | str, vivo: bool) -> None:
     """BERT y bootstatus del arranque `idx`, que hablan del reset que lo inicio, o sea de la muerte
     del anterior. Del arranque vivo el bootstatus sale de sysfs; de los demas, de su journal."""
     k = _journal("-b", str(idx), "-k", "--grep", "BERT: Error records from previous boot", "-n", "1")
@@ -1274,7 +1360,7 @@ def _anade_fuera_del_journal(
 
 
 def recoge_fantasma(
-    g: dict[str, Any], siguiente_id: str, siguiente_inicio: float, idx_siguiente: int | None, vivo: bool
+    g: dict[str, Any], siguiente_id: str, siguiente_inicio: float, idx_siguiente: int | str | None, vivo: bool
 ) -> dict[str, Any]:
     """Evidencia de un arranque fantasma: sin journal propio, solo lo que vive fuera de el. Si lo que
     arranco despues es un boot del journal (`idx_siguiente`), su BERT y su bootstatus son de este."""
@@ -1344,6 +1430,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument(
         "--escribe", action="store_true", help="agrega las filas a reboots.jsonl"
     )
+    ap.add_argument(
+        "--pendientes", action="store_true",
+        help="todo boot terminado de --list-boots sin fila en reboots.jsonl (ignora --ultimos); idempotente",
+    )
     a = ap.parse_args(argv)
     r = _journal("--list-boots", "-o", "json")
     if r.returncode != 0:
@@ -1359,12 +1449,17 @@ def main(argv: list[str] | None = None) -> int:
         print(f"COULD_NOT_RUN: journalctl --list-boots no devolvio JSON: {r.stdout[:80]!r}", file=sys.stderr)
         return 2
     filas = []
-    ya = _ya_escritos() if a.escribe else set()
+    ya = _ya_escritos() if a.escribe or a.pendientes else set()
     almacenamiento: dict[str, Any] | None = None  # una foto por corrida, no por fila
+    actual = _boot_actual()
+    if actual is None or all(_norm(b["boot_id"]) != actual for b in boots):
+        print(f"# arranque vivo no localizado en --list-boots ({BOOT_ID_ACTUAL}: {actual}): se supone el ultimo",
+              file=sys.stderr)
+    boots = ordena_boots(boots, actual)
+    desf = desfases(boots)
     fantasmas = arranques_fantasma(boots, etapas_de())
-    for i in range(
-        max(0, len(boots) - 1 - a.ultimos), len(boots) - 1
-    ):  # el ultimo sigue vivo
+    desde = 0 if a.pendientes else max(0, len(boots) - 1 - a.ultimos)
+    for i in range(desde, len(boots) - 1):  # el ultimo sigue vivo: ordena_boots pone ahi al arranque vivo
         sig = boots[i + 1]
         entre = [
             g for g in fantasmas
@@ -1383,12 +1478,12 @@ def main(argv: list[str] | None = None) -> int:
                     g,
                     nxt["boot_id"] if nxt else boots[i + 1]["boot_id"],
                     nxt["inicio_epoch"] if nxt else boots[i + 1]["first_entry"] / 1e6,
-                    None if nxt else boots[i + 1]["index"],
-                    i + 1 == len(boots) - 1,
+                    None if nxt else boots[i + 1]["boot_id"],
+                    _es_vivo(boots, i + 1),
                 ),
             ))
         for idx, bid, sig_id, recolecta in turno:
-            if bid in ya:
+            if bid in ya or _norm(bid) == actual:
                 continue
             ev = recolecta()
             if almacenamiento is None:
@@ -1400,7 +1495,18 @@ def main(argv: list[str] | None = None) -> int:
                 **veredicto(ev),
                 **forense(ev),
                 "almacenamiento": almacenamiento,
+                "reloj_desfasado": bid in desf,
+                "desfase_s": desf.get(bid),
+                "reloj_desfasado_siguiente": sig_id in desf,
             }
+            if bid in desf or sig_id in desf:
+                fila["razones"].append(
+                    "reloj de pared desfasado ("
+                    + (f"este boot {desf[bid]} s" if bid in desf else "")
+                    + (" y " if bid in desf and sig_id in desf else "")
+                    + (f"el siguiente {desf[sig_id]} s" if sig_id in desf else "")
+                    + "): hueco_s, duracion_s y las horas de la fila salen de ese reloj, no del tiempo real"
+                )
             fila["_generado"] = (
                 datetime.fromtimestamp(ev["fin_epoch"], tz=timezone.utc)
                 .astimezone()

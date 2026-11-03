@@ -1,9 +1,13 @@
 [Unit]
-Description=blackbox: corre el veredicto de reinicio una vez por arranque
+Description=blackbox: corre el veredicto de reinicio dos veces por arranque (20 s y 3 min)
 
 [Timer]
+# 20 s: del 2026-10-30 19:05 al 2026-11-02 11:44 hubo ~20 boots de 5-85 s y con solo 3 min la
+# unidad no corria en ninguno (8 de 32 boots con fila). `--pendientes` juzga TODO boot sin fila,
+# asi que el primer arranque que pase de 20 s cubre a los que murieron antes.
 # 3 min: con journald asentado, y ANTES del atom-crash-detector (4 min), que
-# lee la fila que esta unidad escribe en reboots.jsonl.
+# lee la fila que esta unidad escribe en reboots.jsonl. Si la de 20 s ya escribio, esta no repite.
+OnBootSec=20s
 OnBootSec=3min
 Persistent=false
 
