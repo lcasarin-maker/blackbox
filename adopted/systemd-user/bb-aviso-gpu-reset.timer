@@ -1,0 +1,13 @@
+[Unit]
+Description=blackbox: busca el timeout del GSP / Xid 154 en el arranque actual (60 s, 3 min y 10 min)
+
+[Timer]
+# La secuencia medida aparece entre los 21 y 28 s de vida; 60 s la cubre, 3 min y 10 min reintentan el aviso si
+# a los 60 s aun no habia sesion grafica. Una fila por boot_id: las corridas extra no repiten el aviso.
+OnBootSec=60s
+OnBootSec=3min
+OnBootSec=10min
+Persistent=false
+
+[Install]
+WantedBy=timers.target
