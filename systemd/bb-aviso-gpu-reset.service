@@ -1,0 +1,14 @@
+[Unit]
+Description=blackbox: avisa una vez por arranque si el controlador NVIDIA declaro la GPU en Reset Required (timeout del GSP / Xid 154)
+Documentation=file:%h/projects/blackbox/tools/aviso_gpu_reset.py
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/blackbox
+# notify-send habla por D-Bus con el escritorio; un servicio de usuario no siempre hereda este bus.
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/%U/bus
+# Solo lee el journal de kernel del arranque actual. rc 1 = no pudo avisar (sin sesion): la siguiente corrida reintenta.
+ExecStart=/usr/bin/python3 -m tools.aviso_gpu_reset
+Nice=19
+IOSchedulingClass=idle
+TimeoutStartSec=120
