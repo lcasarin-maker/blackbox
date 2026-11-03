@@ -120,6 +120,9 @@ def leer_veredictos(rutas: list[Path], avisos: list[str]) -> dict[str, tuple[str
                 continue
             try:
                 d = json.loads(linea)
+                if d.get("anula"):  # fila de correccion: deja sin efecto la anterior de ese boot
+                    out.pop(norm_id(d["boot_id"]), None)
+                    continue
                 out[norm_id(d["boot_id"])] = (str(d["etiqueta"]), None if d.get("causa") is None else str(d["causa"]))
             except (json.JSONDecodeError, KeyError) as e:
                 avisos.append(f"{ruta.name}:{n} ilegible ({e!r})")

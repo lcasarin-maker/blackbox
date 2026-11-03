@@ -1203,3 +1203,16 @@ def test_la_unidad_corre_pendientes_temprano_y_otra_vez_a_los_3_min():
     assert [ln.split("=", 1)[1] for ln in timer.splitlines() if ln.startswith("OnBootSec=")] == ["20s", "3min"]
     exec_start = [ln for ln in servicio.splitlines() if ln.startswith("ExecStart=")]
     assert exec_start == ["ExecStart=/usr/bin/python3 -m tools.reboot_verdict --pendientes --escribe"]
+
+
+def test_fila_anula_deja_sin_efecto_la_anterior_y_solo_esa(tmp_path, monkeypatch):
+    f = tmp_path / "r.jsonl"
+    f.write_text(
+        '{"boot_id": "x1", "etiqueta": "CORTE_ABRUPTO"}\n{"boot_id": "x2", "etiqueta": "CIERRE_ORDENADO"}\n'
+        '{"boot_id": "x1", "anula": true, "corrige_linea": 1}\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(rv, "SALIDA", f)
+    assert rv._ya_escritos() == {"x2"}
+    f.write_text(f.read_text(encoding="utf-8") + '{"boot_id": "x1", "etiqueta": "CIERRE_ORDENADO"}\n', encoding="utf-8")
+    assert rv._ya_escritos() == {"x1", "x2"}

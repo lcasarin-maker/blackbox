@@ -1395,13 +1395,17 @@ def recoge_fantasma(
 
 
 def _ya_escritos() -> set[str]:
+    """boot_id con fila vigente. El ledger es solo-anexar: una fila `{"boot_id", "anula": true, "corrige_linea": N}` deja
+    sin efecto la anterior de ese boot (gana la ultima), y `--pendientes` lo vuelve a juzgar."""
     if not SALIDA.exists():
         return set()
-    return {
-        json.loads(ln)["boot_id"]
-        for ln in SALIDA.read_text(encoding="utf-8").splitlines()
-        if ln.strip()
-    }
+    vigentes: set[str] = set()
+    for ln in SALIDA.read_text(encoding="utf-8").splitlines():
+        if not ln.strip():
+            continue
+        f = json.loads(ln)
+        (vigentes.discard if f.get("anula") else vigentes.add)(f["boot_id"])
+    return vigentes
 
 
 def _publica_hallazgos(filas: list[dict[str, Any]]) -> None:
