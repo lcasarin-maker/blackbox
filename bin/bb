@@ -3531,6 +3531,7 @@ bb -- caja negra de la maquina
   bb recovery            estado de RCU, watchdog y pstore, solo lectura
   bb incident [boot]     reporte POR INCIDENTE (formato NVIDIA #1358): 6 timestamps, config, throttle
   bb reboots             causa de cada reinicio, uno por uno (--ultimos N); deja un hallazgo en la bandeja con --escribe
+  bb rojo [seco|estado|restaura]  boton rojo como usuario; el de verdad es: sudo rojo (docs/BOTON-ROJO.md)
   bb status              que instrumento esta armado y cual no
   bb status clock lock   comprobar declaracion y confirmacion reciente del rango GPU
   bb drift               compara lo adoptado en el repo con lo desplegado (exit != 0 si diverge)
@@ -3560,6 +3561,7 @@ case "${1:-}" in
   recovery) python3 "$(dirname "$(readlink -f "$0")")/../tools/recovery_profile.py" ;;
   incident) shift; (cd "$(dirname "$(readlink -f "$0")")/.." && python3 -m tools.incident_report "$@") ;;
   reboots)  shift; (cd "$(dirname "$(readlink -f "$0")")/.." && python3 -m tools.reboot_verdict "$@") ;;
+  rojo)     shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.boton_rojo "$@") ;;
   status)   shift; cmd_status "$@" ;;
   drift)    shift; cmd_drift "$@" ;;
   protect)  shift; cmd_protect "$@" ;;
