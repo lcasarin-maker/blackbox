@@ -1,0 +1,43 @@
+# Lista KEEP del boton rojo (`bb rojo`, tools/boton_rojo.py).
+#
+# Una unidad por linea; `#` comenta. Un patron sin sufijo vale para su .service
+# y su .timer; se admiten comodines de shell (`blackbox-*`).
+#
+# Lo que esta ANTES de `[suspende]` NUNCA se toca: observadores pasivos y avisos.
+# Lo que esta DESPUES de `[suspende]` se suspende y esta clasificado a proposito.
+# Una unidad de ~/.config/systemd/user que no casa con ninguna de las dos listas
+# se SUSPENDE igual (falla hacia seguro) y el reporte la marca SIN CLASIFICAR:
+# esa marca es la senal para venir aqui y decidir.
+
+bb-muestreo-corte
+bb-aviso-termico
+bb-aviso-gpu-reset
+bb-guardia-proceso
+bb-portero
+bb-vigilante-memavail
+bb-vigilante-termico
+bb-reboot-verdict
+bb-modulo-nvidia-registro
+bb-arranque-forense
+bb-reloj-arranque
+atom-gpu-telemetry
+atom-crash-detector
+blackbox-*
+ai-gpu-telemetry
+
+[suspende]
+ai-nemotron*
+ai-ollama*
+ai-memory-monitor
+atlas-api
+kb-nightly*
+liberation-watchdog
+overnight-judge-watchdog
+own-chats-*
+declutter-*
+ojn-fichas
+bb-dmem-*
+bb-canario-motor
+bb-gpumem-historial
+bb-huella
+bb-monitor-distros
