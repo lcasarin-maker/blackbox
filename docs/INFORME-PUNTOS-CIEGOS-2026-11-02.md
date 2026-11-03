@@ -18,10 +18,10 @@ Ultimas muestras de 1 s antes del fin de los 14 arranques cortos del bucle y de 
 
 - CPU entre 0,5 y 44 %, carga 0,4 a 6,8, sin proceso fuera de lo habitual.
 - Temperatura maxima 52,2 C (limite del equipo mucho mas alto).
-- GPU entre 5 y 9,7 W y 0 % en el ultimo segundo.
+- GPU entre 5 y 9,7 W y 0 % en el ultimo segundo: **valido solo en los arranques sin fallo del GSP**. En los arranques con el fallo (813b8381, eb3c701b, 6fed1707, 7cd0848b, c092e563) la lectura de `nvidia-smi` queda CONGELADA desde los 23 a 25 s hasta el final (12, 210, 54, 9 614 y 47 s con la misma linea exacta); ahi la potencia de GPU no se midio. Correccion del 2026-11-02, ver DEBT-LECTURA-DE-GPU-CONGELADA-TRAS-GSP-SIN-MARCA-01.
 - PSI de CPU y memoria en cero.
 
-No fue saturacion de CPU, calentamiento, potencia de GPU ni presion de memoria en esos arranques. El muestreador demostro que su fsync sobrevive: en el arranque de 2 h 44 min la ultima muestra esta a ~0,4 s del ultimo registro del journal.
+No fue saturacion de CPU, calentamiento (zonas termicas de `/sys`) ni presion de memoria en esos arranques; la potencia de GPU queda descartada solo donde la lectura estaba viva (ver la salvedad de arriba). El muestreador demostro que su fsync sobrevive: en el arranque de 2 h 44 min la ultima muestra esta a ~0,4 s del ultimo registro del journal.
 
 ## 3. Lo que NO se habia visto y apareció
 
