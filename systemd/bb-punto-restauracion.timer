@@ -1,0 +1,10 @@
+[Unit]
+Description=blackbox: punto de restauracion cada 30 min (solo se crea con >= 6 h de arranque sano)
+
+[Timer]
+OnBootSec=30min
+OnUnitActiveSec=30min
+Persistent=false
+
+[Install]
+WantedBy=timers.target

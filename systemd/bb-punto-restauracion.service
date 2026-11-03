@@ -1,0 +1,16 @@
+[Unit]
+Description=blackbox: punto de restauracion (kernel, entrada de GRUB, modulo nvidia) si este arranque demuestra estar sano
+Documentation=file:/usr/local/lib/blackbox/tools/punto_restauracion.py
+# Unit de SISTEMA (root): la instala Luis con sudo (docs/PANIC.md); nada la activa sola.
+After=local-fs.target
+
+[Service]
+Type=oneshot
+# La COPIA root-owned, nunca el repo: un root no ejecuta codigo de un directorio que un usuario escribe.
+# -I: sin sitio de usuario ni directorio actual en sys.path.
+ExecStart=/usr/bin/python3 -I /usr/local/lib/blackbox/tools/punto_restauracion.py crea
+Environment=PYTHONDONTWRITEBYTECODE=1
+# Sin punto nuevo (arranque corto o con la firma del GSP) sale 0; rc 1 = hubo could_not_run y se ve como fallo.
+Nice=19
+IOSchedulingClass=idle
+TimeoutStartSec=300

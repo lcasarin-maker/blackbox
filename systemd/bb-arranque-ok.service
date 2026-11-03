@@ -1,0 +1,13 @@
+[Unit]
+Description=blackbox: el arranque demostro ser bueno (>= 180 s, sin la firma del GSP): bb_intentos=0 en el grubenv
+Documentation=file:/usr/local/lib/blackbox/tools/punto_restauracion.py
+# Unit de SISTEMA (root): la instala Luis con sudo (docs/PANIC.md); nada la activa sola.
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -I /usr/local/lib/blackbox/tools/punto_restauracion.py arranque-ok
+Environment=PYTHONDONTWRITEBYTECODE=1
+# rc 1 = arranque NO bueno (firma del GSP, journal ilegible) o could_not_run: el contador NO baja y la unidad
+# queda en failed a proposito, para que se vea. La linea de /var/lib/blackbox/arranque-ok.jsonl dice por que.
+TimeoutStartSec=120

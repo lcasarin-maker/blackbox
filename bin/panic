@@ -1,0 +1,7 @@
+#!/bin/sh
+# panic -- regreso al punto de restauracion (docs/PANIC.md). Se instala como /usr/local/sbin/panic:
+#   sudo panic            kernel y GRUB del ultimo punto sano, contador del autoarmado a 0, suspende lo no-KEEP
+#   sudo panic restaura   deshace SOLO la suspension (motor: sudo panic restaura todo si)
+# Ejecuta la COPIA root-owned del nucleo, nunca el repo: un root no corre codigo de un directorio que un usuario
+# puede escribir. -I: sin PYTHON*, sin site de usuario y sin el directorio actual en sys.path.
+exec /usr/bin/python3 -I /usr/local/lib/blackbox/tools/panic.py "$@"

@@ -1,0 +1,11 @@
+[Unit]
+Description=blackbox: confirma el arranque a los 180 s (contador del autoarmado de GRUB)
+
+[Timer]
+# Un arranque del bucle del 2026-11-02 duro 242 s: por eso el servicio exige ademas el journal sin la firma del GSP.
+OnBootSec=180s
+AccuracySec=1s
+Persistent=false
+
+[Install]
+WantedBy=timers.target

@@ -1,23 +1,19 @@
-"""Boton rojo: `sudo rojo` suspende todo y deja la maquina en su estado base.
+"""Suspension de `sudo panic` (docs/PANIC.md): todo lo no-KEEP fuera y la maquina en su estado base.
 
-Pedido de Luis (2026-11-02): "si vuelve a pasar un megacrash, UN solo comando
-que suspenda todo y deje la maquina en estado funcional base", y despues: "un
-comando que se corra en la terminal en segundos, que se escriba facil y rapido
-sin caracteres especiales, por si tenemos un ciclo de reboot de segundos". Es
-lo que se hizo a mano el 2026-10-30 (`2026-10-30-crashloop.json`, 22
-unidades), en un comando, sin red, sin sesion grafica y con el home medio roto.
+Fue el "boton rojo" (`sudo rojo`, 2026-11-02); desde el 2026-11-03 es el paso (d) de `sudo panic`
+(tools/panic.py), que antes devuelve el kernel y la configuracion de GRUB al punto de restauracion.
+Pedido de Luis: "si vuelve a pasar un megacrash, UN solo comando que suspenda todo y deje la maquina en
+estado funcional base", sin caracteres especiales, por si hay un ciclo de reboot de segundos. Es lo que
+se hizo a mano el 2026-10-30 (`2026-10-30-crashloop.json`, 22 unidades), sin red, sin sesion grafica y
+con el home medio roto.
 
-    sudo rojo               suspende
-    sudo rojo seco          imprime el plan y no toca nada
-    sudo rojo estado        que esta suspendido, desde cuando, cuando vence
-    sudo rojo restaura      deshace desde el manifiesto (motor: restaura todo si)
+    sudo panic              ... y, como paso (d), `suspende`
+    sudo panic restaura     `restaura`: deshace SOLO la suspension (motor: `sudo panic restaura todo si`)
 
-Corre como root y actua sobre el usuario `lcasarin` (BB_ROJO_USUARIO). El
-`sudo rojo` instalado es `/usr/local/sbin/rojo` (bin/rojo) y ejecuta una COPIA
-root-owned de este archivo en /usr/local/lib/blackbox/, nunca el repo: un root
-no ejecuta codigo de un directorio que un usuario escribe (mismo principio que
-tools/ultimo_aliento.py). Solo biblioteca estandar: corre con `python3 -I`.
-Instalacion: docs/BOTON-ROJO.md.
+Corre como root y actua sobre el usuario `lcasarin` (BB_ROJO_USUARIO). `sudo panic` ejecuta una COPIA
+root-owned de este archivo en /usr/local/lib/blackbox/tools/, nunca el repo: un root no ejecuta codigo
+de un directorio que un usuario escribe (mismo principio que tools/ultimo_aliento.py). Solo biblioteca
+estandar.
 
 Orden, por el ciclo de reboot de segundos: primero lo que PERSISTE y despues lo
 vivo. (1) manifiesto con fsync; (2) marca /var/lib/blackbox/rojo.activo;
@@ -43,13 +39,12 @@ Pruebas: BB_ROJO_RAIZ=<dir> antepone una raiz falsa a toda ruta absoluta
 (home, /run/user, /var/lib); BB_ROJO_COMO_ROOT=1 construye los comandos como
 root sin serlo.
 
-Salida: 0 todo hecho; 1 hubo could_not_run (la lista va impresa); 2 no pudo ni
-empezar (falta la lista KEEP, no hay manifiesto que restaurar).
+`suspende` y `restaura` devuelven 0 todo hecho; 1 hubo could_not_run (la lista va impresa); 2 no pudo
+ni empezar (falta la lista KEEP, no hay manifiesto que restaurar).
 """
 
 from __future__ import annotations
 
-import argparse
 import datetime as dt
 import fnmatch
 import hashlib
@@ -120,7 +115,7 @@ class Ejecutor:
         if cmd[0] == "systemctl" and self.systemd_mudo:
             return None, "", "systemd no respondio antes; no se reintenta"
         try:
-            p = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
+            p = subprocess.run(cmd, capture_output=True, text=True, errors="replace", timeout=timeout)
         except FileNotFoundError:
             return None, "", f"no existe {cmd[0]} en PATH"
         except subprocess.TimeoutExpired:
@@ -365,7 +360,7 @@ def ahora() -> str:
 # --- suspende --------------------------------------------------------------
 
 
-def suspende(seco: bool, keep_ruta: Path, motivo: str) -> int:
+def suspende(keep_ruta: Path, motivo: str) -> int:
     t0 = time.monotonic()
     ctx, ej = Ctx(), Ejecutor()
     cnr: list[str] = []
@@ -390,19 +385,14 @@ def suspende(seco: bool, keep_ruta: Path, motivo: str) -> int:
     avisos = [] if ctx.manager else [
         f"manager de usuario de {ctx.usuario} abajo: estado previo y stop OMITIDOS (los renombres bastan)"]
 
-    if seco:
-        imprime(plan_u, plan_c, quedan, scopes_vivos(ctx, ej, cnr), avisos, cnr,
-                titulo="PLAN (seco: no se toca nada)", hechas=False)
-        return 1 if cnr else 0
-
     hoy = dt.date.today()
     ruta, m = manifiesto_del_dia(ctx, hoy.isoformat())
     if m is None:
         m = {
             "esquema": ESQUEMA, "fecha": hoy.isoformat(), "motivo": motivo,
             "vence": (hoy + dt.timedelta(days=VIGENCIA_DIAS)).isoformat(),
-            "vigila": "Luis / sudo rojo estado",
-            "restaurar": "sudo rojo restaura   (motor: sudo rojo restaura todo si)",
+            "vigila": "Luis (este manifiesto; `sudo panic` imprime su ruta)",
+            "restaurar": "sudo panic restaura   (motor: sudo panic restaura todo si)",
             "usuario": ctx.usuario, "estado": "en_curso", "creado": ahora(),
             "unidades": plan_u, "contenedores": plan_c,
             "corridas": [{"tipo": "primera corrida", "inicio": ahora(), "nuevas": []}],
@@ -498,24 +488,23 @@ def suspende(seco: bool, keep_ruta: Path, motivo: str) -> int:
         unidades = [u for u in m["unidades"] if u["unidad"] in nuevas_n]
         conts = [c for c in m["contenedores"] if c["nombre"] in nuevas_n]
         print(f"[{corrida['tipo']}] manifiesto existente {reg.ruta}; solo lo nuevo:")
-    imprime(unidades, conts, quedan, scopes, avisos, cnr,
-            titulo=f"SUSPENDIDO -- manifiesto {reg.ruta}", hechas=True)
+    imprime(unidades, conts, quedan, scopes, avisos, cnr, titulo=f"SUSPENDIDO -- manifiesto {reg.ruta}")
     print(f"duracion: {time.monotonic() - t0:.2f} s")
     return 1 if cnr else 0
 
 
 def imprime(unidades: list[Dic], conts: list[Dic], keep: list[str], scopes: list[str],
-            avisos: list[str], cnr: list[str], titulo: str, hechas: bool) -> None:
+            avisos: list[str], cnr: list[str], titulo: str) -> None:
     print(f"== {titulo}")
     for a in avisos:
         print(f"AVISO: {a}")
-    print(f"\nUNIDADES {'suspendidas' if hechas else 'se suspenderian'}: {len(unidades)}")
+    print(f"\nUNIDADES suspendidas: {len(unidades)}")
     for u in unidades:
         marca = "  SIN CLASIFICAR" if u.get("sin_clasificar") else ""
         print(f"  {u['unidad']:<42} [{u['enabled']}/{u['active']}]{marca}")
     sin = [u["unidad"] for u in unidades if u.get("sin_clasificar")]
     print(f"  sin clasificar (ni KEEP ni [suspende]; decidir en {KEEP.name}): {len(sin)}")
-    print(f"\nCONTENEDORES con GPU {'tratados' if hechas else 'a tratar'}: {len(conts)}")
+    print(f"\nCONTENEDORES con GPU tratados: {len(conts)}")
     for c in conts:
         vivo = "corriendo -> docker stop" if c["corriendo"] else "parado"
         pol = "restart ya era no" if c["restart_policy"] == "no" else f"restart {c['restart_policy']} -> no"
@@ -530,7 +519,7 @@ def imprime(unidades: list[Dic], conts: list[Dic], keep: list[str], scopes: list
     print(f"\nCOULD_NOT_RUN: {len(cnr)}")
     for c in cnr:
         print(f"  {c}")
-    print("\nRESTAURAR: sudo rojo restaura        (motor y contenedores GPU: sudo rojo restaura todo si)")
+    print("\nRESTAURAR: sudo panic restaura        (motor y contenedores GPU: sudo panic restaura todo si)")
 
 
 # --- restaura --------------------------------------------------------------
@@ -555,7 +544,7 @@ def restaura(todo: bool, si: bool) -> int:
     ctx, ej = Ctx(), Ejecutor()
     vivos = [r for r in manifiestos(ctx) if lee(r).get("estado") != "restaurado"]
     if not vivos:
-        print("COULD_NOT_RUN: no hay manifiesto del boton rojo pendiente de restaurar")
+        print("COULD_NOT_RUN: no hay manifiesto de suspension pendiente de restaurar")
         return 2
     reg = Registro(ctx, vivos[-1], lee(vivos[-1]))
     m = reg.m
@@ -580,7 +569,7 @@ def restaura(todo: bool, si: bool) -> int:
     motor_pendiente: list[str] = []
     if not ctx.manager:
         cnr.append(f"manager de usuario de {ctx.usuario} abajo: archivos restaurados, "
-                   "enable/start pendientes (repetir `sudo rojo restaura` con la sesion arriba)")
+                   "enable/start pendientes (repetir `sudo panic restaura` con la sesion arriba)")
     else:
         rc, _, err = ej.corre([*ctx.systemctl, "daemon-reload"], T_RELOAD)
         if rc != 0:
@@ -650,64 +639,9 @@ def restaura(todo: bool, si: bool) -> int:
     for x in motor_pendiente:
         print(f"  {x}")
     if motor_pendiente:
-        print("  para arrancarlo: sudo rojo restaura todo si")
+        print("  para arrancarlo: sudo panic restaura todo si")
     print(f"\nCOULD_NOT_RUN: {len(cnr)}")
     for x in cnr:
         print(f"  {x}")
     print(f"\nmanifiesto: {reg.ruta}  estado={m['estado']}")
     return 1 if cnr else 0
-
-
-# --- estado ----------------------------------------------------------------
-
-
-def estado() -> int:
-    ctx = Ctx()
-    try:
-        print(f"marca {ctx.marca}: PULSADO -- {ctx.marca.read_text(encoding='utf-8').strip()}")
-    except FileNotFoundError:
-        print(f"marca {ctx.marca}: no existe (boton sin pulsar)")
-    except OSError as e:
-        print(f"marca {ctx.marca}: ilegible ({e})")
-    rutas = manifiestos(ctx)
-    print(f"manifiestos del boton rojo: {len(rutas)}")
-    hoy = dt.date.today().isoformat()
-    for r in rutas:
-        m = lee(r)
-        vencida = "  VENCIDA" if m.get("vence", "9999") < hoy and m.get("estado") != "restaurado" else ""
-        susp = [u["unidad"] for u in m["unidades"] if u["hecho"] and not u["restaurado"]]
-        conts = [c["nombre"] for c in m["contenedores"]
-                 if (c["parado"] or c["restart_cambiado"]) and not c["restaurado"]]
-        print(f"\n{r}: estado={m.get('estado')} desde={m.get('creado')} vence={m.get('vence')}{vencida}")
-        print(f"  unidades suspendidas: {len(susp)}")
-        for s in susp:
-            print(f"    {s}")
-        print(f"  contenedores tocados por el boton: {len(conts)}")
-        for c in conts:
-            print(f"    {c}")
-    return 0
-
-
-PALABRAS = {"seco": "--seco", "todo": "--todo", "si": "--si"}
-
-
-def main(argv: list[str] | None = None) -> int:
-    argv = [PALABRAS.get(a, a) for a in (sys.argv[1:] if argv is None else argv)]
-    ap = argparse.ArgumentParser(prog="rojo", description=__doc__,
-                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("accion", nargs="?", choices=["restaura", "estado"])
-    ap.add_argument("--seco", action="store_true", help="imprime el plan, no toca nada")
-    ap.add_argument("--todo", action="store_true", help="restaura tambien el motor (pide --si)")
-    ap.add_argument("--si", action="store_true", help="confirma arrancar el motor")
-    ap.add_argument("--keep", type=Path, default=KEEP, help="lista KEEP")
-    ap.add_argument("--motivo", default="boton rojo: megacrash")
-    a = ap.parse_args(argv)
-    if a.accion == "restaura":
-        return restaura(a.todo, a.si)
-    if a.accion == "estado":
-        return estado()
-    return suspende(a.seco, a.keep, a.motivo)
-
-
-if __name__ == "__main__":
-    sys.exit(main())

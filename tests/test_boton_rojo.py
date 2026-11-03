@@ -1,7 +1,8 @@
-"""Boton rojo (`sudo rojo`): shims de systemctl y docker en PATH y raiz falsa (BB_ROJO_RAIZ).
+"""Suspension de `sudo panic` (tools/boton_rojo.py): shims de systemctl y docker en PATH y raiz falsa (BB_ROJO_RAIZ).
 
 Ninguna prueba toca la maquina real: el home, /run/user y /var/lib viven bajo
-tmp_path. Controles negativos obligatorios (docs/BOTON-ROJO.md):
+tmp_path. `restaura` entra por la linea de comandos de verdad (`panic restaura [todo si]`,
+tools/panic.py). Controles negativos obligatorios (docs/PANIC.md):
   (i)   una unidad KEEP suspendida hace fallar `keep_intactas` (control: lista mutada);
   (ii)  borrar en vez de renombrar lo detecta `test_renombra_nunca_borra`;
   (iii) el manifiesto se fsyncea antes de la primera accion, y lo persistente va antes que lo vivo;
@@ -24,6 +25,7 @@ from pathlib import Path
 import pytest
 
 from tools import boton_rojo as br
+from tools import panic
 
 pytestmark = pytest.mark.integration
 
@@ -183,9 +185,9 @@ class Maquina:
         return [c for c in todas if prog is None or c["argv"][0] == prog]
 
     def corre(self, *args: str) -> int:
-        if args and args[0] in ("restaura", "estado"):
-            return br.main(list(args))
-        return br.main([*args, "--keep", str(self.keep)])
+        if args:
+            return panic.main(list(args))
+        return br.suspende(self.keep, "prueba")
 
     def manifiesto(self) -> dict:
         (m,) = br.manifiestos(br.Ctx())
@@ -311,14 +313,8 @@ def test_manifiesto_fsync_antes_y_lo_persistente_antes_que_lo_vivo(maq, monkeypa
     assert maq.marca.is_file()
 
 
-def test_seco_no_toca_nada(maq, capsys):
-    antes = sorted(f.name for f in maq.ud.iterdir())
-    assert maq.corre("seco") == 0
-    assert sorted(f.name for f in maq.ud.iterdir()) == antes
-    assert not maq.susp.exists() and not maq.marca.exists()
-    escrituras = [c for c in maq.llamadas()
-                  if any(x in c["argv"] for x in ("stop", "start", "daemon-reload", "enable", "update"))]
-    assert escrituras == []
+def test_el_reporte_nombra_sin_clasificar_contenedores_y_scopes(maq, capsys):
+    assert maq.corre() == 0
     out = capsys.readouterr().out
     assert "nueva-cosa.service" in out and "SIN CLASIFICAR" in out
     assert "aequitas-vllm" in out and "nemotron-server" in out and "aequitas-pg" not in out
@@ -405,11 +401,13 @@ def test_systemd_mudo_no_bloquea_los_renombres(maq, monkeypatch):
     assert len(maq.llamadas("systemctl")) == 1  # tras el primer timeout no se insiste
 
 
-def test_palabras_sin_guiones_equivalen_a_las_opciones(maq, capsys):
-    assert maq.corre("seco") == 0
-    a = capsys.readouterr().out
-    assert maq.corre("--seco") == 0
-    assert capsys.readouterr().out == a and "PLAN (seco" in a
+@pytest.mark.parametrize("args", [["seco"], ["estado"], ["--seco"], ["restaura", "si"], ["restaura", "todo", "no"]])
+def test_la_interfaz_publica_solo_tiene_panic_y_restaura(maq, capsys, args):
+    """`seco` y `estado` salieron de la interfaz (YAGNI): ahora son uso equivocado y no tocan nada."""
+    antes = sorted(f.name for f in maq.ud.iterdir())
+    assert maq.corre(*args) == 2
+    assert "uso: sudo panic" in capsys.readouterr().out
+    assert sorted(f.name for f in maq.ud.iterdir()) == antes and maq.llamadas() == []
 
 
 # (v) ----------------------------------------------------------------------
@@ -477,7 +475,7 @@ def test_restaura_sin_todo_no_arranca_el_motor(maq, capsys):
     assert st["units"]["kb-nightly.timer"][1] == "active"
     assert st["units"]["nueva-cosa.service"][1] == "inactive"  # estaba inactiva: sigue asi
     assert maq.corriendo()["aequitas-vllm"] is False and maq.politicas()["aequitas-vllm"] == "no"
-    assert "sudo rojo restaura todo si" in out
+    assert "sudo panic restaura todo si" in out
     assert maq.corre("restaura", "todo") == 0  # `todo` sin `si` tampoco arranca
     assert maq.estado_shim()["units"]["ai-nemotron.service"][1] == "inactive"
     assert maq.corre("restaura", "todo", "si") == 0
@@ -513,18 +511,6 @@ def test_tras_restaurar_otra_pulsacion_abre_manifiesto_nuevo(maq):
     assert maq.corre() == 0
     nombres = [p.name for p in br.manifiestos(br.Ctx())]
     assert len(nombres) == 2 and nombres[1].endswith("-boton-rojo-2.json")
-
-
-def test_estado_lista_lo_suspendido(maq, capsys):
-    assert maq.corre("estado") == 0
-    assert "boton sin pulsar" in capsys.readouterr().out
-    assert maq.corre() == 0
-    capsys.readouterr()
-    assert maq.corre("estado") == 0
-    out = capsys.readouterr().out
-    assert "PULSADO" in out
-    assert "unidades suspendidas: 5" in out and "ai-nemotron.service" in out
-    assert "contenedores tocados por el boton: 3" in out
 
 
 def test_sin_lista_keep_no_toca_nada(maq):
