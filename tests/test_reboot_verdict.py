@@ -24,6 +24,7 @@ def _sin_fuentes_de_la_maquina(tmp_path, monkeypatch):
     monkeypatch.setattr(rv, "ETAPAS", tmp_path / "sin_etapas.jsonl")
     monkeypatch.setattr(rv, "ANILLO", tmp_path / "sin_anillo.bin")
     monkeypatch.setattr(rv, "EXTERNO", tmp_path / "sin_externo")
+    monkeypatch.setattr(rv, "MODULO_NVIDIA", tmp_path / "modulo_nvidia_por_arranque.jsonl")
 
 
 def etiqueta(**kw):
@@ -975,6 +976,9 @@ CAMPOS_NUEVOS = {
     # 2026-11-02: reloj de pared desfasado y la rafaga del GSP
     "reloj_desfasado", "desfase_s", "reloj_desfasado_siguiente", "gsp_timeout", "gsp_timeout_monotonic_s", "xid154",
     "gpu_fullchip_reset_asserts", "gpu_reset_required_checks",
+    # 2026-11-02: modulo nvidia cargado, del registro en vivo
+    "modulo_nvidia_ruta", "modulo_nvidia_sha256", "modulo_nvidia_version", "modulo_nvidia_srcversion",
+    "modulo_nvidia_parchado", "modulo_nvidia_fuente",
 }
 
 
@@ -1216,3 +1220,27 @@ def test_fila_anula_deja_sin_efecto_la_anterior_y_solo_esa(tmp_path, monkeypatch
     assert rv._ya_escritos() == {"x2"}
     f.write_text(f.read_text(encoding="utf-8") + '{"boot_id": "x1", "etiqueta": "CIERRE_ORDENADO"}\n', encoding="utf-8")
     assert rv._ya_escritos() == {"x1", "x2"}
+
+
+def test_la_fila_trae_el_modulo_nvidia_del_registro_en_vivo_y_declara_NOT_COLLECTED_sin_el(monkeypatch, tmp_path):
+    _main_aislado(monkeypatch, tmp_path)
+    monkeypatch.setattr(rv, "_publica_hallazgos", lambda filas: None)
+    bid = BOOTS[0]["boot_id"]
+    reg = {"boot_id": bid, "ts": "2026-11-02T23:00:00-06:00", "ruta": "/lib/modules/7.0.0-1024-nvidia/updates/nvidia.ko",
+           "sha256": "ab" * 32, "version": "580.178.04", "srcversion": "SRC123", "parchado": True}
+    registro = tmp_path / "modulo_nvidia_por_arranque.jsonl"
+    registro.write_text(json.dumps({**reg, "boot_id": "f" * 32}) + "\n" + json.dumps(reg) + "\n", encoding="utf-8")
+    assert rv.main(["--ultimos", "1", "--escribe"]) == 0
+    f = json.loads((tmp_path / "reboots.jsonl").read_text(encoding="utf-8"))
+    assert (f["modulo_nvidia_ruta"], f["modulo_nvidia_sha256"], f["modulo_nvidia_srcversion"]) == (
+        reg["ruta"], reg["sha256"], "SRC123")
+    assert f["modulo_nvidia_parchado"] is True and f["modulo_nvidia_version"] == "580.178.04"
+    # control negativo: un boot sin linea en el registro no hereda la de otro ni se infiere
+    (tmp_path / "reboots.jsonl").unlink()
+    registro.write_text(json.dumps({**reg, "boot_id": "f" * 32}) + "\n", encoding="utf-8")
+    assert rv.main(["--ultimos", "1", "--escribe"]) == 0
+    g = json.loads((tmp_path / "reboots.jsonl").read_text(encoding="utf-8"))
+    campos = {k: v for k, v in g.items() if k.startswith("modulo_nvidia_")}
+    assert set(campos.values()) == {"NOT_COLLECTED"} and len(campos) == 6
+    registro.unlink()  # y sin archivo de registro tampoco
+    assert rv.modulo_nvidia_de(bid) is None

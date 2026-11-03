@@ -1,0 +1,13 @@
+[Unit]
+Description=blackbox: registro temprano del modulo nvidia por arranque (5 s, 20 s y 60 s)
+
+[Timer]
+# Los arranques del bucle del 2026-11-01 duraron de 5 s a minutos: el registro tiene que quedar escrito antes de que
+# la maquina corte. 5 s y 20 s cubren al arranque corto; 60 s al que cargo nvidia tarde. Idempotente por boot_id.
+OnBootSec=5s
+OnBootSec=20s
+OnBootSec=60s
+Persistent=false
+
+[Install]
+WantedBy=timers.target

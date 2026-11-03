@@ -1,0 +1,13 @@
+[Unit]
+Description=blackbox: anota el modulo nvidia que cargo este arranque (ruta, sha256, srcversion, parchado)
+Documentation=file:%h/projects/blackbox/tools/modulo_nvidia_registro.py
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/projects/blackbox
+# Solo-anexar e idempotente por boot_id: correr varias veces por arranque no duplica. rc 1 = nvidia aun no cargado
+# (nada escrito, la corrida siguiente lo reintenta); por eso el timer dispara a 5 s, 20 s y 60 s.
+ExecStart=/usr/bin/python3 -m tools.modulo_nvidia_registro --escribe
+SuccessExitStatus=1
+Nice=19
+TimeoutStartSec=60

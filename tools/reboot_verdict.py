@@ -87,6 +87,11 @@ desfasado del siguiente. `--pendientes` juzga TODO boot terminado sin fila en `r
 las filas viejas no se reescriben). Los campos `gsp_timeout`, `gsp_timeout_monotonic_s`, `xid154`,
 `gpu_fullchip_reset_asserts` y `gpu_reset_required_checks` informan la rafaga del GSP de 7.0.0-1024-nvidia; no
 entran en la `etiqueta`.
+
+Modulo nvidia (2026-11-02): `modulo_nvidia_ruta`, `_sha256`, `_version`, `_srcversion`, `_parchado` (true si la ruta
+esta bajo `/updates/`) y `_fuente` salen de `$BLACKBOX_DATA/modulo_nvidia_por_arranque.jsonl`, que escribe EN VIVO
+`tools/modulo_nvidia_registro.py` al arrancar. Un boot sin linea en ese archivo (todos los anteriores a la unidad) lleva
+`"NOT_COLLECTED"` en cada campo: lo que cargo un arranque pasado no se puede reconstruir y no se infiere.
 """
 
 from __future__ import annotations
@@ -132,6 +137,7 @@ WDT_PROBE = re.compile(r"sbsa[-_]gwdt.*Initialized with")
 PANIC_TEXTO = "Kernel panic - not syncing"
 LEE_MAX_BYTES = 4 * 1024 * 1024
 SALIDA = DATOS / "reboots.jsonl"
+MODULO_NVIDIA = DATOS / "modulo_nvidia_por_arranque.jsonl"  # lo escribe tools/modulo_nvidia_registro.py en vivo
 WATCHDOG_BOOTSTATUS = Path("/sys/class/watchdog/watchdog0/bootstatus")
 VENTANA_COLAPSO_S = 900
 PSI_FULL_COLAPSO = 10.0
@@ -467,6 +473,43 @@ GPU_SIN_LEER = dict.fromkeys(
 )
 
 
+MODULO_NVIDIA_CAMPOS = {  # campo de la fila -> clave de la linea del registro
+    "modulo_nvidia_ruta": "ruta",
+    "modulo_nvidia_sha256": "sha256",
+    "modulo_nvidia_version": "version",
+    "modulo_nvidia_srcversion": "srcversion",
+    "modulo_nvidia_parchado": "parchado",
+}
+
+
+def modulo_nvidia_de(boot_id: str, ruta: Path | None = None) -> dict[str, Any] | None:
+    """Linea del registro en vivo para `boot_id` (la ultima si hubiera varias); None si no hay registro."""
+    ruta = ruta or MODULO_NVIDIA
+    encontrada = None
+    try:
+        lineas = ruta.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return None
+    for ln in lineas:
+        try:
+            fila = json.loads(ln)
+        except ValueError:
+            continue
+        if isinstance(fila, dict) and _norm(str(fila.get("boot_id", ""))) == _norm(boot_id):
+            encontrada = fila
+    return encontrada
+
+
+def modulo_nvidia_campos(registro: Mapping[str, Any] | None) -> dict[str, Any]:
+    """Campos `modulo_nvidia_*` de la fila. Sin registro: "NOT_COLLECTED" declarado, nunca un vacio ni un supuesto."""
+    if registro is None:
+        return {**dict.fromkeys(MODULO_NVIDIA_CAMPOS, "NOT_COLLECTED"), "modulo_nvidia_fuente": "NOT_COLLECTED"}
+    return {
+        **{campo: registro.get(clave, "NOT_COLLECTED") for campo, clave in MODULO_NVIDIA_CAMPOS.items()},
+        "modulo_nvidia_fuente": f"{MODULO_NVIDIA.name} ts={registro.get('ts', 'NOT_COLLECTED')}",
+    }
+
+
 def _boot_actual() -> str | None:
     """boot_id del arranque vivo, sin guiones; None si no se puede leer."""
     try:
@@ -533,6 +576,7 @@ def forense(ev: dict[str, Any]) -> dict[str, Any]:
         "lineas_diagnostico": lineas,
         "xids": xids_del_boot(lineas),
         **(ev.get("gpu") or GPU_SIN_LEER),
+        **modulo_nvidia_campos(ev.get("modulo_nvidia")),
         "vmcore": ev.get("vmcore"),
         "arranque_fantasma": bool(ev.get("fantasma")),
         "kdump": ev.get("kdump"),
@@ -1490,6 +1534,7 @@ def main(argv: list[str] | None = None) -> int:
             if bid in ya or _norm(bid) == actual:
                 continue
             ev = recolecta()
+            ev["modulo_nvidia"] = modulo_nvidia_de(bid)
             if almacenamiento is None:
                 almacenamiento = salud_de_almacenamiento()
             fila = {
