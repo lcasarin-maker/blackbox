@@ -30,7 +30,8 @@ import pytest
 REPO = Path(__file__).resolve().parent.parent
 HERRAMIENTA = REPO / "tools" / "opt_in_captura.sh"
 CONFIGFS = REPO / "adopted" / "opt-in" / "bb-netconsole-configfs.sh"
-CAPAS = ["netconsole-runtime", "netconsole-arranque", "pstore-tras-panico", "grub-marca", "panic-temprano"]
+CAPAS = ["netconsole-runtime", "netconsole-arranque", "pstore-tras-panico", "grub-marca", "panic-temprano",
+         "grub-default-guardado", "grub-autoarmado"]
 CAPAS_GRUB = CAPAS[1:]
 KERNEL = "6.99.0-prueba"
 OTRO_KERNEL = "6.17.0-1032-nvidia"
@@ -54,7 +55,7 @@ GRUB_CMDLINE_LINUX="" GRUB_CMDLINE_LINUX_DEFAULT=""
 if [ -z "${FAKE_IGNORA_GRUBD:-}" ]; then
     for x in "$R"/etc/default/grub.d/*.cfg; do if [ -e "$x" ]; then . "$x"; fi; done
 fi
-export GRUB_CMDLINE_LINUX GRUB_CMDLINE_LINUX_DEFAULT GRUB_FS=ext2
+export GRUB_CMDLINE_LINUX GRUB_CMDLINE_LINUX_DEFAULT GRUB_DEFAULT GRUB_FS=ext2
 for s in "$R"/etc/grub.d/*; do if [ -x "$s" ]; then "$s"; fi; done >"$out.new"
 mv "$out.new" "$out"
 """,
@@ -91,8 +92,26 @@ sha1sum "$R/boot/initrd.img-$K" | cut -d' ' -f1 >"$R/var/lib/initramfs-tools/$K"
 echo "modprobe $*" >>"$FAKE_LOG"
 if [ "$1" = -r ]; then rm -f "$FAKE_ROOT/sys/module/$2/initstate"; fi
 """,
-    "grub-editenv": 'echo "grub-editenv $*" >>"$FAKE_LOG"\nsed -i "/^bb_prev_/d" "$1"\n',
+    # Modelo del grubenv de GRUB: bloque de 1024 bytes, cabecera fija, `k=v` en orden, relleno con '#'.
+    "grub-editenv": r"""
+echo "grub-editenv $*" >>"$FAKE_LOG"
+[ -z "${FAKE_GE_FALLA:-}" ] || exit 1
+exec python3 -c '
+import sys
+f, cmd, rest = sys.argv[1], sys.argv[2], sys.argv[3:]
+d = dict(ln.split("=", 1) for ln in open(f).read().splitlines() if ln[:1] != "#" and "=" in ln)
+if cmd == "list":
+    print("\n".join(k + "=" + v for k, v in d.items())); sys.exit(0)
+if cmd == "set":
+    d.update(x.split("=", 1) for x in rest)
+elif cmd == "unset":
+    for k in rest: d.pop(k, None)
+t = "# GRUB Environment Block\n" + "".join(k + "=" + v + "\n" for k, v in d.items())
+open(f, "w").write(t + "#" * (1024 - len(t)))
+' "$@"
+""",
 }
+GRUBENV_0 = "# GRUB Environment Block\nrecordfail=1\n" + "#" * (1024 - 38)
 COSTURAS = {
     "GRUB_MKCONFIG": "grub-mkconfig", "GRUB_SCRIPT_CHECK": "grub-script-check", "UPDATE_INITRAMFS": "update-initramfs",
     "LSINITRAMFS": "lsinitramfs", "FINDMNT": "findmnt", "LSBLK": "lsblk", "SYSTEMCTL": "systemctl",
@@ -100,12 +119,16 @@ COSTURAS = {
 }
 
 HEADER_00 = """#!/bin/sh
-cat <<'EOF'
-if [ -s $prefix/grubenv ]; then
+D=${GRUB_DEFAULT:-0}
+[ "$D" != saved ] || D='${saved_entry}'
+L=load_env
+[ -z "${FAKE_SIN_LOAD_ENV:-}" ] || L=true
+cat <<EOF
+if [ -s \\$prefix/grubenv ]; then
   set have_grubenv=true
-  load_env
+  $L
 fi
-set default="0"
+set default="$D"
 EOF
 """
 LINUX_10 = """#!/bin/sh
@@ -162,7 +185,7 @@ def raiz(tmp_path: Path) -> Raiz:
              'GRUB_CMDLINE_LINUX_DEFAULT="$GRUB_CMDLINE_LINUX_DEFAULT crashkernel=1G-:512M"\n')
     _escribe(root / "etc/grub.d/00_header", HEADER_00, 0o755)
     _escribe(root / "etc/grub.d/10_linux", LINUX_10, 0o755)
-    _escribe(root / "boot/grub/grubenv", "# GRUB Environment Block\nrecordfail=1\n" + "#" * 990)
+    _escribe(root / "boot/grub/grubenv", GRUBENV_0)
     for k in (KERNEL, OTRO_KERNEL):
         _escribe(root / f"boot/vmlinuz-{k}", f"kernel {k}\n")
         _escribe(root / f"boot/initrd.img-{k}", f"initrd original {k}\n")
@@ -459,6 +482,123 @@ def test_la_plantilla_de_09_no_emite_nada_fuera_de_ext2(tmp_path: Path) -> None:
     assert "save_env" not in sin and "btrfs" in sin
 
 
+# --- grub-default-guardado y grub-autoarmado (sudo panic, docs/PANIC.md) ------------------------------------------
+
+TITULO_617 = f"Advanced options>DGX OS, con Linux {OTRO_KERNEL}"
+
+
+def _grubenv(raiz: Raiz) -> dict[str, str]:
+    t = (raiz.root / "boot/grub/grubenv").read_text(encoding="utf-8")
+    return dict(ln.split("=", 1) for ln in t.splitlines() if ln[:1] != "#" and "=" in ln)
+
+
+def _default_literal(raiz: Raiz, valor: str) -> None:
+    grub = raiz.root / "etc/default/grub"
+    grub.write_text(grub.read_text(encoding="utf-8").replace("GRUB_DEFAULT=0", f'GRUB_DEFAULT="{valor}"'),
+                    encoding="utf-8")
+
+
+def test_default_guardado_gana_al_literal_y_no_cambia_el_kernel_que_arranca(raiz: Raiz) -> None:
+    """Hoy /etc/default/grub fija 6.17 por titulo: tras aplicar, GRUB lee saved_entry, que vale ESE titulo."""
+    _default_literal(raiz, TITULO_617)
+    r = raiz.corre("aplica", "grub-default-guardado")
+    _ok(r)
+    assert f"saved_entry se inicializa con la entrada de hoy:                           {TITULO_617}" in r.stdout
+    assert _grubenv(raiz)["saved_entry"] == TITULO_617
+    cfg = (raiz.root / "boot/grub/grub.cfg").read_text(encoding="utf-8")
+    assert 'set default="${saved_entry}"' in cfg
+    assert (raiz.root / "etc/default/grub.d/zzz-bb-grub-default-guardado.cfg").read_bytes() == \
+        (REPO / "adopted/opt-in/etc_default_grub.d_zzz-bb-grub-default-guardado.cfg").read_bytes()
+    _ok(raiz.corre("retrocede", "grub-default-guardado"))
+    assert "saved_entry" not in _grubenv(raiz)
+
+
+def test_default_guardado_devuelve_el_saved_entry_que_habia(raiz: Raiz) -> None:
+    antes = foto(raiz.root)
+    env = raiz.root / "boot/grub/grubenv"
+    subprocess.run([str(raiz.bin / "grub-editenv"), str(env), "set", "saved_entry=viejo"], env=raiz.env(), check=True)
+    _ok(raiz.corre("aplica", "grub-default-guardado"))
+    assert _grubenv(raiz)["saved_entry"] == "0"
+    _ok(raiz.corre("retrocede", "grub-default-guardado"))
+    assert _grubenv(raiz)["saved_entry"] == "viejo"
+    subprocess.run([str(raiz.bin / "grub-editenv"), str(env), "unset", "saved_entry"], env=raiz.env(), check=True)
+    assert foto(raiz.root) == antes
+
+
+@pytest.mark.parametrize("prepara, motivo", [
+    # un .cfg que carga DESPUES (orden C: 'zzzz' > 'zzz-') y vuelve a fijar GRUB_DEFAULT: el drop-in no ganaria
+    (lambda r: _escribe(r.root / "etc/default/grub.d/zzzz-otro.cfg", "GRUB_DEFAULT=2\n"), "FALTA: tras aplicar gana"),
+    (lambda r: _default_literal(r, "saved"), "FALTA: GRUB_DEFAULT no es ya saved"),
+    (lambda r: _default_literal(r, "Advanced options>DGX OS, con Linux 9.9.9-no-existe"), "FALTA: la entrada de hoy"),
+])
+def test_default_guardado_se_niega_si_no_gana_o_no_tiene_sentido(raiz: Raiz, prepara, motivo: str) -> None:
+    prepara(raiz)
+    antes = foto(raiz.root)
+    _negativa(raiz.corre("aplica", "grub-default-guardado"), motivo)
+    assert foto(raiz.root) == antes and not [c for c in raiz.llamadas() if c.startswith("grub-mkconfig")]
+
+
+def test_control_un_cfg_posterior_que_no_toca_grub_default_no_estorba(raiz: Raiz) -> None:
+    """Control del caso de arriba: lo que estorba es reasignar GRUB_DEFAULT, no cargar despues."""
+    _escribe(raiz.root / "etc/default/grub.d/zzzz-otro.cfg", "GRUB_TIMEOUT=10\n")
+    _ok(raiz.corre("aplica", "grub-default-guardado"))
+
+
+def test_default_guardado_se_niega_si_saved_no_llega_a_grub_cfg_y_deshace(raiz: Raiz) -> None:
+    antes = foto(raiz.root)
+    r = raiz.corre("aplica", "grub-default-guardado", FAKE_IGNORA_GRUBD="1")
+    _negativa(r, "GRUB_DEFAULT=saved no llego")
+    assert foto(raiz.root) == antes and "grub-editenv" not in " ".join(raiz.llamadas())
+
+
+def test_default_guardado_si_editenv_falla_deshace_todo(raiz: Raiz) -> None:
+    antes = foto(raiz.root)
+    _negativa(raiz.corre("aplica", "grub-default-guardado", FAKE_GE_FALLA="1"), "grub-editenv list fallo")
+    assert foto(raiz.root) == antes
+
+
+def test_autoarmado_queda_entre_la_cabecera_y_las_entradas_y_su_retroceso_limpia_el_grubenv(raiz: Raiz) -> None:
+    antes = foto(raiz.root)
+    _ok(raiz.corre("aplica", "grub-autoarmado"))
+    cfg = (raiz.root / "boot/grub/grub.cfg").read_text(encoding="utf-8")
+    assert cfg.index("load_env") < cfg.index("save_env bb_intentos") < cfg.index("menuentry ")
+    # GRUB arranco con la capa y el SO la registro: el grubenv lleva el contador y la marca
+    env = raiz.root / "boot/grub/grubenv"
+    subprocess.run([str(raiz.bin / "grub-editenv"), str(env), "set", "bb_intentos=3", "bb_autoarmado=1"],
+                   env=raiz.env(), check=True)
+    salida = raiz.corre("estado").stdout
+    assert "grubenv: bb_intentos=3" in salida and "grub-autoarmado: APLICADA" in salida
+    _ok(raiz.corre("retrocede", "grub-autoarmado"))
+    assert foto(raiz.root) == antes
+
+
+def test_autoarmado_se_niega_si_el_contador_no_queda_tras_el_load_env(raiz: Raiz) -> None:
+    antes = foto(raiz.root)
+    _negativa(raiz.corre("aplica", "grub-autoarmado", FAKE_SIN_LOAD_ENV="1"), "el contador bb_intentos no queda")
+    assert foto(raiz.root) == antes
+
+
+@pytest.mark.parametrize("findmnt, lsblk", [("ext4 /dev/mapper/vg0-boot", "lvm"), ("btrfs /dev/nvme0n1p2", "part")])
+def test_autoarmado_se_niega_con_boot_en_lvm_u_otro_fs(raiz: Raiz, findmnt: str, lsblk: str) -> None:
+    antes = foto(raiz.root)
+    _negativa(raiz.corre("aplica", "grub-autoarmado", FAKE_FINDMNT=findmnt, FAKE_LSBLK=lsblk),
+              "FALTA: /boot en ext4 sin LVM ni RAID")
+    assert foto(raiz.root) == antes
+
+
+def test_las_tres_capas_de_grub_de_panic_apiladas_vuelven_en_orden_inverso(raiz: Raiz) -> None:
+    _default_literal(raiz, TITULO_617)
+    original = foto(raiz.root)
+    for c in ("grub-marca", "grub-default-guardado", "grub-autoarmado"):
+        _ok(raiz.corre("aplica", c))
+    cfg = (raiz.root / "boot/grub/grub.cfg").read_text(encoding="utf-8")
+    assert cfg.index("09_bb_etapa ###") < cfg.index("09_bb_zautoarmado ###") < cfg.index("menuentry ")
+    _negativa(raiz.corre("retrocede", "grub-marca"), "retrocede antes")
+    for c in ("grub-autoarmado", "grub-default-guardado", "grub-marca"):
+        _ok(raiz.corre("retrocede", c))
+    assert foto(raiz.root) == original
+
+
 # --- netconsole-arranque: initramfs ------------------------------------------------------------------------------
 
 def test_netconsole_arranque_se_niega_sin_kernel_o_sin_update_initramfs(raiz: Raiz) -> None:
@@ -521,7 +661,8 @@ def _mutante(tmp_path: Path, viejo: str, nuevo: str) -> Path:
     return base / "tools/opt_in_captura.sh"
 
 
-@pytest.mark.parametrize("capa", ["panic-temprano", "netconsole-arranque", "grub-marca"])
+@pytest.mark.parametrize("capa", ["panic-temprano", "netconsole-arranque", "grub-marca", "grub-default-guardado",
+                                  "grub-autoarmado"])
 def test_mutacion_quitar_el_respaldo_rompe_la_ida_y_vuelta(raiz: Raiz, tmp_path: Path, capa: str) -> None:
     mutante = _mutante(tmp_path, LLAMADA_RESPALDO, 'anota fichero "$antes" "$despues" "$rel"')
     ok, motivo = _ida_y_vuelta(raiz, capa, script=mutante)
@@ -545,7 +686,8 @@ def _reinicios(texto: str) -> list[str]:
 
 
 def test_ningun_script_reinicia_la_maquina() -> None:
-    for p in (HERRAMIENTA, CONFIGFS, REPO / "adopted/opt-in/etc_grub.d_09_bb_etapa"):
+    for p in (HERRAMIENTA, CONFIGFS, REPO / "adopted/opt-in/etc_grub.d_09_bb_etapa",
+              REPO / "adopted/opt-in/etc_grub.d_09_bb_zautoarmado", REPO / "tools/punto_restauracion.py"):
         assert _reinicios(p.read_text(encoding="utf-8")) == [], p
 
 

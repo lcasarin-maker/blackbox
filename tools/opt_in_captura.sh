@@ -9,6 +9,7 @@
 #   sudo bash tools/opt_in_captura.sh retrocede <capa>
 #
 # Capas: netconsole-runtime netconsole-arranque pstore-tras-panico grub-marca panic-temprano
+#        grub-default-guardado grub-autoarmado   (las dos de `sudo panic`, docs/PANIC.md)
 #
 # Seguridad: cada aplica comprueba sus precondiciones y valida antes de escribir; respalda byte a byte, con sha256,
 # en /var/lib/blackbox/opt-in/<capa>/ cada fichero que va a cambiar; si algo falla a medias deshace lo escrito.
@@ -23,7 +24,8 @@
 set -euo pipefail
 umask 022
 
-CAPAS=(netconsole-runtime netconsole-arranque pstore-tras-panico grub-marca panic-temprano)
+CAPAS=(netconsole-runtime netconsole-arranque pstore-tras-panico grub-marca panic-temprano grub-default-guardado
+    grub-autoarmado)
 PLANTILLAS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/adopted/opt-in"
 CONFIGFS_SH="$PLANTILLAS/bb-netconsole-configfs.sh"
 ESTADO_REL=var/lib/blackbox/opt-in
@@ -205,13 +207,14 @@ trap 'exit 130' INT TERM
 contiene() { [[ " $1 " == *" $2 "* ]]; }      # $1 contiene la palabra $2
 no_contiene() { ! contiene "$1" "$2"; }
 
-# GRUB_CMDLINE_LINUX_DEFAULT como la arma grub-mkconfig (default/grub y despues default/grub.d/*.cfg en orden C),
-# con el candidato $1 (nombre en grub.d) y su contenido $2 en su sitio. Solo lee: el candidato no toca el disco.
-cmdline_simulada() {
-    local nombre=${1:-} contenido=${2:-}
+# La variable $1 de /etc/default como la deja grub-mkconfig (default/grub y despues default/grub.d/*.cfg en orden
+# C: lo ultimo que la asigna gana), con el candidato $2 (nombre en grub.d) y su contenido $3 en su sitio. Solo lee:
+# el candidato no toca el disco.
+simula_var() {
+    local var=$1 nombre=${2:-} contenido=${3:-}
     (
         set +eu
-        GRUB_CMDLINE_LINUX_DEFAULT=""
+        printf -v "$var" '%s' ""
         d=$(r etc/default/grub.d)
         # shellcheck source=/dev/null
         [ ! -f "$(r etc/default/grub)" ] || . "$(r etc/default/grub)" >/dev/null 2>&1
@@ -220,9 +223,10 @@ cmdline_simulada() {
             if [ "$b" = "$nombre" ]; then eval "$contenido" </dev/null >/dev/null 2>&1; else . "$d/$b" </dev/null >/dev/null 2>&1; fi
         done < <( { for f in "$d"/*.cfg; do [ ! -e "$f" ] || basename "$f"; done; [ -z "$nombre" ] || echo "$nombre"; } \
                   | LC_ALL=C sort -u)
-        printf '%s\n' "$GRUB_CMDLINE_LINUX_DEFAULT"
+        printf '%s\n' "${!var}"
     )
 }
+cmdline_simulada() { simula_var GRUB_CMDLINE_LINUX_DEFAULT "$@"; }
 
 # Valida un grub.cfg generado contra el vigente. Imprime el motivo y sale 1 si no sirve.
 valida_grub_cfg() {  # nuevo vigente palabra-esperada(vacia=ninguna) marca(vacia|marca)
@@ -237,10 +241,20 @@ valida_grub_cfg() {  # nuevo vigente palabra-esperada(vacia=ninguna) marca(vacia
     while IFS= read -r raiz; do
         grep -qF -- " $raiz" "$nuevo" || { echo "perdio $raiz"; return 1; }
     done < <(grep -o 'root=[^[:space:]]*' "$vigente" | sort -u)
-    if [ "${4:-}" = marca ]; then
-        awk '/load_env/ && !l { l = NR } /save_env bb_prev_recordfail/ && !m { m = NR } END { exit !(l && m && l < m) }' "$nuevo" \
-            || { echo "la marca bb_prev_* no queda despues del load_env de 00_header"; return 1; }
-    fi
+    case "${4:-}" in
+        marca)
+            awk '/load_env/ && !l { l = NR } /save_env bb_prev_recordfail/ && !m { m = NR } END { exit !(l && m && l < m) }' "$nuevo" \
+                || { echo "la marca bb_prev_* no queda despues del load_env de 00_header"; return 1; } ;;
+        autoarmado)
+            # despues del load_env y del `set default` de 00_header, y antes de la primera entrada
+            awk '/load_env/ && !l { l = NR } /set default=/ && !d { d = NR } /save_env bb_intentos/ && !s { s = NR }
+                 /^[[:space:]]*(menuentry|submenu) / && !e { e = NR }
+                 END { exit !(l && d && s && l < s && d < s && (!e || s < e)) }' "$nuevo" \
+                || { echo "el contador bb_intentos no queda entre el load_env/default de 00_header y la primera entrada"; return 1; } ;;
+        guardado)
+            grep -qF 'set default="${saved_entry}"' "$nuevo" \
+                || { echo 'la cabecera no lleva set default="${saved_entry}": GRUB_DEFAULT=saved no llego'; return 1; } ;;
+    esac
 }
 
 # grub-mkconfig -o a un fichero aparte, validacion, y solo entonces sustituye a grub.cfg (con respaldo).
@@ -319,7 +333,7 @@ valida_initrd() {
 # Precondiciones: las mismas para plan (informa) y aplica (se niega con cualquier FALTA).
 # ---------------------------------------------------------------------------------------------------------------
 FALTAS=0
-GSC="" MK="" UI="" LSI="" TOKEN="" NC_DEV="" NC_DRIVER=""
+GSC="" MK="" UI="" LSI="" GE="" TOKEN="" NC_DEV="" NC_DRIVER="" SAVED_INICIAL=""
 chequea() {  # descripcion comando...
     local d=$1; shift
     if "$@"; then echo "    ok: $d"; else echo "    FALTA: $d"; FALTAS=$((FALTAS + 1)); fi
@@ -379,7 +393,14 @@ snippet() {  # capa -> nombre en /etc/default/grub.d
         netconsole-arranque) echo 90-bb-netconsole.cfg ;;
         pstore-tras-panico) echo 91-bb-pstore-tras-panico.cfg ;;
         panic-temprano) echo 92-bb-panic-temprano.cfg ;;
+        grub-default-guardado) echo zzz-bb-grub-default-guardado.cfg ;;
     esac
+}
+
+# La entrada que GRUB_DEFAULT nombra existe en grub.cfg: un numero vale; un titulo o id, por su ultimo tramo.
+entrada_en_cfg() {
+    case "$1" in '' | *[!0-9]*) ;; *) return 0 ;; esac
+    grep -qF -- "'${1##*>}'" "$(r "$GRUB_CFG_REL")" 2>/dev/null
 }
 contenido_snippet() {  # capa -> plantilla con el parametro ya puesto
     local t
@@ -423,6 +444,28 @@ precond() {
             chequea "/etc/grub.d/09_bb_etapa no existe" no_existe etc/grub.d/09_bb_etapa
             chequea "/$GRUBENV_REL existe (save_env no lo crea)" existe "$GRUBENV_REL"
             chequea "/boot en ext4 sin LVM ni RAID" boot_simple ;;
+        grub-default-guardado)
+            local hoy tras
+            TOKEN=""
+            precond_grub
+            chequea "/etc/default/grub.d/$(snippet "$capa") no existe" no_existe "etc/default/grub.d/$(snippet "$capa")"
+            chequea "grub-editenv (inicializa saved_entry)" usa GE GRUB_EDITENV grub-editenv
+            chequea "/$GRUBENV_REL existe" existe "$GRUBENV_REL"
+            hoy=$(simula_var GRUB_DEFAULT)
+            tras=$(simula_var GRUB_DEFAULT "$(snippet "$capa")" "$(contenido_snippet "$capa")")
+            SAVED_INICIAL=${hoy:-0}
+            echo "    GRUB_DEFAULT hoy (lo ultimo que lo asigna en default/grub y grub.d/*.cfg): ${hoy:-<vacio: 0>}"
+            echo "    GRUB_DEFAULT tras aplicar:                                                 ${tras:-<vacio: 0>}"
+            echo "    saved_entry se inicializa con la entrada de hoy:                           $SAVED_INICIAL"
+            chequea "GRUB_DEFAULT no es ya saved" test "$hoy" != saved
+            chequea "tras aplicar gana GRUB_DEFAULT=saved (ningun .cfg posterior lo pisa)" test "$tras" = saved
+            chequea "la entrada de hoy existe en /$GRUB_CFG_REL (legible solo como root)" entrada_en_cfg "$SAVED_INICIAL" ;;
+        grub-autoarmado)
+            TOKEN=""
+            precond_grub
+            chequea "/etc/grub.d/09_bb_zautoarmado no existe" no_existe etc/grub.d/09_bb_zautoarmado
+            chequea "/$GRUBENV_REL existe (save_env no lo crea)" existe "$GRUBENV_REL"
+            chequea "/boot en ext4 sin LVM ni RAID" boot_simple ;;
     esac
 }
 
@@ -450,6 +493,16 @@ TXT
     corre:   grub-mkconfig + validacion -> /$GRUB_CFG_REL (con respaldo)
 TXT
             ;;
+        grub-default-guardado) cat <<TXT
+    escribe: /etc/default/grub.d/$(snippet "$1") (0644: GRUB_DEFAULT=saved, GRUB_SAVEDEFAULT=false)
+    corre:   grub-mkconfig + validacion -> /$GRUB_CFG_REL (con respaldo); al final grub-editenv set saved_entry=<hoy>
+TXT
+            ;;
+        grub-autoarmado) cat <<TXT
+    escribe: /etc/grub.d/09_bb_zautoarmado (0755)
+    corre:   grub-mkconfig + validacion -> /$GRUB_CFG_REL (con respaldo)
+TXT
+            ;;
     esac
 }
 
@@ -462,6 +515,19 @@ aplica_snippet() {  # capa (con TOKEN ya puesto por precond)
     contenido_snippet "$1" >"$tmp"
     tx_escribe "etc/default/grub.d/$(snippet "$1")" 0644 "$tmp"
     rm -f -- "$tmp"
+}
+
+# grub-default-guardado, ULTIMO paso (grub.cfg ya validado): saved_entry = la entrada que arrancaba hasta hoy, para que
+# el kernel no cambie. El grubenv no va al manifiesto -- GRUB lo reescribe en cada arranque (recordfail, bb_prev_*),
+# asi que su sha256 nunca coincidiria --; se guarda el saved_entry anterior y retrocede lo devuelve.
+inicia_saved_entry() {
+    local env previo
+    env=$(r "$GRUBENV_REL")
+    previo=$("$GE" "$env" list) || die "grub-editenv list fallo; grubenv sin tocar"
+    previo=$(printf '%s\n' "$previo" | sed -n 's/^saved_entry=//p')
+    printf '%s\n' "${previo:--}" >"$TX_DIR/saved_entry_previo"
+    "$GE" "$env" set "saved_entry=$SAVED_INICIAL" || die "grub-editenv set saved_entry fallo"
+    log "saved_entry=$SAVED_INICIAL (la entrada que arrancaba hasta hoy; antes: ${previo:-<no existia>})"
 }
 
 cmd_aplica() {
@@ -498,6 +564,13 @@ cmd_aplica() {
         grub-marca)
             tx_escribe etc/grub.d/09_bb_etapa 0755 "$PLANTILLAS/etc_grub.d_09_bb_etapa"
             regenera_grub "" marca ;;
+        grub-default-guardado)
+            aplica_snippet "$capa"
+            regenera_grub "" guardado
+            inicia_saved_entry ;;
+        grub-autoarmado)
+            tx_escribe etc/grub.d/09_bb_zautoarmado 0755 "$PLANTILLAS/etc_grub.d_09_bb_zautoarmado"
+            regenera_grub "" autoarmado ;;
     esac
     tx_cierra "$capa"
     case "$capa" in
@@ -554,13 +627,25 @@ para_runtime() {
     BB_NC_ROOT=$ROOT BB_NC_MODPROBE=${MP:-modprobe} bash "$script" para
 }
 
-limpia_grubenv() {
-    local ge env
+limpia_grubenv() {  # variables... (las que la capa dejo en el grubenv; GRUB las ignora sin la capa)
+    local ge env v hay=()
     env=$(r "$GRUBENV_REL")
-    grep -q '^bb_prev_' "$env" 2>/dev/null || return 0
+    for v in "$@"; do grep -q "^$v=" "$env" 2>/dev/null && hay+=("$v"); done
+    [ "${#hay[@]}" -gt 0 ] || return 0
     if usa ge GRUB_EDITENV grub-editenv; then
-        "$ge" "$env" unset bb_prev_recordfail bb_prev_default bb_prev_boot_once && log "quitadas las bb_prev_* de /$GRUBENV_REL"
-    else log "AVISO: sin grub-editenv quedan las bb_prev_* en /$GRUBENV_REL (GRUB las ignora sin 09_bb_etapa)"; fi
+        "$ge" "$env" unset "${hay[@]}" && log "quitadas de /$GRUBENV_REL: ${hay[*]}"
+    else log "AVISO: sin grub-editenv quedan en /$GRUBENV_REL: ${hay[*]} (GRUB las ignora sin la capa)"; fi
+}
+
+devuelve_saved_entry() {
+    local ge env previo
+    env=$(r "$GRUBENV_REL")
+    previo=$(cat -- "$TX_DIR/saved_entry_previo" 2>/dev/null) || { log "AVISO: sin saved_entry_previo: saved_entry queda"; return 0; }
+    if ! usa ge GRUB_EDITENV grub-editenv; then
+        log "AVISO: sin grub-editenv saved_entry queda en /$GRUBENV_REL (sin GRUB_DEFAULT=saved, GRUB lo ignora)"; return 0
+    fi
+    if [ "$previo" = - ]; then "$ge" "$env" unset saved_entry && log "quitado saved_entry (no existia antes de aplicar)"
+    else "$ge" "$env" set "saved_entry=$previo" && log "saved_entry devuelto a $previo"; fi
 }
 
 MP=""
@@ -580,7 +665,11 @@ cmd_retrocede() {
         restaura "$tipo" "$antes" "$rel"
         [ "$tipo" = dir ] || log "devuelto /$rel"
     done < <(tac -- "$TX_DIR/manifiesto")
-    [ "$capa" != grub-marca ] || limpia_grubenv
+    case "$capa" in
+        grub-marca) limpia_grubenv bb_prev_recordfail bb_prev_default bb_prev_boot_once ;;
+        grub-autoarmado) limpia_grubenv bb_intentos bb_autoarmado ;;
+        grub-default-guardado) devuelve_saved_entry ;;
+    esac
     borra_estado_capa
     log "$capa RETROCEDIDA: cada fichero quedo byte a byte como antes de aplicar"
 }
@@ -618,7 +707,8 @@ cmd_estado() {
     if [ -d "$d" ]; then log "destino netconsole bb: enabled=$(cat -- "$d/enabled" 2>/dev/null || echo ?)"
     else log "destino netconsole bb: no existe"; fi
     if [ -r "$(r "$GRUBENV_REL")" ]; then
-        grep '^bb_prev_' "$(r "$GRUBENV_REL")" | sed 's/^/[opt-in] grubenv: /' || log "grubenv: sin bb_prev_*"
+        grep -E '^(bb_[a-z_]+|saved_entry|next_entry)=' "$(r "$GRUBENV_REL")" | sed 's/^/[opt-in] grubenv: /' \
+            || log "grubenv: sin bb_* ni saved_entry"
     fi
 }
 
@@ -629,6 +719,8 @@ descripcion() {
         pstore-tras-panico) echo "crash_kexec_post_notifiers: pstore guarda el panico aunque kdump este cargado" ;;
         grub-marca) echo "/etc/grub.d/09_bb_etapa: GRUB guarda recordfail y la entrada por defecto en bb_prev_*" ;;
         panic-temprano) echo "panic=30: un panico antes de sysctl reinicia a los 30 s en vez de quedarse parado" ;;
+        grub-default-guardado) echo "GRUB_DEFAULT=saved: el kernel por defecto lo fija grub-set-default (sudo panic)" ;;
+        grub-autoarmado) echo "/etc/grub.d/09_bb_zautoarmado: tras 3 arranques sin confirmar, GRUB arranca el punto" ;;
     esac
 }
 
@@ -670,6 +762,6 @@ case "${1:-plan}" in
         { [ $# -eq 2 ] && es_capa "$2"; } || ambigua
         candado
         if [ "$1" = aplica ]; then cmd_aplica "$2"; else cmd_retrocede "$2"; fi ;;
-    -h | --help | ayuda) sed -n 2,24p "$0" ;;
+    -h | --help | ayuda) sed -n 2,23p "$0" ;;
     *) ambigua ;;
 esac

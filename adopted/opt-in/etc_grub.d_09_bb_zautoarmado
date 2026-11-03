@@ -1,0 +1,54 @@
+#!/bin/sh
+# /etc/grub.d/09_bb_zautoarmado -- capa grub-autoarmado (blackbox adopted/opt-in). La instala y la quita
+# `tools/opt_in_captura.sh {aplica,retrocede} grub-autoarmado`. Procedimiento de prueba: docs/PANIC.md.
+#
+# El nombre la pone DESPUES de 00_header (load_env y la entrada por defecto ya resueltos) y de 09_bb_etapa
+# (grub-marca copia el `default` sin tocar a bb_prev_default), y ANTES de 10_linux (cualquier entrada).
+#
+# Contador de arranques sin confirmar, en el grubenv:
+#   bb_intentos     0 1 2 -> GRUB lo sube en cada arranque; bb-arranque-ok.timer (180 s, journal sin la firma del
+#                   GSP) lo devuelve a 0. Si GRUB lo lee en 3 o mas (o con basura) y existe bb_punto_entry, arranca
+#                   esa entrada, pone el contador a 0 y deja bb_autoarmado=1 para que el SO lo registre.
+#   bb_punto_entry  `<submenu>><entrada>` del punto de restauracion valido mas reciente; la escriben
+#                   bb-punto-restauracion y `sudo panic`. Sin ella, el contador se queda en 3 y nada cambia.
+# Sin grubenv (have_grubenv vacio) no hace nada. Sin bucles: cada arranque ejecuta este bloque una vez. Si save_env
+# falla, GRUB sigue con el `default` que ya tenia.
+# Si `default` llega vacio (GRUB_DEFAULT=saved sin saved_entry: GRUB arrancaria la primera entrada, el kernel mas
+# nuevo) y hay bb_punto_entry, usa el punto.
+#
+# save_env solo es seguro con /boot/grub en ext2/3/4 sin LVM ni RAID: la herramienta lo comprueba antes de
+# instalarlo y aqui se repite con GRUB_FS, que grub-mkconfig exporta (grub-probe llama ext2 a ext4).
+set -e
+if [ "${GRUB_FS:-}" != ext2 ]; then
+    echo "# 09_bb_zautoarmado: /boot/grub en '${GRUB_FS:-desconocido}', no ext2/3/4: sin autoarmado"
+    exit 0
+fi
+cat <<'GRUB'
+### BEGIN /etc/grub.d/09_bb_zautoarmado ###
+if [ -n "${have_grubenv}" ]; then
+  if [ -z "${bb_intentos}" ]; then
+    set bb_intentos=0
+  fi
+  if [ "${bb_intentos}" = 0 ]; then
+    set bb_intentos=1
+  elif [ "${bb_intentos}" = 1 ]; then
+    set bb_intentos=2
+  elif [ "${bb_intentos}" = 2 ]; then
+    set bb_intentos=3
+  elif [ -n "${bb_punto_entry}" ]; then
+    set default="${bb_punto_entry}"
+    set bb_intentos=0
+    set bb_autoarmado=1
+    save_env bb_autoarmado
+  else
+    set bb_intentos=3
+  fi
+  save_env bb_intentos
+  if [ -z "${default}" ]; then
+    if [ -n "${bb_punto_entry}" ]; then
+      set default="${bb_punto_entry}"
+    fi
+  fi
+fi
+### END /etc/grub.d/09_bb_zautoarmado ###
+GRUB
