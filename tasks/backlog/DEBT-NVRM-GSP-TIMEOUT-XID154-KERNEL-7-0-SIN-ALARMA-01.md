@@ -21,6 +21,8 @@ close_check: {"cmd": "grep -q '\"gsp_timeout\"' ~/.local/share/blackbox/reboots.
 - El arranque 7cd0848b vivio 9 871 s (2 h 44 min) con la GPU en ese estado y termino sin cierre ordenado; las ultimas 4 muestras de 1 s (`muestreo-7cd0848b.jsonl`) son planas: CPU 0,3 a 3,4 %, 41,8 a 43,3 C, GPU 9,3 W al 0 %.
 - En el arranque 39e2f667 el hilo `pr/ttyS0` consume un nucleo al 101 % en la ultima muestra: la consola serie esta a `console=ttyS0,921600` y la inundacion de mensajes NVRM pasa por ella. Es una pista, no una causa: no hay prueba de que esa carga reinicie nada.
 
+- **Modulo cargado en esos arranques: no consta.** `dmem_parche.jsonl` no tiene entradas despues de 2026-10-30 22:25 UTC (el monitor estaba suspendido), el journal de kernel de los arranques del bucle no trae lineas `dmem` ni `memacct`, y hoy `/lib/modules/7.0.0-1024-nvidia/updates/` no existe. No se puede afirmar si el bucle corrio con el modulo parchado o con el de fabrica; si fue el de fabrica, la hipotesis "el parche causa los cortes" pierde fuerza. Falta un registro por arranque de la ruta del `nvidia.ko` cargado (`/sys/module/nvidia/` + `modinfo -n`) y de su sha256.
+
 ## Lo que corrige
 
 El informe preparado para NVIDIA y el tema publicado decian "sin Xid ni NVRM de error" y "pstore vacio" para los cortes del 2026-10-30 (cierto para esos cuatro) y no mencionaban esta secuencia en los arranques del bucle del 11-01 y 11-02. Esa omision es un error mio de lectura (solo mire las colas de los journals de los cortes), no una ausencia en los datos.

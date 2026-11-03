@@ -48,6 +48,7 @@ Esto contradice una lectura previa: el informe para NVIDIA y el tema del foro di
 | 12 | Receptor externo en un PC que se puede reiniciar | tarea `bb_receptor_netconsole` creada, sin probar a traves de un reinicio de Windows | armado, sin probar | DEBT-OBSERVADORES-CONSTRUIDOS-SIN-INSTALAR-01 |
 | 13 | Caidas de la sesion grafica | 3 SIGSEGV de `gnome-shell` en 8 dias; pila con simbolos: `device=0x0` en `meta_input_device_x11_reset_scroll_info` | causa localizada, decision pendiente | DEBT-GNOME-SHELL-SEGV-EN-LIBMUTTER-FREE-X11-01 |
 | 14 | Consola serie a 921 600 baudios inundada por NVRM | hilo `pr/ttyS0` al 101 % de un nucleo en 39e2f667 | pista sin probar | DEBT-NVRM-GSP-TIMEOUT-XID154-KERNEL-7-0-SIN-ALARMA-01 §3 |
+| 15 | Que modulo nvidia (fabrica o parchado) cargo cada arranque | `dmem_parche.jsonl` sin entradas desde 10-30 22:25 UTC; `updates/` de 7.0 no existe hoy; el bucle no se puede atribuir a un modulo | abierto | DEBT-NVRM-GSP-TIMEOUT-XID154-KERNEL-7-0-SIN-ALARMA-01 |
 
 ## 5. Lo que sigue sin saberse
 
