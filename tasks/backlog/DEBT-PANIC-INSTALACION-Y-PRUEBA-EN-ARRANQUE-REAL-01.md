@@ -8,7 +8,7 @@ severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-03
-close_check: {"cmd": "test -x /usr/local/sbin/panic && grub-editenv list | grep -q '^bb_intentos=' && grep -q '\"autoarmado\": true' /var/lib/blackbox/arranque-ok.jsonl", "expect": "exit_zero", "porque": "Falla hoy (medido 2026-11-03, rc=1): /usr/local/sbin/panic no existe (rc 1), `grub-editenv list` no tiene ninguna variable (0 lineas) y /var/lib/blackbox/arranque-ok.jsonl no existe. Pasa solo con panic instalado, el contador del autoarmado en el grubenv y UN arranque real en que GRUB eligio el punto y bb-arranque-ok lo registro."}
+close_check: {"cmd": "test -x /usr/local/sbin/panic && grub-editenv list | grep -q '^bb_intentos=' && grep -q '\"autoarmado\": true.*\"fijado_a\": \"gnulinux-' /var/lib/blackbox/arranque-ok.jsonl", "expect": "exit_zero", "porque": "Falla hoy (medido 2026-11-03, rc=1): /usr/local/sbin/panic no existe (rc 1), `grub-editenv list` no tiene ninguna variable (0 lineas) y /var/lib/blackbox/arranque-ok.jsonl no existe. Pasa solo con panic instalado, el contador del autoarmado en el grubenv y UN arranque real en que GRUB eligio el punto, salio sano y bb-arranque-ok lo fijo con grub-set-default."}
 ---
 
 ## Que falta
@@ -29,8 +29,9 @@ con `grub-script-check` (sintaxis) y con un interprete del subconjunto de GRUB (
    `/var/lib/blackbox/restore/` y `bb_punto_entry` en `grub-editenv list`.
 6. `aplica grub-autoarmado`.
 7. Prueba en arranque real: `sudo grub-editenv /boot/grub/grubenv set bb_intentos=3`, `sudo reboot`, y comprobar
-   `uname -r` = kernel del punto, `bb_autoarmado=1` antes de 180 s y, despues, la linea con `"autoarmado": true` en
-   `/var/lib/blackbox/arranque-ok.jsonl`.
+   `uname -r` = kernel del punto, `bb_autoarmado=1` antes de 180 s y, despues, la linea con `"autoarmado": true` y
+   `"fijado_a": "<entrada del punto>"` en `/var/lib/blackbox/arranque-ok.jsonl`, y `saved_entry` = esa entrada
+   (sin oscilacion: decision de Luis 2026-11-03). Un reinicio mas debe arrancar el punto.
 8. Tras la instalacion: `git mv` de las cuatro gemelas de `adopted/pendiente-de-despliegue/` a
    `adopted/system-config/` y su fila en SPEC.md §Inventario de propiedad.
 

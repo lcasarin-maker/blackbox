@@ -119,9 +119,11 @@ def arranca(env: dict[str, str] | None, autoarmado: str, guardar_falla: bool = F
 
 
 def arranque_ok(env: dict[str, str]) -> None:
-    """Lo que hace bb-arranque-ok tras 180 s de un arranque sano (tools/punto_restauracion.arranque_ok)."""
+    """Lo que hace bb-arranque-ok tras 180 s de un arranque sano (tools/punto_restauracion.arranque_ok): con
+    bb_autoarmado=1, grub-set-default al punto (GRUB_DEFAULT=saved), para que no oscile."""
     env["bb_intentos"] = "0"
-    env.pop("bb_autoarmado", None)
+    if env.pop("bb_autoarmado", None) == "1" and env.get("bb_punto_entry"):
+        env["saved_entry"] = env["bb_punto_entry"]
 
 
 def secuencia(autoarmado: str, arranques: str, env: dict[str, str] | None = None) -> list[tuple[str, str, str]]:
@@ -164,6 +166,28 @@ def test_un_arranque_largo_devuelve_el_contador_a_cero(capsys):
             print(f"  {n}  {f[0]:<12} {f[1]:<6} {f[2]}")
     assert [f[1] for f in filas] == ["saved", "saved", "saved", "saved", "saved", "saved", "PUNTO"]
     assert filas[2] == ("2", "saved", "0")  # el largo: GRUB lo subio a 3 y arranque-ok lo bajo a 0
+
+
+def test_tras_un_autoarmado_sano_el_siguiente_reinicio_no_vuelve_al_kernel_malo(capsys):
+    """Decision de Luis 2026-11-03: la oscilacion (3 cortos, punto, otra vez el malo) no se acepta."""
+    filas = secuencia(emite(AUTOARMADO), "cccl" + "ccc")
+    with capsys.disabled():
+        print("\n[tabla] corto x3, el punto arranca LARGO, despues reinicios (cortos o no):")
+        for n, f in enumerate(filas, 1):
+            print(f"  {n}  {f[0]:<12} {f[1]:<6} {f[2]}")
+    assert [f[1] for f in filas] == ["saved", "saved", "saved", "PUNTO", "PUNTO", "PUNTO", "PUNTO"]
+
+
+def test_control_sin_fijar_el_punto_si_oscila():
+    """Control: con el arranque-ok de antes (sin grub-set-default) la misma secuencia vuelve al malo."""
+    env = {"saved_entry": SAVED, "bb_punto_entry": PUNTO}
+    vistos = []
+    for tipo in "cccl" + "c":
+        vistos.append(arranca(env, emite(AUTOARMADO)))
+        if tipo == "l":
+            env["bb_intentos"] = "0"
+            env.pop("bb_autoarmado", None)
+    assert vistos[-1] == SAVED
 
 
 def test_sin_punto_el_contador_se_queda_en_3_y_no_cambia_el_arranque():

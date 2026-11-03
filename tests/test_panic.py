@@ -350,12 +350,61 @@ def test_sin_kernel_en_boot_no_nace_un_punto_y_se_quita_bb_punto_entry(atom, cap
 def test_arranque_ok_baja_el_contador_y_anota_el_autoarmado(atom):
     escribe(atom.raiz / "proc/uptime", "181.0 10.0\n")
     atom.env.write_text("# GRUB Environment Block\nbb_intentos=2\nbb_autoarmado=1\n" + "#" * 974)
-    assert pr.main(["arranque-ok"]) == 0
+    assert pr.main(["arranque-ok"]) == 1  # sano, pero el autoarmado sin bb_punto_entry es could_not_run
     env = atom.grubenv()
     assert env["bb_intentos"] == "0" and "bb_autoarmado" not in env
     (fila,) = [json.loads(ln) for ln in (atom.raiz / "var/lib/blackbox/arranque-ok.jsonl").read_text().splitlines()]
     assert fila["sano"] and fila["autoarmado"] and fila["bb_intentos_antes"] == "2" and fila["bb_intentos_a_0"]
     assert fila["kernel"] == BUENO and fila["boot_id"] == "aaaaaaaabbbbccccddddeeeeeeeeeeee"
+    assert fila["fijado_a"] is None  # autoarmado sin bb_punto_entry: nada que fijar, y se dice
+    assert "sin bb_punto_entry" in " ".join(fila["could_not_run"])
+
+
+def _autoarmado_hecho(atom: Atom) -> None:
+    """Lo que deja GRUB tras arrancar el punto por el autoarmado; saved_entry sigue en el kernel malo."""
+    malo = f"{SUB}>gnulinux-{MALO}-advanced-{UUID}"
+    atom.env.write_text("# GRUB Environment Block\n" + "".join(f"{k}={v}\n" for k, v in {
+        "saved_entry": malo, "bb_intentos": "0", "bb_autoarmado": "1", "bb_punto_entry": RUTA_BUENO}.items()))
+    t = atom.env.read_text()
+    atom.env.write_text(t + "#" * (1024 - len(t)))
+
+
+def test_autoarmado_sano_fija_el_punto_y_no_oscila(atom):
+    escribe(atom.raiz / "proc/uptime", "181.0 10.0\n")
+    _autoarmado_hecho(atom)
+    assert pr.main(["arranque-ok"]) == 0
+    env = atom.grubenv()
+    assert env["saved_entry"] == RUTA_BUENO, "el siguiente reinicio volveria al kernel malo"
+    assert "bb_autoarmado" not in env and env["bb_intentos"] == "0"
+    fila = json.loads((atom.raiz / "var/lib/blackbox/arranque-ok.jsonl").read_text())
+    assert fila["autoarmado"] is True and fila["fijado_a"] == RUTA_BUENO
+    (llamada,) = atom.llamadas("grub-set-default")
+    assert llamada == ["grub-set-default", f"--boot-directory={atom.raiz}/boot", RUTA_BUENO]
+
+
+@pytest.mark.parametrize("uptime, journal", [
+    ("181.0 1.0\n", LIMPIO + "[   24.3] NVRM: _issueRpcAndWait: rpcRecvPoll timedout waiting for response\n"),
+    ("120.0 1.0\n", LIMPIO),
+])
+def test_autoarmado_de_un_arranque_no_sano_no_fija_nada(atom, uptime, journal):
+    escribe(atom.raiz / "proc/uptime", uptime)
+    atom.pon({"journal": journal})
+    _autoarmado_hecho(atom)
+    assert pr.main(["arranque-ok"]) == 1
+    assert atom.grubenv()["saved_entry"] == f"{SUB}>gnulinux-{MALO}-advanced-{UUID}"
+    assert atom.llamadas("grub-set-default") == []
+    fila = json.loads((atom.raiz / "var/lib/blackbox/arranque-ok.jsonl").read_text())
+    assert fila["autoarmado"] is True and fila["fijado_a"] is None
+
+
+def test_autoarmado_sano_sin_grub_default_saved_lo_dice(atom):
+    (atom.raiz / "etc/default/grub.d/zzz-bb-grub-default-guardado.cfg").unlink()
+    escribe(atom.raiz / "proc/uptime", "181.0 10.0\n")
+    _autoarmado_hecho(atom)
+    assert pr.main(["arranque-ok"]) == 1
+    fila = json.loads((atom.raiz / "var/lib/blackbox/arranque-ok.jsonl").read_text())
+    assert fila["fijado_a"] is None and "no saved" in " ".join(fila["could_not_run"])
+    assert atom.llamadas("grub-set-default") == [] and atom.grubenv()["bb_intentos"] == "0"
 
 
 @pytest.mark.parametrize("uptime, journal", [

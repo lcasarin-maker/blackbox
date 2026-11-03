@@ -122,9 +122,14 @@ Para el bucle de segundos, sin teclear. Dos capas de `tools/opt_in_captura.sh` y
   - sin bucles: el bloque corre una vez por arranque; si `save_env` falla, GRUB sigue con el `default` que tenía.
 - **`bb-arranque-ok.timer`** (180 s tras arrancar, como root): si el arranque lleva 180 s o más y su journal de
   kernel no tiene la firma del GSP, `grub-editenv /boot/grub/grubenv set bb_intentos=0`; registra una línea en
-  `/var/lib/blackbox/arranque-ok.jsonl` (boot_id, fecha, kernel, sano, motivos, contador anterior, autoarmado) y
-  quita `bb_autoarmado` tras anotarlo. La condición del GSP va más allá de «180 s» a propósito: un arranque del
-  bucle duró 242 s, así que el tiempo solo lo habría dado por bueno.
+  `/var/lib/blackbox/arranque-ok.jsonl` (boot_id, fecha, kernel, sano, motivos, contador anterior, autoarmado,
+  `fijado_a`) y quita `bb_autoarmado` tras anotarlo. La condición del GSP va más allá de «180 s» a propósito: un
+  arranque del bucle duró 242 s, así que el tiempo solo lo habría dado por bueno.
+- **Sin oscilación** (decisión de Luis, 2026-11-03): si GRUB dejó `bb_autoarmado=1` y ese arranque del punto
+  resulta sano, `arranque-ok` hace `grub-set-default <bb_punto_entry>` y anota `"fijado_a": "<entrada>"`. Así el
+  siguiente reinicio manual arranca el punto y no vuelve al kernel malo. Si `GRUB_DEFAULT` efectivo no es `saved`
+  no fija nada y lo dice en `could_not_run` (`fijado_a: null`). Un arranque del punto que NO resulta sano no fija
+  nada.
 
 Tabla de verdad del contador (salida literal de `tests/test_grub_autoarmado.py`, que ejecuta el texto que emite
 la plantilla con un intérprete del subconjunto de GRUB que usa):
@@ -137,6 +142,14 @@ la plantilla con un intérprete del subconjunto de GRUB que usa):
 | 4 | 3 | **punto** | 0, `bb_autoarmado=1` |
 | 5 corto | 0 | saved | 1 (la marca sigue hasta que arranque-ok la lea) |
 | largo (en cualquier punto) | n | saved | 0 (arranque-ok a los 180 s) |
+
+Y cuando el arranque del punto SÍ sale sano (3 cortos, el punto largo, después reinicios):
+
+| Arranque | `bb_intentos` que lee GRUB | Arranca | `bb_intentos` al acabar |
+|---|---|---|---|
+| 1-3 cortos | (no existe), 1, 2 | saved (kernel malo) | 1, 2, 3 |
+| 4 largo | 3 | **punto** | 0; arranque-ok: `grub-set-default` al punto, `fijado_a` |
+| 5, 6, 7 | 0, 1, 2 | **punto** (ya es `saved_entry`) | 1, 2, 3 |
 
 ## Cómo probarlo (lo corre Luis; la lógica en GRUB NO se ha probado en un arranque real)
 
@@ -173,7 +186,8 @@ sudo grub-editenv list
 ```
 
    Debe salir el kernel del punto, `bb_intentos=0` y `bb_autoarmado=1`. Tras 180 s, la última línea de
-   `/var/lib/blackbox/arranque-ok.jsonl` debe decir `"autoarmado": true` y la marca debe haber desaparecido:
+   `/var/lib/blackbox/arranque-ok.jsonl` debe decir `"autoarmado": true` y `"fijado_a": "<entrada del punto>"`, la
+   marca debe haber desaparecido y `saved_entry` debe ser la entrada del punto (un reinicio más arranca el punto):
 
 ```
 sudo tail -n 1 /var/lib/blackbox/arranque-ok.jsonl
@@ -292,9 +306,9 @@ cmp tools/panic.py /usr/local/lib/blackbox/tools/panic.py
   reciente.
 - El autoarmado NO se probó en un arranque real (could_not_run): solo su sintaxis (`grub-script-check`) y su
   lógica (intérprete del subconjunto de GRUB sobre el texto emitido). El procedimiento está arriba.
-- El autoarmado cambia el arranque de UNA vez: `saved_entry` sigue siendo el kernel de antes. Si el siguiente
-  reinicio vuelve a ser el kernel malo, el contador vuelve a subir y a los tres arranques cortos vuelve al punto.
-  Fijarlo para siempre es `sudo panic`.
+- El autoarmado fija el punto solo si el arranque del punto sale sano y `GRUB_DEFAULT` es `saved`. Si el propio
+  punto también muere antes de 180 s, nada se fija: el siguiente arranque vuelve a `saved_entry` (el kernel de
+  antes) y el contador vuelve a empezar.
 - Si `bb_punto_entry` nombra una entrada que no existe en el menú, GRUB arranca la primera entrada (el kernel más
   nuevo). El servicio solo publica la de un punto válido, cuya entrada se comprueba en `grub.cfg` en cada corrida.
 - `apt-mark hold` deja a propósito los kernels de los puntos sin actualizar ni quitar: una subida de esos paquetes

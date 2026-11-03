@@ -23,7 +23,9 @@ es lo que lee /etc/grub.d/09_bb_zautoarmado.
 >= 180 s y su journal de kernel no tiene la firma del GSP (timeout de RPC ni Xid 154). Esa segunda condicion
 va mas alla del brief a proposito: un arranque del bucle duro 242 s, asi que 180 s solos lo darian por bueno.
 Registra una linea por corrida en /var/lib/blackbox/arranque-ok.jsonl y, si GRUB dejo `bb_autoarmado=1`, lo
-anota y lo quita.
+anota y lo quita. Si ademas el arranque resulto sano, `grub-set-default <bb_punto_entry>` (con GRUB_DEFAULT=saved;
+si no, could_not_run) y anota `fijado_a`: el autoarmado deja la maquina fijada al punto y el siguiente reinicio
+no vuelve al kernel malo (decision de Luis 2026-11-03: la oscilacion no se acepta).
 
 Root y biblioteca estandar: se instala como COPIA root-owned en /usr/local/lib/blackbox/tools/ y corre con
 `python3 -I` (sin el directorio actual ni PYTHON* en sys.path); nunca se ejecuta el repo como root. Pruebas:
@@ -580,6 +582,26 @@ def _crea(ctx: br.Ctx, ej: br.Ejecutor, cnr: list[str], puntos: list[tuple[Path,
 # --- arranque-ok -----------------------------------------------------------
 
 
+def fija_punto(ej: br.Ejecutor, cnr: list[str], entrada: str | None) -> str | None:
+    """Tras un autoarmado que salio sano: `grub-set-default <bb_punto_entry>` si GRUB_DEFAULT es saved.
+
+    Sin esto, saved_entry seguiria nombrando el kernel malo y el siguiente reinicio volveria a el (oscilacion:
+    tres cortos, punto, otra vez el malo). Devuelve la entrada fijada o None (con su could_not_run)."""
+    if not entrada:
+        cnr.append("autoarmado sin bb_punto_entry en el grubenv: no se fija nada")
+        return None
+    efectivo = grub_default_efectivo()
+    if efectivo != "saved":
+        cnr.append(f"autoarmado sano pero GRUB_DEFAULT efectivo es {efectivo!r}, no saved: el kernel del punto NO "
+                   "queda fijo (aplica grub-default-guardado o corre sudo panic)")
+        return None
+    rc, _, err = ej.corre(["grub-set-default", f"--boot-directory={en_raiz('/boot')}", entrada], T_CMD)
+    if rc != 0:
+        cnr.append(f"grub-set-default {entrada}: {br.motivo_de(rc, err)}")
+        return None
+    return entrada
+
+
 def arranque_ok() -> int:
     ctx, ej = br.Ctx(), br.Ejecutor()
     cnr: list[str] = []
@@ -589,10 +611,12 @@ def arranque_ok() -> int:
         "esquema": ESQUEMA_OK, "fecha": ahora(), "boot_id": s["boot_id"], "kernel": kernel(),
         "sano": s["sano"], "motivos": s["motivos"], "bb_intentos_antes": env.get("bb_intentos"),
         "autoarmado": env.get("bb_autoarmado") == "1", "bb_punto_entry": env.get("bb_punto_entry"),
-        "bb_intentos_a_0": False,
+        "bb_intentos_a_0": False, "fijado_a": None,
     }
     if s["sano"]:
         fila["bb_intentos_a_0"] = grubenv_cambia(ej, cnr, "set", "bb_intentos=0")
+        if fila["autoarmado"]:  # GRUB eligio el punto y el punto SI arranco bien: queda fijo, sin oscilar
+            fila["fijado_a"] = fija_punto(ej, cnr, env.get("bb_punto_entry"))
     if fila["autoarmado"]:
         grubenv_cambia(ej, cnr, "unset", "bb_autoarmado")
     fila["could_not_run"] = cnr
