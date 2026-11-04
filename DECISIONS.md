@@ -474,3 +474,11 @@ El repositorio es publico y debe quedar limpio de temas ajenos. Estas son las de
 - **Reescribir ya, con la maquina apagada (#36 B):** la reescritura corre en cuanto el arbol este neutralizado (#35 A), sin esperar mas, y con la maquina apagada mientras dura.
 - **Descarta:** guardar los datos ajenos «por historia» en un repositorio publico; que el consumidor actue sobre el motor; apilar guardias nuevas sin tener captura externa que las valide.
 - **Reabrir si:** el respaldo previo falla o el historial ya reescrito rompe un hash citado.
+
+## 2026-11-03 — El repo ya no depende del kit de guardrails; se borran su configuración y sus restos (voto de Luis, boleta «Cierre»)
+
+- **Decisión:** se borran `.pre-commit-config.yaml` (14 entradas, 5 de ellas `python -m simplecode.*` con 4 pins `simplecode @ git+…@cf7e2ccd`), `.simplecode/simplecode.retired` (lanzador que hacía `exec python -m simplecode.fleet_runner`), `.simplecode/native-release.json` (pin del kit 12.1.1) y las 15 copias de `.simplecode/pin-backups/*/.pre-commit-config.yaml`. Los hooks los corre `simplecode` desde `simple.json`; el framework pre-commit ya estaba desplazado del clon y nada del repo (CI, Makefile, scripts, tests) leía esos archivos.
+- **Por qué:** cuando se borre el paquete `simplecode` 12.1.1 del sistema, todo lo que lo importe falla; el pin apunta a la rama `kit`, que deja de existir. Las entradas que `simple.json` cubre: `ruff`, `gitleaks`, `pytest` (test_impact del kit → política `test-impact`), `bash-sintaxis`, `bb-cobertura-piso`, `inventario-spec`, `integridad-archivos`, `pii-staged`.
+- **Lo que deja de existir sin sustituto (ya no corría: los hooks de simplecode desplazaron al framework):** `ruff-full` (ruff sobre todo el árbol en pre-push), `pyright`, `git-history-present`, `gitleaks-new-commits` (gitleaks del rango del push), `integridad-arbol` y `pii-arbol` (árbol completo en pre-push); y `pii-staged` del kit leía todo archivo cambiado, la política de simplecode sólo `tasks/` y `docs/`. Añadirlos a `simple.json` es otra decisión.
+- **Descarta:** dejar el archivo con las entradas no cubiertas (ningún hook las lee; describiría controles que no corren); sustituirlas por filas nuevas sin voto.
+- **Reabrir si:** se quiere de vuelta alguno de los controles de la lista anterior: va como fila de `simple.json`, no como entrada del framework.

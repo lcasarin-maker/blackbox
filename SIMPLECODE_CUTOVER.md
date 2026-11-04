@@ -15,4 +15,4 @@ hay llamadas activas a su lanzador. La decision, con lo retirado y lo descartado
 
 `COULD_NOT_RUN` declarado: la CI de GitHub no arranca en la cuenta por un error de facturacion; no cuenta como verde.
 
-La migración del 2026-10-18 retiró las dos copias nativas y sus tests; las pruebas de los motores viven en Simplecode. El pin de commit está en `.pre-commit-config.yaml`.
+La migración del 2026-10-18 retiró las dos copias nativas y sus tests; las pruebas de los motores viven en Simplecode. Desde el 2026-11-03 no hay pin: el kit dejó de ser dependencia, se borró `.pre-commit-config.yaml` y los hooks los corre `simplecode` desde `simple.json` (`DECISIONS.md`, 2026-11-03).
