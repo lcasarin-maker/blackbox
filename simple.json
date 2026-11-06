@@ -297,6 +297,132 @@
       "hooks": [
         "pre-push"
       ]
+    },
+    {
+      "id": "ruff-full",
+      "argv": [
+        "sh",
+        "-c",
+        "command -v \"$0\" >/dev/null 2>&1 || { echo \"COULD_NOT_RUN: ruff-full: no \\`$0\\` on PATH\" >&2; exit 2; }\nexec \"$0\" check --no-cache \"$@\" .",
+        "ruff",
+        "--extend-select",
+        "S102,S301,S602,S608,S307,S506,S604,S605,PLE2502,PLE2510,PLE2512,PLE2513,PLE2514,PLE2515"
+      ],
+      "timeout_ms": 1800000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": false,
+      "could_not_run_exit_codes": [
+        2
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "read_only": true,
+      "hooks": [
+        "ci"
+      ]
+    },
+    {
+      "id": "pyright",
+      "policy": {
+        "kind": "types",
+        "python": "python3",
+        "args": []
+      },
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "timeout_ms": 1800000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [],
+      "inherit_env": [
+        "PYTHONUSERBASE"
+      ],
+      "read_only": true,
+      "hooks": [
+        "ci"
+      ]
+    },
+    {
+      "id": "gitleaks-history",
+      "argv": [
+        "sh",
+        "-c",
+        "n=$(git rev-list --all --count) || { echo \"COULD_NOT_RUN: gitleaks-history: git rev-list --all failed\" >&2; exit 2; }\n[ \"$n\" -gt 0 ] || { echo \"COULD_NOT_RUN: gitleaks-history: no commit enumerated (git-history-present)\" >&2; exit 2; }\n[ \"$(git rev-parse --is-shallow-repository)\" = false ] ||\n  { echo \"COULD_NOT_RUN: gitleaks-history: shallow history cannot cover every commit\" >&2; exit 2; }\necho \"history=--all reachable_commits=$n\"\nexec \"$0\" git --no-banner --redact --exit-code 23 --log-opts=--all \"$@\" .",
+        "gitleaks"
+      ],
+      "timeout_ms": 1800000,
+      "cache": false,
+      "inputs": [
+        "simple.json",
+        ".gitleaks.toml",
+        ".gitleaksignore"
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [
+        1,
+        2
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "read_only": true,
+      "hooks": [
+        "ci"
+      ]
+    },
+    {
+      "id": "integridad-arbol",
+      "policy": {
+        "kind": "integrity",
+        "python": "python3",
+        "args": []
+      },
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "timeout_ms": 1800000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [],
+      "read_only": true,
+      "hooks": [
+        "ci"
+      ]
+    },
+    {
+      "id": "pii-arbol",
+      "policy": {
+        "kind": "pii",
+        "python": "python3",
+        "args": [
+          "--all-tracked"
+        ]
+      },
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "timeout_ms": 1800000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [],
+      "read_only": true,
+      "hooks": [
+        "ci"
+      ]
     }
   ]
 }
