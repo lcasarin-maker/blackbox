@@ -82,3 +82,11 @@ Pendiente de Luis (root): `SyncIntervalSec=1s` en journald para no perder los ul
 1. Estabilizar sin motor, luego reintroducir UNA unidad a la vez (primero el motor) y registrar el tiempo hasta el corte.
 2. Si el motor reproduce el corte con el modulo parchado y no con el de fabrica, retroceder el modulo (`sudo bash tools/dmem_modulo.sh retrocede`) y devolver el parche a revision.
 3. Restaurar las 22 unidades con el manifiesto antes del 2026-11-06.
+
+## Decision de Luis, 2026-11-06 (boleta «Vence hoy»): el manifiesto de suspension se extiende 7 dias
+
+`~/.local/share/blackbox/suspensiones/2026-10-30-crashloop.json`: `vence` pasa de 2026-11-06 a 2026-11-13 (copia previa en `*.bak-2026-11-06`; unico campo cambiado, comprobado con diff tras normalizar). Estado medido ese dia con `systemctl show` de las 22 unidades: 13 activas, 5 `declutter-*` deshabilitadas, `own-chats-classify` y `own-chats-sync` no encontradas, `atlas-api` y `ojn-fichas` inactivas.
+
+- **Motivo:** la causa de los cortes sigue sin aislar y los `declutter-*` esperan el registro de Aequitas. Motivo declarado por Luis: ninguno adicional (eligio la opcion recomendada).
+- **Descartado:** restaurar hoy los `declutter-*` y `ojn-fichas` (efecto en memoria sin medir tras dos colapsos el mismo dia); dejar vencer (sin restauracion queda apagado sin vigilante).
+- **Corte:** 2026-11-13; ese dia se corre `systemctl show` de nuevo y se decide con la salida.
