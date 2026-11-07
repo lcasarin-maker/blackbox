@@ -28,3 +28,11 @@ El 2026-11-05 `tailscaled` y `NetworkManager` murieron a las 19:59 (earlyoom los
 ## Limite
 
 Si `ssh-casa` tambien esta caido, la Dell no puede entrar: el camino sigue siendo el aviso por ntfy y el reinicio por `sudo panic` o fisico. Esta ficha no cubre un cuelgue del kernel.
+
+## Decision de Luis, 2026-11-06 (boleta «Reparacion»): no se construye ahora
+
+- **Decidido:** se deja abierta y se pasa al limite de memoria de GPU. Motivo del voto: ninguno adicional (eligio la opcion recomendada).
+- **Evidencia que la sustenta:** `systemctl show tailscaled NetworkManager` da `Restart=always RestartUSec=2s StartLimitIntervalUSec=0` (el drop-in `bb-reinicio-ilimitado.conf` del 2026-11-06); el `--avoid` de earlyoom incluye `tailscaled|NetworkManager|rustdesk`; la alarma de la Dell avisa tras 3 fallos. Eso cubre el camino exacto del 2026-11-05.
+- **Costo medido que la frena:** `python3 -m tools.bb_root_manifest --check` da `aprobados iguales: 10, cambios: 2` (`earlyoom-proteger` cambiado y `nvidia-bug-report` sin aprobar); la re-aprobacion con sudo aprobaria ambos a la vez. `tests/test_bb_root_manifest.py` afirma 12 scripts en tres sitios (`len(SCRIPTS) == 12`, «los doce scripts», `aprobados iguales: 12`).
+- **Descartado por ahora:** construirla completa (script sellado `red-reparar`, llave de solo-ese-comando para la Dell, accion en la alarma) y la version sin root que solo reinicia RustDesk (no cubre `tailscaled` ni `NetworkManager`).
+- **Reabrir si:** `tailscaled` o `NetworkManager` vuelven a quedar caidos por una causa que el reinicio ilimitado no resuelve, o si la alarma avisa de una caida de red que requirio la mano de Luis.
