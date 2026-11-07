@@ -21,7 +21,7 @@ Entre 2026-10-30 19:05 y 2026-11-02 11:44 hubo 20 arranques de 3 a 242 s (`journ
 | Netconsole en la linea de arranque (capa `netconsole-arranque`) | `no aplicada` (`opt_in_captura.sh estado`; `arranque en marcha: sin netconsole.netconsole=`) | 2026-11-01 (PR #4) |
 | pstore tras panico (`pstore-tras-panico`), `panic-temprano`, `grub-marca` | `no aplicada` | 2026-11-01 |
 | Muestreador de 250 ms con anillo fijo (`bb-ultimo-aliento.service`) | `not-found` como unidad de usuario; el archivo `systemd/bb-ultimo-aliento.service` existe en el repo | 2026-11-01 |
-| Testigo externo de un solo archivo (`tools/testigo/bb_testigo.py`) | no corre en ningun equipo | 2026-11-01 |
+| Testigo externo de un solo archivo (`tools/testigo/bb_testigo.py`) | instalado el 2026-11-06 en la Dell (`DesktopAequitas`): tarea `bb-testigo` (SYSTEM, al arrancar), sondeo TCP/ICMP a la ATOM y latido, UDP 6667 junto al receptor de netconsole; la ATOM trae sus series con `externo/testigo.json` (`trae.json`: `OK`, 2 archivos). Probado en Windows real: 20 s de corrida de prueba, `rc=0`, TCP 22 abierto (31 ms) y eco ICMP. NO probado a traves de un reinicio de la Dell ni con un corte real | 2026-11-06 |
 | Ping desde el NAS (`adopted/nas/bb-ping-atom.sh`, voto de Luis 2026-10-14) | "sin instalar" segun la ficha FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01 | 2026-10-14 (19 dias) |
 | Medidor de energia externo (enchufe) | en camino | pendiente |
 
