@@ -1,0 +1,14 @@
+[Unit]
+Description=bb aviso de intervencion de earlyoom al telefono (interruptor aviso_earlyoom; off por defecto)
+
+[Service]
+Type=simple
+WorkingDirectory=%h/projects/blackbox
+ExecStart=/usr/bin/python3 -m tools.aviso_earlyoom
+ExecStopPost=-%h/projects/blackbox/bin/bb-parada-diagnostico %n $EXIT_STATUS $SERVICE_RESULT
+Restart=on-failure
+RestartSec=5
+MemoryMax=64M
+
+[Install]
+WantedBy=default.target
