@@ -3,12 +3,17 @@ id: DEBT-BB-AVISO-GPU-RESET-UNIDAD-NUEVA-SIN-INSTALAR-01
 kind: task
 domain: GPU
 title: "bb-aviso-gpu-reset (alarma de timeout del GSP / Xid 154) esta en el repo y no instalada"
-status: open
+status: done
 severity: P1
 origin: measured
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-02
 close_check: {"cmd": "cmp systemd/bb-aviso-gpu-reset.timer \"$HOME/.config/systemd/user/bb-aviso-gpu-reset.timer\" && cmp systemd/bb-aviso-gpu-reset.service \"$HOME/.config/systemd/user/bb-aviso-gpu-reset.service\"", "expect": "exit_zero", "porque": "Cierra cuando las dos unidades instaladas son byte a byte las del repo. Hoy sale 1: no estan instaladas."}
+closed_at: 2026-11-07
+closure_type: verified_closed
+closure_reason: "El close_check de la ficha sale 0 hoy (corrido por /debt el 2026-11-07); la ficha seguia abierta aunque su condicion ya se cumplia. Salida en la evidencia."
+evidence:
+  pass: tasks/evidence/DEBT-BB-AVISO-GPU-RESET-UNIDAD-NUEVA-SIN-INSTALAR-01/pass.txt
 ---
 
 ## Que falta

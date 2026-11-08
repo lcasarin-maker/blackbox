@@ -3,12 +3,17 @@ id: DEBT-REBOOT-VERDICT-CIEGO-A-ARRANQUES-CORTOS-Y-RELOJ-01
 kind: task
 domain: SYSTEM
 title: "reboot_verdict juzga solo el arranque anterior y solo tras 3 min de uptime, ordena por reloj de pared y marco CORTE_ABRUPTO al arranque en marcha"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-02
 close_check: {"cmd": "python3 - <<'E'\nimport json,subprocess,os,datetime as dt,sys\nids={json.loads(l).get('boot_id') for l in open(os.path.expanduser('~/.local/share/blackbox/reboots.jsonl'))}\nbl=json.loads(subprocess.run(['journalctl','--list-boots','--no-pager','-o','json'],capture_output=True,text=True,errors='replace').stdout)\ncur=open('/proc/sys/kernel/random/boot_id').read().strip().replace('-','')\ncorte=dt.datetime(2026,10,24).timestamp()*1e6\nfalta=[b for b in bl if b['boot_id']!=cur and b['first_entry']>=corte and b['boot_id'] not in ids]\nsys.exit(1 if falta else 0)\nE", "expect": "exit_zero", "porque": "Falla hoy (medido 2026-11-02): 23 de los arranques desde 2026-10-24, sin contar el actual, no tienen fila en reboots.jsonl. Pasa solo cuando cada arranque anterior tiene su veredicto."}
+closed_at: 2026-11-07
+closure_type: verified_closed
+closure_reason: "El close_check de la ficha sale 0 hoy (corrido por /debt el 2026-11-07); la ficha seguia abierta aunque su condicion ya se cumplia. Salida en la evidencia."
+evidence:
+  pass: tasks/evidence/DEBT-REBOOT-VERDICT-CIEGO-A-ARRANQUES-CORTOS-Y-RELOJ-01/pass.txt
 ---
 
 ## Medido el 2026-11-02

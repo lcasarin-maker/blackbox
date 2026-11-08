@@ -3,12 +3,17 @@ id: DEBT-NVRM-GSP-TIMEOUT-XID154-KERNEL-7-0-SIN-ALARMA-01
 kind: task
 domain: GPU
 title: "Desde 2026-10-30 19:05, 8 de 11 arranques en 7.0.0-1024 que pasan de ~25 s registran timeout del GSP y Xid 154 (GPU Reset Required) y ningun instrumento lo vio"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-02
 close_check: {"cmd": "grep -q '\"gsp_timeout\"' ~/.local/share/blackbox/reboots.jsonl", "expect": "exit_zero", "porque": "Falla hoy (medido 2026-11-02): las filas de reboots.jsonl no traen el campo gsp_timeout. Pasa cuando reboot_verdict lo escribe."}
+closed_at: 2026-11-07
+closure_type: verified_closed
+closure_reason: "El close_check de la ficha sale 0 hoy (corrido por /debt el 2026-11-07); la ficha seguia abierta aunque su condicion ya se cumplia. Salida en la evidencia."
+evidence:
+  pass: tasks/evidence/DEBT-NVRM-GSP-TIMEOUT-XID154-KERNEL-7-0-SIN-ALARMA-01/pass.txt
 ---
 
 ## Medido el 2026-11-02 (`journalctl -k -b <id>`, tabla completa por arranque con `xid.py` del informe de puntos ciegos)

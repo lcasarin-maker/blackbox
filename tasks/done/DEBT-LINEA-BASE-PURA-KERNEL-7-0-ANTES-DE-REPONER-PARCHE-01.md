@@ -3,12 +3,17 @@ id: DEBT-LINEA-BASE-PURA-KERNEL-7-0-ANTES-DE-REPONER-PARCHE-01
 kind: task
 domain: GPU
 title: "Medir la ATOM en estado puro y actualizado (kernel 7.0, driver 580 de fabrica, meta 26.09.3) antes de reponer el parche memacct"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-28
 close_check: {"cmd": "f=tasks/evidence/DEBT-LINEA-BASE-PURA-KERNEL-7-0-ANTES-DE-REPONER-PARCHE-01/estado-puro.txt; test -s $f && grep -qE '^kernel=7[.]0[.]0-[0-9]+-nvidia$' $f && grep -q '^dmem_region_nvidia=0$' $f && grep -q '^ota_meta=26.09.3$' $f", "expect": "exit_zero", "porque": "Especificacion pendiente: el archivo no existe hoy, asi que falla. Pasa solo con una foto tomada tras reiniciar en el kernel 7.0 con el meta 26.09.3 y SIN region dmem de nvidia (modulo de fabrica)."}
+closed_at: 2026-11-07
+closure_type: verified_closed
+closure_reason: "El close_check de la ficha sale 0 hoy (corrido por /debt el 2026-11-07); la ficha seguia abierta aunque su condicion ya se cumplia. Salida en la evidencia."
+evidence:
+  pass: tasks/evidence/DEBT-LINEA-BASE-PURA-KERNEL-7-0-ANTES-DE-REPONER-PARCHE-01/pass.txt
 ---
 
 ## Decision de Luis 2026-10-28

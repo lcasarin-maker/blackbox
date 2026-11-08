@@ -3,12 +3,17 @@ id: DEBT-BB-REBOOT-VERDICT-UNIDAD-NUEVA-SIN-INSTALAR-01
 kind: task
 domain: VERDICT
 title: "bb-reboot-verdict con --pendientes y OnBootSec=20s esta en el repo y no instalado"
-status: open
+status: done
 severity: P1
 origin: measured
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-02
 close_check: {"cmd": "cmp systemd/bb-reboot-verdict.timer \"$HOME/.config/systemd/user/bb-reboot-verdict.timer\" && cmp systemd/bb-reboot-verdict.service \"$HOME/.config/systemd/user/bb-reboot-verdict.service\"", "expect": "exit_zero", "porque": "Cierra cuando las dos unidades instaladas son byte a byte las del repo. Hoy sale 1: la instalada corre `--ultimos 1 --escribe` una sola vez a los 3 min (y el servicio instalado ni siquiera trae los ExecStartPre del repo)."}
+closed_at: 2026-11-07
+closure_type: verified_closed
+closure_reason: "El close_check de la ficha sale 0 hoy (corrido por /debt el 2026-11-07); la ficha seguia abierta aunque su condicion ya se cumplia. Salida en la evidencia."
+evidence:
+  pass: tasks/evidence/DEBT-BB-REBOOT-VERDICT-UNIDAD-NUEVA-SIN-INSTALAR-01/pass.txt
 ---
 
 ## Que falta

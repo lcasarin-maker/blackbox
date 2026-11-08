@@ -3,12 +3,17 @@ id: DEBT-BB-MODULO-NVIDIA-REGISTRO-UNIDAD-SIN-INSTALAR-01
 kind: task
 domain: VERDICT
 title: "bb-modulo-nvidia-registro (ruta, sha256 y srcversion del nvidia.ko por arranque) esta en el repo y no instalado"
-status: open
+status: done
 severity: P1
 origin: measured
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-02
 close_check: {"cmd": "cmp systemd/bb-modulo-nvidia-registro.timer \"$HOME/.config/systemd/user/bb-modulo-nvidia-registro.timer\" && cmp systemd/bb-modulo-nvidia-registro.service \"$HOME/.config/systemd/user/bb-modulo-nvidia-registro.service\"", "expect": "exit_zero", "porque": "Cierra cuando las dos unidades instaladas son byte a byte las del repo. Hoy sale 1 (cmp: No such file): un agente no instala unidades."}
+closed_at: 2026-11-07
+closure_type: verified_closed
+closure_reason: "El close_check de la ficha sale 0 hoy (corrido por /debt el 2026-11-07); la ficha seguia abierta aunque su condicion ya se cumplia. Salida en la evidencia."
+evidence:
+  pass: tasks/evidence/DEBT-BB-MODULO-NVIDIA-REGISTRO-UNIDAD-SIN-INSTALAR-01/pass.txt
 ---
 
 ## Que falta

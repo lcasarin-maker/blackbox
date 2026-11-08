@@ -3,12 +3,17 @@ id: DEBT-CONTROL-RACHA-VENTANA-2026-10-21-1706-SIN-ETIQUETAR-01
 kind: task
 domain: MEMORY
 title: "test_control_racha falla sobre el corpus real: racha sostenida de 451 s el 2026-10-21 17:06 fuera de toda ventana de incidente etiquetada"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-30
 close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider tests/test_control_racha.py::test_el_gate_sale_0_sobre_el_corpus_real", "expect": "exit_zero", "porque": "Falla hoy en master (medido 2026-10-30, antes de cualquier cambio de esta sesion): corpus 25719 muestras 2026-10-15 a 2026-10-30, 9 ventanas de incidente excluidas, y las reglas de 1, 2, 3 y 6 bajas dan FALSO POSITIVO en 2026-10-21 17:06:32 con un maximo sostenido sano de 451 s. Pasa cuando esa ventana este etiquetada como incidente con evidencia independiente de PSI, o cuando se demuestre otra lectura, sin recalibrar el umbral."}
+closed_at: 2026-11-07
+closure_type: verified_closed
+closure_reason: "El close_check de la ficha sale 0 hoy (corrido por /debt el 2026-11-07); la ficha seguia abierta aunque su condicion ya se cumplia. Salida en la evidencia."
+evidence:
+  pass: tasks/evidence/DEBT-CONTROL-RACHA-VENTANA-2026-10-21-1706-SIN-ETIQUETAR-01/pass.txt
 ---
 
 ## Medido (2026-10-30, `python3 -m pytest -q tests/test_control_racha.py -k corpus_real`)

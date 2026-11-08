@@ -1,0 +1,11 @@
+# close_check de la ficha, corrido el 2026-11-07 (/debt)
+$ python3 - <<'E'
+import json,subprocess,os,datetime as dt,sys
+ids={json.loads(l).get('boot_id') for l in open(os.path.expanduser('~/.local/share/blackbox/reboots.jsonl'))}
+bl=json.loads(subprocess.run(['journalctl','--list-boots','--no-pager','-o','json'],capture_output=True,text=True,errors='replace').stdout)
+cur=open('/proc/sys/kernel/random/boot_id').read().strip().replace('-','')
+corte=dt.datetime(2026,10,24).timestamp()*1e6
+falta=[b for b in bl if b['boot_id']!=cur and b['first_entry']>=corte and b['boot_id'] not in ids]
+sys.exit(1 if falta else 0)
+E
+rc=0
