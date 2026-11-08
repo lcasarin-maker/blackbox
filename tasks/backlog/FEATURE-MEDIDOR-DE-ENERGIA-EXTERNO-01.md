@@ -26,3 +26,10 @@ El fichero tiene datos y un corte real o provocado sale como `CORTE_DE_RED` o `A
 ## Avance 2026-10-13: colector y clasificador construidos, falta el enchufe
 Construido sin el dispositivo: `tools/medidor_energia.py` (lee Shelly Gen2/3 `Switch.GetStatus` o Tasmota `Status 8` por API local, una fila por ejecucion en `externo/energia.jsonl`; un campo ausente es `NOT_COLLECTED`, un enchufe mudo es `ok: false` y no cuenta como voltaje perdido), `ventana_de_corte` (tres estados: solo concluye con voltaje medido) y el enlace en `reboot_verdict._anade_evidencia_externa`, que rellena `ev["externo"]` o declara `medidor_externo (no concluyente)` en `could_not_run`. Tests: `tests/test_medidor_energia.py` (9) y 2 en `tests/test_reboot_verdict.py`, con control negativo en cada rama. Las unidades `systemd/bb-medidor-energia.{service,timer}` (1 s) quedan sin instalar.
 Falta, y es de Luis: comprar y conectar el enchufe, crear `$BLACKBOX_DATA/externo/medidor.json` con `{"tipo": "shelly"|"tasmota", "url": "http://<ip>"}` y correr el colector desde otro equipo. Los nombres de campos son los de la documentacion de cada fabricante y NO se verificaron contra un dispositivo: la primera lectura real lo confirma o lo corrige (`python3 -m tools.medidor_energia --paso`).
+
+
+## Decision de Luis, 2026-11-07: pendiente de baja prioridad
+
+- **Decidido:** queda pendiente; no se compra ni se instala ahora. Motivo de Luis: la energia nunca ha sido la causa de los cortes; la causa fue el kernel actualizado y lo que no se vio.
+- **Lo que esta ficha NO afirma:** que la energia este descartada. La causa de los cortes de octubre sigue sin aislar y `tools/reboot_verdict.py` seguira declarando `INDETERMINADO` sin esta fuente.
+- **Reabrir si:** un corte futuro no queda explicado por el kernel y el testigo de la Dell muestra que la ATOM dejo de responder sin aviso previo.
