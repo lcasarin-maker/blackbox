@@ -12,7 +12,7 @@ vuelve permanente en silencio, así que cada entrada lleva la suya y quién vigi
 | **sha256** | `ce823854e9b1dd5da6dd92c6a5a8e69d609b008d97c00a6219f3ce82e5354122` |
 | **modo** | `775` |
 | **Unit parada** | `ai-gpu-telemetry.service` (disable --now) |
-| **Caduca** | **2026-11-07** — si sigue suspendido sin decisión, se revisa |
+| **Caduca** | **2026-11-14** (extendida el 2026-11-08 desde 2026-11-07, sin decisión de fondo: restaurarlo reactivaría `ai-gpu-telemetry.service`, un bucle de `nvidia-smi` que la ficha `DEBT-LECTURA-DE-GPU-CONGELADA-TRAS-GSP-SIN-MARCA-01` ya señala como instrumento ciego tras un fallo del GSP; su telemetría la cubre el muestreador absorbido) |
 | **Vigila** | `bb status`, que comprueba la frescura de la telemetría absorbida |
 
 **Por qué.** Sus campos los absorbió una referencia externa el
