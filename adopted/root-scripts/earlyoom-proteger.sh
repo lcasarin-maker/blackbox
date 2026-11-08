@@ -25,7 +25,7 @@ conf=/etc/default/earlyoom
 dir_conf=/etc/default
 base=/var/lib/blackbox
 sha_viejo=b4fb4f09ab4ecf827bde4772e0729ef183207b2cf72add5b728955fe80b38569
-sha_nuevo=f15bb4fce9dab977f85d3736bbe41ba79eccbc07a848075c1255a5c5d0bd8db6
+sha_nuevo=972f78e04ba172a65650e139ebbf0d4d8fb9da207383c35202060ee6c3d422ba
 bak="$base/etc_default_earlyoom.$sha_viejo"
 espera=3
 tmp=
@@ -63,7 +63,7 @@ mapfile -t args <<'ARGS'
 -s
 100,100
 --avoid
-(claude|pipewire|wireplumber|dbus|gnome-shell|gnome-session|Xorg|Xwayland|gdm|sshd|systemd|journal|xdg-|antigravity|vllm|VLLM|docker|containerd|^bb-|^(node|cowork-linux-he|electron|chrome_crashpad|init|earlyoom|bb)$)
+(claude|pipewire|wireplumber|dbus|gnome-shell|gnome-session|Xorg|Xwayland|gdm|sshd|tailscaled|NetworkManager|rustdesk|systemd|journal|xdg-|antigravity|vllm|VLLM|docker|containerd|^bb-|^(node|cowork-linux-he|electron|chrome_crashpad|init|earlyoom|bb)$)
 --prefer
 (pytest|xdist|triton|bb-portero)
 ARGS
@@ -104,7 +104,10 @@ cat > "$tmp" <<'NUEVO'
 # 'bb' evitarian cualquier comm que los contenga. 'journal' y 'antigravity' siguen
 # aqui y no estan en la lista: asimetria declarada en la ficha. Umbrales y
 # --prefer sin cambios.
-EARLYOOM_ARGS="-r 60 -m 10 -s 100,100 --avoid '(claude|pipewire|wireplumber|dbus|gnome-shell|gnome-session|Xorg|Xwayland|gdm|sshd|systemd|journal|xdg-|antigravity|vllm|VLLM|docker|containerd|^bb-|^(node|cowork-linux-he|electron|chrome_crashpad|init|earlyoom|bb)$)' --prefer '(pytest|xdist|triton|bb-portero)'"
+# 2026-11-06: --avoid suma tailscaled, NetworkManager y rustdesk (data/procesos_protegidos.json). El 2026-11-05 a las
+# 19:58 earlyoom les envio SIGKILL en una rafaga de 54 senales; systemd se rindio de reiniciar tailscaled y NetworkManager
+# (Start request repeated too quickly) y la ATOM quedo 17,6 h sin red remota. Umbrales y --prefer sin cambios.
+EARLYOOM_ARGS="-r 60 -m 10 -s 100,100 --avoid '(claude|pipewire|wireplumber|dbus|gnome-shell|gnome-session|Xorg|Xwayland|gdm|sshd|tailscaled|NetworkManager|rustdesk|systemd|journal|xdg-|antigravity|vllm|VLLM|docker|containerd|^bb-|^(node|cowork-linux-he|electron|chrome_crashpad|init|earlyoom|bb)$)' --prefer '(pytest|xdist|triton|bb-portero)'"
 NUEVO
 if [[ "$(sha256sum < "$tmp" | cut -d' ' -f1)" != "$sha_nuevo" ]]; then
   echo "earlyoom-proteger: el contenido generado no tiene el sha256 nuevo; no se toca" >&2

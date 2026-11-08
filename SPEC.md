@@ -341,6 +341,8 @@ disco.
 | `/etc/systemd/system/bb-usable.service` | el vigilante por PSI que reinicia la maquina. Cuelgue. |
 | `/etc/systemd/system/docker.slice.d/99-blackbox.conf` | techo agregado de los contenedores. Presion de memoria. |
 | `/etc/systemd/system/earlyoom.service.d/override.conf` | punteria del OOM killer antes de que la maquina se atasque. |
+| `/etc/systemd/system/tailscaled.service.d/bb-reinicio-ilimitado.conf` | `Restart=always`, `RestartSec=2` y sin limite de arranques: el 2026-11-05 systemd se rindio de reiniciar `tailscaled` (Start request repeated too quickly) y la ATOM quedo 17,6 h sin red remota. |
+| `/etc/systemd/system/NetworkManager.service.d/bb-reinicio-ilimitado.conf` | igual que `tailscaled`: reinicio sin limite para la red de la ATOM. |
 | `/etc/systemd/system/nvrm-watch.service` | registra cada 5 min los errores `NVRM: Out of memory`, señal que puede aparecer con o sin cuelgue. |
 | `/etc/systemd/system/nvrm-watch.timer` | su cadencia. |
 | `/etc/systemd/system/system.slice.d/99-blackbox.conf` | techo agregado de los servicios del sistema. Sin él entraba en el presupuesto por lo que USABA y no por lo que prometía, y los compromisos no cuadraban. Presion de memoria. |

@@ -871,7 +871,8 @@ def test_earlyoom_nuevo_conserva_umbrales_y_prefer_y_amplia_avoid():
     assert viejo[:6] == nuevo[:6] == ["-r", "60", "-m", "10", "-s", "100,100"]
     assert [viejo[6], viejo[8]] == [nuevo[6], nuevo[8]] == ["--avoid", "--prefer"] and len(nuevo) == len(viejo) == 10
     assert _alternativas(nuevo[7]) - _alternativas(viejo[7]) == {
-        "claude", "dbus", "Xwayland", "^(node|cowork-linux-he|electron|chrome_crashpad|init|earlyoom|bb)$"}
+        "claude", "dbus", "Xwayland", "^(node|cowork-linux-he|electron|chrome_crashpad|init|earlyoom|bb)$",
+        "tailscaled", "NetworkManager", "rustdesk"}  # los tres ultimos: 2026-11-06
     # las dos que salen quedan contenidas en las que entran: 'claude' casa con claude-desktop, 'dbus' con dbus-daemon
     assert _alternativas(viejo[7]) - _alternativas(nuevo[7]) == {"claude-desktop", "dbus-daemon"}
     assert nuevo[9] == viejo[9]

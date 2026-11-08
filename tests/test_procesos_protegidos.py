@@ -48,7 +48,7 @@ NO_PROTEGIDOS = ("python3", "pytest", "bash", "sleep")
 # Medido el 2026-10-14 contra el --avoid que estuvo desplegado: nombres de la lista que earlyoom NO evitaba.
 # DEBT-EARLYOOM-AVOID-NO-CUBRE-LA-LISTA-UNICA-01. Desde el despliegue del 2026-10-16 el desplegado los cubre todos.
 FALTABAN_ANTES = {"claude", "node", "cowork-linux-he", "electron", "chrome_crashpad", "Xwayland", "init", "dbus",
-                  "earlyoom", "bb"}
+                  "earlyoom", "bb", "tailscaled", "NetworkManager", "rustdesk"}  # los tres ultimos: 2026-11-06
 FALTAN_EN_EARLYOOM: set[str] = set()
 
 
@@ -309,8 +309,8 @@ def test_earlyoom_cubre_toda_la_lista():
     assert faltan_en_earlyoom() == set()
 
 
-def test_control_negativo_el_desplegado_anterior_dejaba_diez_nombres_fuera():
-    """El instrumento puede salir rojo: contra el contenido que estuvo desplegado antes faltan exactamente los diez."""
+def test_control_negativo_el_desplegado_anterior_dejaba_trece_nombres_fuera():
+    """El instrumento puede salir rojo: contra el contenido que estuvo desplegado antes faltan exactamente los trece (los diez de 2026-10-16 y tailscaled, NetworkManager y rustdesk de 2026-11-06)."""
     assert faltan_en_earlyoom(EARLYOOM_VIEJO) == FALTABAN_ANTES
 
 

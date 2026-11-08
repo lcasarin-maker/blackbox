@@ -52,7 +52,7 @@ RESPALDO_COMM: tuple[tuple[str, bool, str | None], ...] = (
     ("claude", True, None), ("node", False, None), ("cowork-linux-he", False, None), ("electron", False, None),
     ("chrome_crashpad", False, None), ("Xorg", False, None), ("Xwayland", False, None), ("gnome-shell", True, None),
     ("gnome-session", True, None), ("gdm", True, None), ("systemd", True, None), ("init", False, None),
-    ("sshd", True, None), ("dbus", True, None), ("pipewire", True, None), ("wireplumber", False, None),
+    ("sshd", True, None), ("tailscaled", False, None), ("NetworkManager", False, None), ("rustdesk", True, None), ("dbus", True, None), ("pipewire", True, None), ("wireplumber", False, None),
     ("xdg-", True, None), ("earlyoom", False, None), ("docker", True, None), ("containerd", True, None),
     ("vllm", True, None), ("VLLM", True, None), ("bb", False, _BB_UNIDAD), ("bb-", True, _BB_UNIDAD),
 )
