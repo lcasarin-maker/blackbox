@@ -1,0 +1,14 @@
+[Unit]
+Description=bb guardia de GPU por contenedor: detiene al contenedor con lanzado_por que llena la memoria (interruptor guardia_gpu; off por defecto)
+
+[Service]
+Type=simple
+WorkingDirectory=%h/projects/blackbox
+ExecStart=/usr/bin/python3 -m tools.guardia_gpu
+ExecStopPost=-%h/projects/blackbox/bin/bb-parada-diagnostico %n $EXIT_STATUS $SERVICE_RESULT
+Restart=on-failure
+RestartSec=5
+MemoryMax=64M
+
+[Install]
+WantedBy=default.target
