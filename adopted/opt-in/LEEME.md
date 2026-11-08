@@ -90,7 +90,7 @@ Cada `aplica` imprime su retroceso. Las capas de GRUB se retroceden en orden inv
 
 ## Retroceso de emergencia: la máquina no arranca
 
-1. **En el menú de GRUB** (`GRUB_TIMEOUT_STYLE=menu`, `GRUB_TIMEOUT=5`: hay **5 s** para pulsar una flecha y
+1. **En el menú de GRUB** (`GRUB_TIMEOUT_STYLE=menu`, `GRUB_TIMEOUT=10`: hay **10 s** para pulsar una flecha y
    detener la cuenta), se elige la entrada y se pulsa **`e`**. En la línea `linux` se borran
    `netconsole.netconsole=...`, `crash_kexec_post_notifiers` o `panic=30`. Si el initrd trae netconsole, se añade
    `modprobe.blacklist=netconsole`. Se arranca con **Ctrl-x** (o F10). El cambio dura solo ese arranque.

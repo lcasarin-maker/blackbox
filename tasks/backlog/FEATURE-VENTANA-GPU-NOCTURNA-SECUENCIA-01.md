@@ -24,14 +24,15 @@ Dos pruebas de gpt-oss (2026-11-06 21:45 y 21:59) murieron a los ~4 min con `sys
 
 ## Secuencia (secuencial; cada paso tiene su condicion de parada)
 1. **Preflight (T-10 min).** Todo debe cumplirse o no se empieza y se avisa por ntfy: alarma de la Dell con latido de menos de 2 min; `bb-guardia-gpu` y `bb-aviso-earlyoom` activos; `nemotron` con health 200; MemAvailable ≥ 45 000 MB; ningun otro proceso en la GPU salvo nemotron; no existe el contenedor `gpt-oss-runtime`.
-2. **Encender el cazador** (`cazador.sh`: procesos `docker stop|kill`, llamadas D-Bus a systemd con PID de quien llama, eventos de Docker) y dejar su salida en `~/.local/share/blackbox/ventana-gpu/<fecha>/`.
-3. **Prueba 0.60** con el lanzador de sisifo (admision hasta las 05:00) y la guarda de 15 000 MB.
-   - Si muere antes de `/health`: leer la salida del cazador, escribir `quien_mata=<proceso>` en el resumen y **parar** (no se prueba 0.55). Ir al paso 6.
+2. **Coordinar con quien usa el chat local (metodologia de skilletor y Atlas).** Hoy el unico cliente del motor en `127.0.0.1:8000` es `skilletor-cola-local.service` (`tools/cola_local_durable.py` de skilletor, medido con `ss -tnp`). Ese cliente toma el candado compartido `catalogo/garantias/local/local_llm.lock` (`flock` exclusivo) antes de cada inferencia, y el acuerdo de `coordinacion-atlas.json` dice: «Atlas gestiona servicio y recursos; Skilletor conserva catalogo». Por tanto bb toma ese mismo candado (`flock` exclusivo, espera a que termine la inferencia en curso) ANTES de detener nemotron y lo suelta DESPUES de restaurarlo con health 200: la cola de skilletor espera sin fallar. Ademas: aviso a Luis por ntfy al empezar y al terminar; `SendMessage` a las sesiones de Claude abiertas que dependan del motor; y una nota en el resumen de la ventana para la sesion de Atlas y la de skilletor. Si el candado no se obtiene en 10 min, no se empieza.
+3. **Encender el cazador** (`cazador.sh`: procesos `docker stop|kill`, llamadas D-Bus a systemd con PID de quien llama, eventos de Docker) y dejar su salida en `~/.local/share/blackbox/ventana-gpu/<fecha>/`.
+4. **Prueba 0.60** con el lanzador de sisifo (admision hasta las 05:00) y la guarda de 15 000 MB.
+   - Si muere antes de `/health`: leer la salida del cazador, escribir `quien_mata=<proceso>` en el resumen y **parar** (no se prueba 0.55). Ir al paso 7.
    - Si llega a `/health`: pedir una respuesta corta, anotar GPU maxima y latencia, detener el contenedor.
-4. **Prueba 0.55** (solo si 0.60 arranco), igual que el paso 3.
-5. **Prueba 0.50** (solo si 0.55 arranco). Se para en la primera que falle.
-6. **Restaurar** nemotron con el teardown certificado de sisifo y esperar health 200 (hasta 5 min). Si pasan las 04:40, se restaura sin importar lo que falte.
-7. **Resumen** en `resumen.txt` con: `quien_mata=`, valores probados con arranque si/no, GPU maxima por valor, MemAvailable minima, nemotron restaurado si/no. Aviso final por ntfy.
+5. **Prueba 0.55** (solo si 0.60 arranco), igual que el paso 4.
+6. **Prueba 0.50** (solo si 0.55 arranco). Se para en la primera que falle.
+7. **Restaurar** nemotron con el teardown certificado de sisifo y esperar health 200 (hasta 5 min). Si pasan las 04:40, se restaura sin importar lo que falte.
+8. **Resumen** en `resumen.txt` con: `quien_mata=`, valores probados con arranque si/no, GPU maxima por valor, MemAvailable minima, nemotron restaurado si/no. Aviso final por ntfy.
 
 ## Despues de la primera ventana limpia
 - Automatizar con un timer de usuario (OnCalendar 02:00) y pasar el resumen a la ficha del techo de GPU (`DEBT-MEMORIA-GPU-SIN-LIMITE-APLICADO-COLAPSOS-5-Y-6-NOV-01`).
