@@ -41,3 +41,10 @@ Dos pruebas de gpt-oss (2026-11-06 21:45 y 21:59) murieron a los ~4 min con `sys
 
 ## Limite
 No se sabe aun si el kill vuelve a ocurrir con el cazador encendido; si no se reproduce, el resumen dice `NO_REPRODUCIDO` y el cierre pasa al valor de utilizacion medido.
+
+## Hallazgo del 2026-11-08: quien mato las dos pruebas fue el Codex coordinador
+
+- **Evidencia:** `reports/coordinacion-limite-gpu-gpt-oss/suspension-bb-medicion-gpu-060.json` (repo de sisifo) lo escribio el `Codex coordinador` con marca `2026-11-06T21:59:57.986`, el mismo segundo en que systemd registro `bb-medicion-gpu-060.service: Sending signal SIGKILL ... on client request`. El manifiesto renombra `medir_gpu.sh` a `medir_gpu.sh.suspendido-caida-rvlpwk` (sha256 `3e619424...`), nombra la unidad, fija `revisar_antes_de` 2026-11-13 y dice: «Solo por instruccion expresa. Verificar hash y modo antes de restaurar». Es el contrato de suspension de Luis aplicado por otro agente.
+- **Por que:** el agente vio caer el chat local (el lanzador detiene nemotron) y suspendio lo que lo causaba. El primer kill (21:45:30) coincide con una rafaga de SIGKILL de `tokio-rt-worker` (el servidor de Codex) en el registro de senales de blackbox.
+- **Consecuencia para la secuencia:** el paso 2 (coordinar) deja de ser opcional. Antes de apagar nemotron hay que avisar al Codex coordinador de la ventana, y el script suspendido solo se reactiva por instruccion expresa de Luis; se recrea desde el repo en vez de restaurar el archivo marcado. El contenedor `gpt-oss-runtime` detenido (creado 2026-11-06 21:56) debe retirarse antes de lanzar (el lanzador aborta si preexiste); su registro ya esta archivado en `prueba-0.60-abortada-2/`.
+- **Lo que no se probo:** que avisar al coordinador impida el kill. Se prueba en la primera ventana, con el cazador encendido.
