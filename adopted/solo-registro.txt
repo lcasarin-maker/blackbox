@@ -160,3 +160,15 @@ etc_systemd_system_bb-gpu-accounting.service
     `DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01` midio en una ventana sin
     motor (`recarga_probada`). Si `bb drift` marca una divergencia, el remedio es
     repetir esas tres ordenes con el motor parado, no correr el instalador.
+
+
+etc_systemd_system_restart-resolved.service
+    Unit de SISTEMA que ya estaba en la ATOM sin fuente en ningun repo: oneshot
+    que reinicia systemd-resolved antes de network.target (habilitada). Se
+    adopto el 2026-11-09 durante la reorganizacion de la ATOM al canon
+    (Atlas DGX-703: "su fuente vive en el repo dueño") como copia byte a byte
+    de /etc/systemd/system/restart-resolved.service. Ningun script la instala:
+    no se sabe quien la creo ni que problema de red resolvia, asi que no se
+    redespliega a ciegas; `bb drift` la compara con la instalada.
+    Remedio de una divergencia: copiar este fichero a /etc/systemd/system/ y
+    `systemctl daemon-reload`, o retirarla si se demuestra que sobra.

@@ -387,6 +387,8 @@ disco.
 | `/etc/default/grub` | `GRUB_DEFAULT` fijado al kernel 6.17.0-1032-nvidia por la seccion 8b. Cuelgue. |
 | `/etc/default/grub.d/kdump-tools.cfg` | `crashkernel=1G-:512M`, la reserva sin la que kdump no captura. Conffile modificado del paquete. Cuelgue. |
 | `/etc/systemd/system/journal-udp-forward.service` | reenvia el log del kernel por UDP a otra maquina: la captura que sobrevive a un cuelgue (reemplazo de netconsole). |
+| `/etc/systemd/system/restart-resolved.service` | oneshot que reinicia systemd-resolved antes de `network.target`; preexistente, sin autor conocido. Adoptada el 2026-11-09 (Atlas DGX-703) y declarada en `adopted/solo-registro.txt`: no se redespliega a ciegas, `bb drift` la vigila. |
+| `~/.config/systemd/user/bb-muestreo-corte.service` | muestreo de 1 s con fsync para ver el ultimo segundo antes de un corte duro (DEBT-CAIDAS-DURAS-7-0-MODULO-PARCHADO-01). Corre la copia suelta `~/.local/share/blackbox/incidentes/caidas-2026-10-30/muestreo_1s.py`, distinta de `tools/muestreo_1s.py`; pasarla a `tools/` lo decide esa ficha. |
 | `/usr/local/bin/journal-udp-forward.sh` | su cuerpo; la copia lleva la IP destino redactada y `bb drift` compara con la misma redaccion. |
 | `/etc/systemd/system/bb-gpu-accounting.service` | enciende el accounting mode de la GPU en cada arranque (`nvidia-smi -am 1`); sin el, `bb scan` no nombra los procesos de GPU ya salidos tras una caida CUDA. Desplegada y habilitada el 2026-10-15. |
 
