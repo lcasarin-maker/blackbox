@@ -507,3 +507,10 @@ El repositorio es publico y debe quedar limpio de temas ajenos. Estas son las de
 - **Límite:** `kernel.hardlockup_panic=1` no hace nada en esta máquina (no hay NMI; el kernel registra «Hard watchdog permanently disabled»).
 - **Retroceso:** `sudo rm /etc/sysctl.d/99-freeze-panic.conf /etc/sysctl.d/99-blackbox-panic.conf && sudo sysctl kernel.hung_task_panic=0 kernel.softlockup_panic=0 kernel.panic=30`.
 - **Reabrir si:** ocurre un pánico por `hung_task` o `softlockup` que no corresponda a un cuelgue real (un falso positivo durante una ventana de GPU, por ejemplo).
+
+## 2026-11-09 — Plan escalonado hacia el kernel 7.0 con camino de regreso; ventana de GPU cancelada
+- **Decidido (votos de Luis):** (1) la ventana nocturna de GPU se cancela: sisifo se retira (Atlas DECISIONS 2026-11-09, DGX-706) y su runtime gpt-oss era el unico objeto de la medicion; ficha cerrada `void_wontfix`. (2) Se prueba UNA vez el kernel 7.0.0-1025 (`grub-reboot`, vuelta automatica a 6.17.0-1032). (3) Se aprueba el plan por etapas de `tasks/backlog/FEATURE-PRUEBA-KERNEL-7-0-1025-UNA-VEZ-01.md`: observar el 1025 con carga, guardia de GPU por nombre protegido, captura de arranque y punto de restauracion fijo en 6.17, 1025 como defecto 24 h, 7 dias, parche memacct recompilado para el kernel que quede, firmware y Ubuntu 26.04 al final.
+- **Por que:** medido el 2026-11-09: 1025 = 1024 + un arreglo de IPv4 (LP #2172774); mismo `srcversion` de `nvidia.ko` en 6.17-1032, 7.0-1024 y 7.0-1025; el 1025 aguanto 22 min con carga de GPU real y 0 firmas de falla. El 6.17 tampoco esta libre de cortes duros (7 desde el 6 de oct).
+- **Descarta:** actualizar a Ubuntu 26.04 o todo lo actualizable junto con el kernel (mezcla causas); reinstalar el parche en 6.17 antes (se rehace para cada kernel).
+- **Costo aceptado:** una semana mas sin tope de memoria de GPU por cgroup; el cuelgue sin reinicio automatico exige a Luis fisicamente.
+- **Se reabre si:** el 1025 muestra `Xid 154`, `rpcRecvPoll` o un corte duro; entonces se vuelve al 6.17 y se pregunta a zneill.
