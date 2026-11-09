@@ -29,3 +29,21 @@ Probar el 7.0.0-1025 **una sola vez**. Alternativas descartadas: no actualizar y
 ## Limites
 - Un cuelgue sin reinicio automatico exige a Luis fisicamente (no es remoto).
 - `netconsole-arranque` (captura desde el arranque temprano) sigue sin instalar; la captura sera la de `bb-netconsole` en marcha, que no cubre los primeros segundos.
+
+## Plan escalonado, 2026-11-09 (orden de Luis: avanzar a 7.0 dejando siempre el camino de regreso)
+Regla: una sola variable por etapa. El refugio de cada etapa es 6.17.0-1032 con el modulo de fabrica (`saved_entry`, autoarm tras 3 arranques sin confirmar, `sudo panic`).
+
+| Etapa | Cambio | Criterio de salida | Camino de regreso |
+|---|---|---|---|
+| 0 (hoy) | 1025 una vez, con carga (`~/scratch/blackbox/2026-11-09-prueba-1025/observa.sh`, 100 min) | 0 firmas (`rpcRecvPoll`, `Xid`, `Oops`, `hung task`, `NVRM` timed/fail/OOM) y sin reinicios | reiniciar: `next_entry` ya se consumio |
+| 1 (sin reiniciar) | guardia de GPU por nombre protegido (nemotron-server), no por etiqueta; `core22` y `dgx-spark-fieldiag` de uno en uno | pruebas verdes; actualizaciones sin errores | `git revert` / paquete anterior |
+| 2 | instalar `netconsole-arranque` y fijar el punto de restauracion en 6.17 (verificar en `tools/panic.py` que no migre al 1025 tras 6 h sanas) | captura de arranque comprobada con linea de prueba en la Dell | `opt_in_captura.sh retrocede` |
+| 3 | 1025 como defecto 24 h (modulo de fabrica) | 24 h sin firmas, `bb_intentos` vuelve a 0 | autoarm / `sudo panic` |
+| 4 | 7 dias en 1025 | 7 dias sin cortes duros ni Xid 154 | idem |
+| 5 | parche memacct recompilado para el kernel que se quede (no para 6.17: se tiraria), firmado con MOK, tope en `observar` una semana | el modulo carga, dmem.capacity != 0, 0 cortes | quitar `updates/nvidia.ko`, `depmod`, reiniciar al modulo de fabrica |
+| 6 | firmware OTA de uno en uno; Ubuntu 26.04 al final con respaldo | cada uno con su ventana | respaldo previo |
+
+## Lo medido que sostiene el orden
+- 6.17 no es refugio libre de cortes: 7 cortes duros sin rastro desde el 6 de oct (DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01), con y sin modulo parchado; tasa antes/despues del parche 6,3 y 6,2 por 100 h (n=3, sin inferencia posible).
+- 7.0.0-1024: bucle del 2 nov con `gsp_timeout` en varias filas de `reboots.jsonl`; `modulo_nvidia_ruta` = NOT_COLLECTED en esos arranques, asi que no se puede atribuir al modulo parchado o al de fabrica.
+- El parche cobro y hizo cumplir `dmem.max` en 6.17 (DECISIONS 2026-10-16), pero hay que recompilarlo por kernel: parchearlo para 6.17 y luego rehacerlo para 7.0 duplica el trabajo.
