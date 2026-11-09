@@ -172,3 +172,25 @@ etc_systemd_system_restart-resolved.service
     redespliega a ciegas; `bb drift` la compara con la instalada.
     Remedio de una divergencia: copiar este fichero a /etc/systemd/system/ y
     `systemctl daemon-reload`, o retirarla si se demuestra que sobra.
+
+
+etc_systemd_system_tailscaled.service.d_bb-reinicio-ilimitado.conf
+etc_systemd_system_NetworkManager.service.d_bb-reinicio-ilimitado.conf
+    Drop-ins instalados a mano por Luis con sudo el 2026-11-06 (Restart=always,
+    RestartSec=2, StartLimitIntervalSec=0): el 5 nov systemd dejo de reiniciar
+    tailscaled y NetworkManager tras "Start request repeated too quickly" y la
+    ATOM quedo 17,6 h sin red. Ningun instalador del repo los pone todavia;
+    anadirlos a `enable-privileged.sh` es un cambio de un script de root y queda
+    como trabajo aparte. Se siguen comparando con `bb drift`.
+    Remedio de una divergencia (como root, una unidad por vez):
+      install -D -m 0644 adopted/system-config/etc_systemd_system_<unidad>.service.d_bb-reinicio-ilimitado.conf \
+        /etc/systemd/system/<unidad>.service.d/bb-reinicio-ilimitado.conf && systemctl daemon-reload
+
+
+etc_systemd_system_snap.openshell.system-gateway.service.d_bb-espera-docker.conf
+    Drop-in instalado a mano por Luis con sudo el 2026-11-09: el gateway de
+    openshell (snap de NVIDIA) salio 5 veces en menos de 1 s al arrancar porque
+    Docker y el DNS aun no estaban listos, y dejo el sistema en `degraded`.
+    Mismo motivo y mismo remedio que los dos anteriores:
+      install -D -m 0644 adopted/system-config/etc_systemd_system_snap.openshell.system-gateway.service.d_bb-espera-docker.conf \
+        /etc/systemd/system/snap.openshell.system-gateway.service.d/bb-espera-docker.conf && systemctl daemon-reload
