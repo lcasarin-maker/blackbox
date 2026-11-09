@@ -3,12 +3,16 @@ id: FEATURE-VENTANA-GPU-NOCTURNA-SECUENCIA-01
 kind: task
 domain: GPU
 title: "Secuencia de la ventana nocturna de GPU (02:00-05:00) con el chat local apagado: cazador del kill, medicion de gpt-oss y restauracion"
-status: open
+status: done
 severity: P1
 origin: measured
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-07
 close_check: {"cmd": "test -s ~/.local/share/blackbox/ventana-gpu/resumen.txt && grep -q 'quien_mata=' ~/.local/share/blackbox/ventana-gpu/resumen.txt", "expect": "exit_zero", "porque": "Falla hoy (no existe el resumen). Cierra cuando una ventana supervisada deja el resumen con quien_mata=<proceso> o quien_mata=NO_REPRODUCIDO, el valor de --gpu-memory-utilization probado (o el motivo de no haberlo logrado) y nemotron restaurado (health 200)."}
+closed_at: 2026-11-09
+closure_type: void_wontfix
+reason: "Luis voto el 2026-11-09 cancelar la ventana: Atlas DECISIONS 2026-11-09 retira sisifo (DGX-706) y el runtime gpt-oss, unico objeto de la medicion, queda sin dueno ni cliente. No se corrio la ventana; quien_mata queda sin medir."
+evidence: {"pass":"tasks/evidence/FEATURE-VENTANA-GPU-NOCTURNA-SECUENCIA-01/pass.txt"}
 ---
 
 ## Decision que la habilita

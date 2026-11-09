@@ -57,3 +57,9 @@ No se identifico quien lanzo `gpt-oss-runtime` ni que sesion de sisifo estaba mi
 - **Descartado:** firmar 100,1 GiB un mes (deja 21 GiB al resto, el escenario de los dos colapsos) y firmar 88,7 GiB otro mes (nace contradicha por la medida).
 - **Pedido a sisifo (escrito como encargo el 2026-11-06 en el formato de sisifo, `reports/coordinacion-limite-gpu-gpt-oss/encargo-codex-sisifo.txt` del repo de sisifo, SHA-256 del cuerpo `0fda877d238391415975eb47740fda46283f896e4dee87629ed1b22b510ba814`; falta que la sesion de Codex de sisifo lo lea y entregue `entrega-sisifo.txt`):** arrancar `gpt-oss-120b` con `--gpu-memory-utilization` 0.60, 0.55 y 0.50 en ese orden, anotar si arranca, la GPU usada y el rendimiento, y entregar el menor valor que funciona. Hasta tener ese numero, `close_check` sigue fallando a proposito.
 - **Reabrir si:** el modelo no arranca por debajo de 0.7; entonces la decision pasa a ser cuanta memoria se le quita al escritorio (el tope de `app.slice` de 42 GiB tiene su propia decision de 2026-10-17).
+
+## Decision de Luis, 2026-11-09: se cancela la ventana de medicion; el alcance se reorienta
+- **Decidido:** sisifo se retira (Atlas DECISIONS 2026-11-09, DGX-706). El 0.60/0.55/0.50 de `gpt-oss-120b` ya no se mide: el modelo no tiene dueno ni cliente. Ficha de la ventana cerrada `void_wontfix`.
+- **Sigue abierto:** nada aplica un limite de memoria de GPU. El techo ya no se deriva de gpt-oss sino de lo que usa el motor de chat (`nemotron-server`) mas lo que lance un trabajo futuro. `guardia_gpu` solo detiene contenedores con `lanzado_por`; sin sisifo no hay ninguno, asi que queda sin objetivo hasta que alguien lance uno con la etiqueta.
+- **Pendiente de voto:** que techo firmar para el motor de chat, o dejar `presupuesto_gpu.json` retirado.
+- **Limite:** quien tiro los ~30 GB del 5 nov sigue sin identificarse.
