@@ -47,3 +47,17 @@ Regla: una sola variable por etapa. El refugio de cada etapa es 6.17.0-1032 con 
 - 6.17 no es refugio libre de cortes: 7 cortes duros sin rastro desde el 6 de oct (DEBT-CORTES-BAJO-CARGA-SIN-RASTRO-01), con y sin modulo parchado; tasa antes/despues del parche 6,3 y 6,2 por 100 h (n=3, sin inferencia posible).
 - 7.0.0-1024: bucle del 2 nov con `gsp_timeout` en varias filas de `reboots.jsonl`; `modulo_nvidia_ruta` = NOT_COLLECTED en esos arranques, asi que no se puede atribuir al modulo parchado o al de fabrica.
 - El parche cobro y hizo cumplir `dmem.max` en 6.17 (DECISIONS 2026-10-16), pero hay que recompilarlo por kernel: parchearlo para 6.17 y luego rehacerlo para 7.0 duplica el trabajo.
+
+## Hallazgo 2026-11-09 21:50: la vuelta 7.0 -> 6.17 con `reboot` fallo (voto de Luis: se mantiene el plan y se mejora la recuperacion)
+- 19:21:03 el 1025 cerro de forma ordenada (3 h 23 min, 141 min con carga, 0 firmas estrictas). 19:21:53 arranco 6.17.0-1032 con el modulo de fabrica, como debia.
+- **19:22:07, 10 s despues de cargar el modulo, en 6.17:** `Xid 119` / GSP Timeout (`rpcRecvPoll timedout`, funcion 76 GSP_RM_CONTROL, proceso Xorg). Ese arranque dejo 16 961 lineas `NVRM` y, a las 21:20:00, `Assertion failed ... NV_ERR_GPU_IN_FULLCHIP_RESET`. Es la firma que se atribuia al 7.0, ahora en 6.17.
+- 21:20:17 `systemd-logind: Power key pressed short` (Luis apago con el boton). 21:22:05 a 21:22:59 otro arranque que acabo en apagado. Los reinicios manuales siguientes no dejaron diario. 21:47:09 arranco 6.17 y quedo sano (0 firmas, `bb_intentos=0`).
+- **Correccion:** la nota de esta ficha «cualquier reinicio vuelve al 6.17» era cierta para GRUB y insuficiente: el arranque en 6.17 fallo igual.
+- **Hipotesis sin probar:** un reinicio en caliente tras una sesion larga en 7.0 deja la GPU o el GSP en un estado que el arranque siguiente no recupera (el reinicio en caliente no corta la alimentacion de la GPU). Apoyan: dos reinicios en caliente 6.17 -> 6.17 (6 y 9 nov) y uno 6.17 -> 7.0 salieron bien; la unica vuelta 7.0 -> 6.17 fallo. No lo prueba: n=1.
+- **Regla desde ahora:** la vuelta de 7.0 a 6.17 se hace con apagado completo (`poweroff`, esperar 30 s, encender), nunca con `reboot`.
+
+### Recuperacion antes de la etapa 2 (nuevo requisito)
+Escalera, de mas a menos automatica; cada peldano lleva su prueba:
+1. Alarma de la Dell con una comprobacion de solo lectura por `ssh atom`: `GSP Timeout`/`Xid 119|154` en el diario del arranque actual, aviso por ntfy con la orden recomendada.
+2. Apagado en frio remoto: script sellado de `bb-root-run` que hace `systemctl poweroff`, y la Dell envia Wake-on-LAN (MAC enP7s7 48:21:0b:95:41:f1) a los 45 s. Sin probar: que la NIC y el BIOS enciendan desde apagado (`sudo ethtool enP7s7 | grep Wake-on`; `/sys/class/net/enP7s7/device/power/wakeup` dice `enabled`).
+3. Si `ssh-casa` esta caido: nada de la Dell llega. Solo el boton fisico, o un enchufe inteligente (corte real de energia) comandado desde la Dell. Decision de Luis y de hardware.
