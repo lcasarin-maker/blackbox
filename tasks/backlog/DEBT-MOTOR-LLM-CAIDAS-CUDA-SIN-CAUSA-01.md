@@ -82,3 +82,9 @@ la ventana (dia y hora) y los parametros exactos de generacion; hasta entonces n
 - Medido: `env` de `active_engine.json` solo trae `VLLM_HOST_IP`, `XDG_CACHE_HOME` y `FLASHINFER_WORKSPACE_BASE`; el contenedor vivo (`nemotron-server`) no tiene la variable (`docker inspect`, sin coincidencia). El archivo se movio con el mismo sha256 (informe de Atlas, 19 archivos), asi que la mudanza no la quito: ya faltaba. No se sabe cuando se perdio; el modelo del motor cambio a `nemotron-3.5-bolt-74b-a9b-24gb` el 6 nov.
 - Consecuencia: una excepcion CUDA del motor no deja volcado en `/srv/ai/models/_coredumps`.
 - Pendiente: poner la variable en `active_engine.json` (archivo de Atlas ahora) y reiniciar el motor; decision de Luis y de Atlas porque implica reiniciar `ai-nemotron`.
+
+## Nota 2026-11-10 03:20: volcado CUDA ante excepcion ARMADO
+- Atlas (voto de Luis) puso `CUDA_ENABLE_COREDUMP_ON_EXCEPTION=1` y `CUDA_COREDUMP_FILE=/models/_coredumps/vllm_%h_%p_%t` en `/srv/Atlas/gateway/active_engine.json` y reinicio `ai-nemotron` (03:12:57; /health 200 a las 03:16:51). Sin reboot; respaldo `.bak-2026-11-10-pre-coredump`.
+- Verificado por blackbox a las 03:17: `docker inspect nemotron-server` trae ambas variables; `bb status` dice `ARMADO volcado CUDA ante excepcion del motor` (antes `FALTA`); `journalctl -k -b 0` con Xid/rpcRecvPoll/GSP Timeout = 0 lineas; kernel 6.17.0-1032 sigue desde 2026-11-09 21:47:03 (reloj de 24 h sin reiniciar). Disco de `/srv/ai/models`: 1.6T libres.
+- Control negativo: el mismo `bb status` marco `FALTA` a las 22:20 del 9 nov con la variable ausente, asi que la linea puede dar el veredicto contrario.
+- Sigue abierta la causa de las caidas: el volcado solo captura la proxima excepcion CUDA.
