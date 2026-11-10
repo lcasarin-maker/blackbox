@@ -470,7 +470,7 @@ psi_campo() { # recurso, linea(some|full), clave(avg10|avg60) -> valor o ""
 GATEWAY_URL="${BLACKBOX_GATEWAY_URL:-http://127.0.0.1:8000/v1/models}"
 GATEWAY_CHAT="${BLACKBOX_GATEWAY_CHAT:-http://127.0.0.1:8000/v1/chat/completions}"
 MOTOR_UNIDAD="${BLACKBOX_MOTOR_UNIDAD:-ai-nemotron.service}"
-MOTOR_CONFIG="${BLACKBOX_MOTOR_CONFIG:-/srv/ai/gateway/active_engine.json}"
+MOTOR_CONFIG="${BLACKBOX_MOTOR_CONFIG:-$([ -f /srv/Atlas/gateway/active_engine.json ] && echo /srv/Atlas/gateway/active_engine.json || echo /srv/ai/gateway/active_engine.json)}"  # el gateway pasa de /srv/ai a /srv/Atlas (DGX-703): la ruta nueva gana si existe
 MOTOR_VOLCADOS="${BLACKBOX_MOTOR_VOLCADOS:-/srv/ai/models/_coredumps}"
 
 gateway_modelo() { # -> nombre del modelo servido, o "" si no responde

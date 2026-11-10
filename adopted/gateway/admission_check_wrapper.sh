@@ -6,7 +6,7 @@
 # bajara a 75 (adopcion sin DSpark, DGX-142); el numero quedo desincronizado
 # y bloqueaba reinicios legitimos con memoria real de sobra.
 set -euo pipefail
-CONFIG="${1:-/srv/ai/gateway/active_engine.json}"
+CONFIG="${1:-$(dirname "$(readlink -f "$0")")/active_engine.json}"  # junto al script: sobrevive a mover el gateway (DGX-703)
 SERVICE_NAME="${2:-ai-nemotron}"
 GB=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['admission_check_gb'])" "$CONFIG")
 exec /srv/ai/gpu_governance/admission_check.sh "$GB" "$SERVICE_NAME"
