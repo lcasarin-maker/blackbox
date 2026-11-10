@@ -76,3 +76,9 @@ Decidido: si, obtener un volcado completo del kernel que tumba el motor, en una 
 (mas tiempo antes del reinicio o banderas de generacion distintas), asi que la ficha exige avisar antes a la otra sesion que usa
 el motor. Costo aceptado: el motor queda abajo hasta ~622 s por caida (maximo medido en los 28 volcados truncados). Falta fijar
 la ventana (dia y hora) y los parametros exactos de generacion; hasta entonces no se toca el motor.
+
+## Nota 2026-11-09 22:20: el volcado CUDA ante excepcion NO esta armado en el motor actual
+- Tras la mudanza del gateway a `/srv/Atlas/gateway` (Atlas, 22:12 a 22:17; ficha DGX-703), `bb status` marca `FALTA  volcado CUDA ante excepcion del motor -- falta CUDA_ENABLE_COREDUMP_ON_EXCEPTION=1 en /srv/Atlas/gateway/active_engine.json`.
+- Medido: `env` de `active_engine.json` solo trae `VLLM_HOST_IP`, `XDG_CACHE_HOME` y `FLASHINFER_WORKSPACE_BASE`; el contenedor vivo (`nemotron-server`) no tiene la variable (`docker inspect`, sin coincidencia). El archivo se movio con el mismo sha256 (informe de Atlas, 19 archivos), asi que la mudanza no la quito: ya faltaba. No se sabe cuando se perdio; el modelo del motor cambio a `nemotron-3.5-bolt-74b-a9b-24gb` el 6 nov.
+- Consecuencia: una excepcion CUDA del motor no deja volcado en `/srv/ai/models/_coredumps`.
+- Pendiente: poner la variable en `active_engine.json` (archivo de Atlas ahora) y reiniciar el motor; decision de Luis y de Atlas porque implica reiniciar `ai-nemotron`.

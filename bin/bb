@@ -3024,11 +3024,14 @@ cmd_drift() {
   echo "== divergencia repo vs maquina =="
   # BLACKBOX_DRIFT_SRV: el mismo patron que BLACKBOX_DRIFT_ROOT, para el lado
   # desplegado de /srv/ai.
-  local srv="${BLACKBOX_DRIFT_SRV:-/srv/ai}" sub
+  local srv="${BLACKBOX_DRIFT_SRV:-/srv/ai}" sub dest
   for sub in gpu_governance gateway; do
+    dest="$srv/$sub"
+    # el gateway paso de /srv/ai a /srv/Atlas el 2026-11-09 (Atlas, DGX-703); con BLACKBOX_DRIFT_SRV se respeta el lado de prueba
+    [ "$sub" = gateway ] && [ -z "${BLACKBOX_DRIFT_SRV:-}" ] && dest=/srv/Atlas/gateway
     for f in "$root"/adopted/"$sub"/*.sh; do
       [ -e "$f" ] || continue
-      cmp_one "$srv/$sub/$(basename "$f")" "$f"
+      cmp_one "$dest/$(basename "$f")" "$f"
     done
   done
   for f in "$root"/adopted/systemd-user/*; do

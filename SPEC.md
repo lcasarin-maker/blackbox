@@ -377,7 +377,7 @@ disco.
 | `~/.config/systemd/user/bb-modulo-nvidia-registro.timer` | su cadencia: a los 5 s, 20 s y 60 s del arranque, porque el modulo cargado solo se lee en vivo. |
 | `~/.config/systemd/user/bb-aviso-termico.service` | corre `python3 -m tools.aviso_termico` de forma continua (reinicio en fallo); lleva `DBUS_SESSION_BUS_ADDRESS` porque un servicio de usuario no siempre hereda el bus de notificaciones. |
 | `~/.config/systemd/user/bb-guardia-proceso.service` | corre `bin/bb-guardia-proceso`, que frena a un proceso desbocado antes de que tumbe la maquina. Desplegado sin adoptar hasta el 2026-10-12. |
-| `/srv/ai/gateway/admission_check_wrapper.sh` | el `ExecStartPre` del motor: lee `admission_check_gb` de `active_engine.json` y llama a `admission_check.sh`. Es la mitad del veto de memoria que no estaba en el repo. |
+| `/srv/Atlas/gateway/admission_check_wrapper.sh` | el `ExecStartPre` del motor: lee `admission_check_gb` de `active_engine.json` y llama a `admission_check.sh`. Es la mitad del veto de memoria que no estaba en el repo. |
 | `/etc/systemd/coredump.conf.d/99-blackbox.conf` | techo de disco de los volcados (seccion 1 de `enable-privileged.sh`). Cuelgue. |
 | `/etc/security/limits.d/99-blackbox-core.conf` | `core unlimited` para sesiones (seccion 2). |
 | `/etc/systemd/system.conf.d/99-blackbox.conf` | `DefaultLimitCORE=infinity` para servicios del sistema (seccion 2). |
@@ -401,7 +401,7 @@ la actualización.
 `tasks/evidence/FEATURE-OWNEAR-EN-BB-LO-QUE-ACTUA-SOBRE-LA-MAQUINA-01/inventario.txt`):
 `active_engine.json`, `main.py`, `ai-nemotron.service`, modelos, imagenes y datos
 se quedan donde estan. La relacion es de informacion: bb LEE
-`/srv/ai/gateway/active_engine.json` (`admission_check_gb`, `container_memory_gb`)
+`/srv/Atlas/gateway/active_engine.json` (`admission_check_gb`, `container_memory_gb`)
 y `/srv/ai/models/_coredumps`, y actua sobre la unidad del motor solo por
 `systemctl` (vigilante y gate de admision), sin versionar su configuracion.
 
