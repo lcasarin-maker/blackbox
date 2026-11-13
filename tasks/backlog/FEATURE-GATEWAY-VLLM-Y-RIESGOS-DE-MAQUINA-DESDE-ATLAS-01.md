@@ -49,3 +49,20 @@ abrir trabajo nuevo.
 ## Pendiente de medir
 
 Las 33 funciones aun no se han leido una por una; esta ficha registra el pedido, no su cierre.
+
+## Cosecha de /clean (2026-11-13)
+
+La rama local `codex/h3-gateway-receiver` conserva el contrato pendiente en
+`bff519044561d4898107940436a0ab9e217b0da2`
+(`wip(cosecha): conservar contrato pendiente del handoff del gateway`).
+Contiene solo `tests/test_gateway_handoff.py`, cosechado sin modificar.
+
+Comando: `python3 -m pytest -q -p no:cacheprovider tests/test_gateway_handoff.py`.
+Salida: `8 failed in 0.08s`, codigo `1`: faltan el lanzador, la unit y el
+adaptador de admision de `tools/gateway/`. La prueba detecta esa ausencia.
+
+Por instruccion del coordinador, esta es la unica rama que se conserva a
+proposito: queda sin aterrizar hasta implementar el alcance D3 de esta ficha.
+El worktree secundario se retira despues de conservar el commit; el trabajo se
+retoma creando un worktree de esa rama. /clean no implementa el gateway ni
+modifica servicios instalados.
