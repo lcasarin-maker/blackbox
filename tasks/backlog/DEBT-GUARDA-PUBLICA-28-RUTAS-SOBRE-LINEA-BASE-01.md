@@ -151,7 +151,7 @@ de cero escrituras fuera del repo y scratch. No se invoco el servicio.
 
 ### Suite completa y limites operativos
 
-Comando: `PYTHONDONTWRITEBYTECODE=1 TMPDIR=/home/lcasarin/scratch/blackbox/r13 python3 -m pytest -q -p no:cacheprovider --basetemp=/home/lcasarin/scratch/blackbox/r13/suite`.
+Comando: `PYTHONDONTWRITEBYTECODE=1 TMPDIR=$HOME/scratch/blackbox/r13 python3 -m pytest -q -p no:cacheprovider --basetemp=$HOME/scratch/blackbox/r13/suite`.
 Salida literal: `17 failed, 4570 passed, 8 skipped, 3 deselected, 1 warning in 618.35s (0:10:18)`; rc=1.
 Comparacion de nodos contra los 18 de DEBT-SUITE-PREVIA-ROJA-2026-11-13-01:
 17 persistentes, 0 nuevos; solo deja de fallar
