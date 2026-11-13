@@ -47,7 +47,7 @@ recupera su nombre exacto. El inventario completo local conserva el nombre liter
 | `tasks/backlog/DEBT-CAIDAS-DURAS-7-0-MODULO-PARCHADO-01.md` | 0 | 7 | `e9eee190d357` |
 | `tasks/backlog/DEBT-MEMORIA-GPU-SIN-LIMITE-APLICADO-COLAPSOS-5-Y-6-NOV-01.md` | 0 | 5 | `e9eee190d357` |
 | `tasks/backlog/DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01.md` | 0 | 8 | `7a84acf11c65` |
-| `tasks/backlog/FEATURE-GATEWAY-VLLM-Y-RIESGOS-DE-MAQUINA-DESDE-*.md` | 0 | 20 | `fe1e9cbf1e77` |
+| `tasks/backlog/FEATURE-GATEWAY-VLLM-Y-RIESGOS-DE-MAQUINA-DESDE-CONSUMIDOR-01.md` | 0 | 20 | `fe1e9cbf1e77` |
 | `tasks/backlog/FEATURE-PRUEBA-KERNEL-7-0-1025-UNA-VEZ-01.md` | 0 | 1 | `16cd76512f9a` |
 | `tasks/backlog/IDEA-DECLARAR-DUENIO-UNICO-DEL-MONITOREO-Y-AREAS.md` | 0 | 1 | `002e4f2d7eff` |
 | `tasks/backlog/IDEA-DISTINGUIR-COMANDO-DESCONOCIDO-EN-BB-ROOT-RUN.md` | 0 | 1 | `002e4f2d7eff` |
@@ -89,9 +89,10 @@ Commits de implementacion: `d5bad497`, `d9967fc9`, `fec92311`.
 
 - A: narrativas y evidencia transformadas; usuario y destinos operativos
   se leen de configuracion externa, con ejemplos sinteticos en `config/`.
-  En SPEC.md:380 se conserva una referencia de compatibilidad exigida por
-  el inventario, dentro del umbral anterior de 1; se retira el dato de usuario
-  de SPEC.md:297 y se neutralizan las otras referencias narrativas.
+  En la primera pasada SPEC.md:380 conservaba una referencia de compatibilidad.
+  La revision la sustituye por @BB_GATEWAY@, preservando el inventario mediante
+  su expansion; SPEC.md:276 vuelve a la red de diseno del puente. La cuota
+  existente de 1 vuelve a corresponder exclusivamente al motivo _LAB.
 - B: siete rutas admitidas con cuenta exacta (3, 2, 6, 24, 1, 3, 2),
   total 41; cada una lleva motivo en `MOTIVOS`. Patron y firma conservados.
 - Pre-push: `datos-privados-publicacion`, siempre seleccionada; simplecode
@@ -138,8 +139,8 @@ sin limite de revisiones ni archivos, buscando la misma regex firmada en
 lineas agregadas y retiradas; dos fixtures sinteticos explicitos se excluyeron.
 Lista privada modo 600 en scratch de reescritura, nunca versionada:
 78 valores distintos: MAC=33, IP_LAN=25, USUARIO=1, HOST=1, KB=2, PROYECTO=16;
-681 commits afectados por alguna coincidencia retenida, incluyendo retiradas
-(recorrido final tras documentar y corregir el comando; primer recorrido: 679).
+682 commits afectados por alguna coincidencia retenida, incluyendo retiradas
+(recorrido tras corregir revision: 682; tras documentar: 681; primero: 679).
 Marcas: A-confirmado=13, A-historico=10, candidato-sintetico=55.
 A-confirmado procede de coincidencias de los archivos A de la evaluacion
 (SPEC restringido al usuario); A-historico identifica tokens privados del
@@ -179,3 +180,62 @@ Close-check informa `fichas_cerradas=1 ejecuta=0 no_ejecuta=1` sobre la ficha
 historica de ventana GPU, cuyo comando compuesto carece de ejecutor admitido.
 Se registra la omision junto a los contadores del gate; el estado done previo
 de esa ficha no acredita que el close-check haya podido ejecutarla ahora.
+
+## Revision Claude, correcciones de la primera ronda
+
+- Bloqueantes 1 y 2, commit bcba6b19: red de diseno de SPEC.md:276 restaurada;
+  @BB_GATEWAY@ en su tabla y expansion limitada en inventario; se conserva
+  cuota SPEC=1 y su motivo _LAB. Prueba de inventario: la plantilla correcta
+  pasa y un nombre de archivo ajeno devuelve dos hallazgos. La ficha del
+  gateway cambia nombre e id juntos a la ruta neutra indicada en la tabla.
+- Bloqueante 3 y menores 5, 7 y 8, commit 3522a4dc: error de configuracion
+  con archivo e instrucciones (root, modo 0600) en lugar de traceback;
+  manejo en panic, suspension/restauracion y los dos entrypoints de los timers.
+  docs/PANIC.md exige configuracion antes de actualizar; instalaciones intactas.
+  WoL documenta BB_WOL_CONFIG, rechaza JSON no objeto y sus fixtures usan
+  literales sinteticos completos; ejemplo ntfy sin https, rechazado por carga.
+  Unit de muestreo exige que el script configurado exista antes de arrancar.
+- Bloqueante 4 y menor 6, commit 247d661b: medir usa ls-tree y cat-file de HEAD;
+  la propia base tambien sale de HEAD. Disco, indice o base sin commit no
+  pueden blanquearlo. Motivo especifico y voto fechado para cada B.
+  Regresiones antes: 8 failed, 4 passed in 0.48s; despues, pasada focal:
+  114 passed in 33.48s. Los tres casos de HEAD contaminado (disco limpio,
+  borrado e indice limpio) bloquean y, tras un commit limpio, pasan.
+- Menor 9: transformaciones y despliegues anotados arriba desde c9f28ae5.
+  Los puntos de restauracion root tambien dependen del archivo privado nuevo.
+
+### Nombres de ruta fuera del alcance de la regex
+
+El revisor encontro inicialmente cinco rutas con nombres internos, que la
+regex de contenido no mide. La ficha gateway ya se renombro junto con su id.
+Quedan cuatro, para la segunda parte (patrones que preservan su privacidad):
+`docs/evidence/INVESTIGACION-GB10-2026-10-11/entrega_*.json` (2),
+`tasks/evidence/FEATURE-*-RECOLECTOR-HALLAZGOS-BB-01/e2e.txt` (1),
+`tasks/evidence/FEATURE-COSECHA-FORO-*/entrega_*_manifiesto.sha256` (1).
+`git ls-files -- '<patron>'` recupera cada sujeto sin copiar aqui los valores.
+Ademas, tres archivos .coverage historicos ya admitidos por la base contienen
+usuario local; son residuo previo fuera de las 21 A de esta tarea. La ficha
+sigue abierta y el reporte no afirma ausencia global de A en toda la base.
+La ampliacion del patron a otras formas de MAC y la reduccion de cuotas
+historicas vacias requieren trabajo separado; el patron firmado se conserva.
+
+### Resultado final de la correccion de revision
+
+Segunda suite completa (mismos argumentos, basetemp suite-revision en scratch):
+`17 failed, 4579 passed, 8 skipped, 3 deselected, 2 warnings in 522.43s (0:08:42)`;
+rc=1. Comparacion con los 18 originales: nuevos=0, persistentes=17;
+solo deja de fallar la guarda. Las nueve pruebas nuevas de esta revision pasan.
+Las dos warnings son excepciones de hilo gpuoom-gpu durante los tests de portero
+`test_cmd_run_lanza_con_tope_en_todo_modo_y_solo_actuar_hace_esperar` y
+`test_cmd_demonio_una_vez_corre_un_ciclo_y_con_contenedores_aplica`.
+
+Control externo, comando literal `simplecode verify --hook pre-push` en clon:
+limpio `{"could_not_run":0,"fail":0,"pass":5,"pending":0}`;
+HEAD con dato sintetico y disco limpio
+`{"could_not_run":0,"fail":1,"pass":4,"pending":0}`.
+Solo falla datos-privados-publicacion; guarda directa con disco limpio:
+`1 failed, 4 passed in 3.32s`; disco borrado:
+`1 failed, 4 passed in 3.31s`. Guarda corregida limpia:
+`5 passed in 3.51s`. No se pudo correr en estos controles: 0.
+Faltan aprobacion de ultima revision y push normal, segun instruccion del
+coordinador; la historia, los despliegues y la adjudicacion siguen pendientes.
