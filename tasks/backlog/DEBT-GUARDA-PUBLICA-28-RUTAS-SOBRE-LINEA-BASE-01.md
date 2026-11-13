@@ -138,7 +138,8 @@ sin limite de revisiones ni archivos, buscando la misma regex firmada en
 lineas agregadas y retiradas; dos fixtures sinteticos explicitos se excluyeron.
 Lista privada modo 600 en scratch de reescritura, nunca versionada:
 78 valores distintos: MAC=33, IP_LAN=25, USUARIO=1, HOST=1, KB=2, PROYECTO=16;
-679 commits afectados por alguna coincidencia retenida, incluyendo retiradas.
+681 commits afectados por alguna coincidencia retenida, incluyendo retiradas
+(recorrido final tras documentar y corregir el comando; primer recorrido: 679).
 Marcas: A-confirmado=13, A-historico=10, candidato-sintetico=55.
 A-confirmado procede de coincidencias de los archivos A de la evaluacion
 (SPEC restringido al usuario); A-historico identifica tokens privados del
@@ -164,3 +165,17 @@ nuevos_control=1. Reporte detallado local: suite-comparacion.json.
 No se pudo correr (guarda, controles y gates de privacidad): 0.
 Omisiones de suite: 8; deseleccionados por configuracion habitual: 3.
 La suite sigue roja; la reescritura y el despliegue siguen pendientes.
+
+### Correccion documental y omision conservada
+
+El comando de suite se documento inicialmente con dos apariciones del usuario
+local en la ruta absoluta; el gate de c9f28ae5 las detecto. Se corrigieron en
+5d49599c mediante HOME, en un commit nuevo; esa incorporacion/retirada entra
+en los 681 commits candidatos a purga y se conserva en la historia hasta la
+segunda parte votada. El gate sobre c9f28ae5 informo fail=2, pass=3,
+could_not_run=0 (guarda y pytest fallaron por la misma linea documental).
+
+Close-check informa `fichas_cerradas=1 ejecuta=0 no_ejecuta=1` sobre la ficha
+historica de ventana GPU, cuyo comando compuesto carece de ejecutor admitido.
+Se registra la omision junto a los contadores del gate; el estado done previo
+de esa ficha no acredita que el close-check haya podido ejecutarla ahora.
