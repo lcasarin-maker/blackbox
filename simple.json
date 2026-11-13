@@ -180,6 +180,37 @@
       ]
     },
     {
+      "id": "datos-privados-publicacion",
+      "argv": [
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_sin_datos_privados.py"
+      ],
+      "timeout_ms": 300000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "read_only": true,
+      "hooks": [
+        "pre-push"
+      ]
+    },
+    {
       "id": "pytest",
       "policy": {
         "kind": "test-impact",
