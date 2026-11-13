@@ -3,7 +3,7 @@
 Medido el 2026-10-11 (analisis de la frontera entre bb y su consumidor): el arbol ya publicaba MACs, IPs de LAN, el hostname y nombres de
 proyectos privados dentro de evidencias historicas. Esas evidencias llevan hashes de procedencia y NO se
 reescriben; quedan en `datos_privados_baseline.json` con su cuenta. La guarda falla si un archivo nuevo
-contiene estos datos o si uno de la lista sube su cuenta. La lista solo puede encogerse salvo admision explicita de compatibilidad por boleta.
+contiene estos datos o si uno de la lista sube su cuenta. La lista solo puede crecer mediante voto fechado del dueno, con clase y motivo por archivo.
 
 Ampliada el 2026-11-01 (boleta #23 A de Luis: el repo publico no lleva datos personales de la maquina): el
 usuario, cualquier IP RFC 1918 (las de documentacion, 192.0.2.x, 198.51.100.x y 203.0.113.x, no lo son), los
@@ -25,6 +25,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import io
 import re
 import subprocess
 from pathlib import Path
@@ -75,13 +76,13 @@ _REF = "ruta de procedencia en la KB del consumidor (`ref_raiz` de rules/firmas_
 _LEGADO = "clave de legado del contrato neutro (boleta #18 A): se lee por compatibilidad hasta que el productor migre"
 _LAB = "la /24 RFC 1918 es la direccion de DISENO del puente propio del laboratorio (bblab0), no un dato de la maquina"
 MOTIVOS: dict[str, str] = {
-    "adopted/boton-rojo-keep.txt": "Identificador de compatibilidad de servicios o fixture de su contrato; clase B, boleta 2026-11-13.",
-    "adopted/gateway/admission_check_wrapper.sh": "Identificador de compatibilidad de servicios o fixture de su contrato; clase B, boleta 2026-11-13.",
-    "bin/bb": "Identificador de compatibilidad de servicios o fixture de su contrato; clase B, boleta 2026-11-13.",
-    "tests/test_boton_rojo.py": "Identificador de compatibilidad de servicios o fixture de su contrato; clase B, boleta 2026-11-13.",
-    "tests/test_inventario.py": "Identificador de compatibilidad de servicios o fixture de su contrato; clase B, boleta 2026-11-13.",
-    "tools/inventario.py": "Identificador de compatibilidad de servicios o fixture de su contrato; clase B, boleta 2026-11-13.",
-    "tools/motor_solicitudes.py": "Identificador de compatibilidad de servicios o fixture de su contrato; clase B, boleta 2026-11-13.",
+    "adopted/boton-rojo-keep.txt": "Patrones reales KEEP/suspende: preservan servicios del consumidor en emergencia; boleta B 2026-11-13.",
+    "adopted/gateway/admission_check_wrapper.sh": "Ruta instalada del gateway y contrato de su wrapper adoptado; boleta B 2026-11-13.",
+    "bin/bb": "Rutas de compatibilidad para localizar gateway instalado y mapear bb drift; boleta B 2026-11-13.",
+    "tests/test_boton_rojo.py": "Fixtures que ejercen nombres reales de unidades KEEP, suspension y restauracion; boleta B 2026-11-13.",
+    "tests/test_inventario.py": "Contrato del destino instalado que inventario debe seguir reconociendo; boleta B 2026-11-13.",
+    "tools/inventario.py": "Mapa de la ruta instalada del gateway, compartido con bb drift; boleta B 2026-11-13.",
+    "tools/motor_solicitudes.py": "Alternativas de ruta heredada y vigente para leer solicitudes del motor; boleta B 2026-11-13.",
 
     "SPEC.md": _LAB,
     "adopted/system-config/home_@BB_USUARIO@_.config_systemd_user_app.slice.d_99-blackbox.conf": _ADOPTADA,
@@ -109,29 +110,41 @@ def cuenta(texto: str) -> int:
 
 
 def archivos_versionados() -> list[str]:
-    r = subprocess.run(
-        ["git", "ls-files", "-z"], cwd=RAIZ, capture_output=True, check=True
-    )
-    return [p for p in r.stdout.decode().split("\0") if p]
+    r = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", "-z", "HEAD"], cwd=RAIZ)
+    return [p for p in r.decode().split("\0") if p]
+
+
+def _base_publicada() -> dict[str, int]:
+    return json.loads(subprocess.check_output(
+        ["git", "show", "HEAD:tests/fixtures/datos_privados_baseline.json"], cwd=RAIZ))
 
 
 def medir() -> dict[str, int]:
+    """Lee exclusivamente blobs de HEAD; ni indice ni disco pueden blanquear el snapshot."""
+    tree = subprocess.check_output(["git", "ls-tree", "-rz", "HEAD"], cwd=RAIZ)
+    blobs = []
+    for row in tree.split(b"\0"):
+        if not row:
+            continue
+        meta, rel = row.split(b"\t", 1)
+        _, kind, oid = meta.split()
+        if kind == b"blob":
+            blobs.append((rel.decode(), oid))
+    raw = subprocess.check_output(["git", "cat-file", "--batch"], cwd=RAIZ,
+                                  input=b"".join(oid + b"\n" for _, oid in blobs))
+    stream = io.BytesIO(raw)
     out: dict[str, int] = {}
-    ilegibles: list[str] = []
-    for rel in archivos_versionados():
-        if rel == "tests/fixtures/datos_privados_baseline.json" or rel == Path(__file__).relative_to(RAIZ).as_posix():
+    for rel, oid in blobs:
+        header = stream.readline().split()
+        assert len(header) == 3 and header[0] == oid and header[1] == b"blob", "blob ilegible"
+        size = int(header[2])
+        data = stream.read(size)
+        assert len(data) == size and stream.read(1) == b"\n", "blob truncado"
+        if rel in ("tests/fixtures/datos_privados_baseline.json", "tests/test_sin_datos_privados.py"):
             continue
-        p = RAIZ / rel
-        try:
-            if not p.is_file():
-                continue
-            n = cuenta(p.read_bytes().decode("utf-8", errors="ignore"))
-        except OSError:
-            ilegibles.append(rel)
-            continue
+        n = cuenta(data.decode("utf-8", errors="ignore"))
         if n:
             out[rel] = n
-    assert ilegibles == [], f"archivos versionados que no se pudieron leer: {ilegibles}"
     return out
 
 
@@ -142,12 +155,12 @@ def compara(actual: dict[str, int], base: dict[str, int]) -> list[str]:
 
 
 def test_el_repo_no_gana_datos_privados():
-    base = json.loads(BASE.read_text(encoding="utf-8"))
+    base = _base_publicada()
     assert compara(medir(), base) == []
 
 
 def test_lo_que_queda_fuera_de_tasks_y_docs_lleva_su_motivo():
-    base = json.loads(BASE.read_text(encoding="utf-8"))
+    base = _base_publicada()
     fuera = {r for r in base if not r.startswith(("tasks/", "docs/"))}
     assert sorted(fuera - MOTIVOS.keys()) == [], "en la linea base sin motivo en MOTIVOS"
     assert sorted(MOTIVOS.keys() - fuera) == [], "motivo de algo que ya no esta en la linea base: quitarlo"
