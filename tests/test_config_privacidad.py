@@ -35,3 +35,33 @@ def test_rojo_sin_usuario_bloquea(tmp_path, monkeypatch):
     monkeypatch.setenv('BB_ROJO_CONFIG', str(tmp_path / 'ausente.json'))
     with pytest.raises((OSError, ValueError)):
         boton_rojo.Ctx()
+
+
+def test_rojo_json_sin_usuario_da_error_de_configuracion(tmp_path, monkeypatch):
+    cfg = tmp_path / 'rojo.json'
+    cfg.write_text('{}')
+    monkeypatch.delenv('BB_ROJO_USUARIO', raising=False)
+    monkeypatch.setenv('BB_ROJO_CONFIG', str(cfg))
+    with pytest.raises(ValueError, match='rojo.json'):
+        boton_rojo.Ctx()
+
+
+@pytest.mark.parametrize('entrada', ['panic', 'crea', 'arranque-ok'])
+def test_emergencia_sin_config_falla_con_mensaje(tmp_path, monkeypatch, capsys, entrada):
+    from tools import panic, punto_restauracion
+    monkeypatch.delenv('BB_ROJO_USUARIO', raising=False)
+    monkeypatch.setenv('BB_ROJO_RAIZ', str(tmp_path))
+    monkeypatch.setenv('BB_ROJO_CONFIG', str(tmp_path / 'ausente.json'))
+    rc = panic.main([]) if entrada == 'panic' else punto_restauracion.main([entrada])
+    assert rc == 2
+    mensaje = capsys.readouterr().out
+    assert 'COULD_NOT_RUN' in mensaje and 'ausente.json' in mensaje and 'usuario' in mensaje
+
+
+def test_wol_config_lista_se_rechaza(tmp_path, monkeypatch):
+    cfg = tmp_path / 'wol.json'
+    cfg.write_text('[]')
+    monkeypatch.setenv('BB_WOL_CONFIG', str(cfg))
+    with pytest.raises(SystemExit) as exc:
+        bb_wol.main(['--seco'])
+    assert exc.value.code == 2

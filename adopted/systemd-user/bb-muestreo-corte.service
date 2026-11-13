@@ -2,6 +2,7 @@
 Description=bb: muestreo de 1 s con fsync para ver el ultimo segundo antes de un corte duro (DEBT-CAIDAS-DURAS-7-0-MODULO-PARCHADO-01)
 [Service]
 EnvironmentFile=%h/.config/blackbox/muestreo.env
+ExecCondition=/usr/bin/test -f ${BB_MUESTREO_SCRIPT}
 ExecStart=/usr/bin/python3 -I ${BB_MUESTREO_SCRIPT}
 Nice=10
 Restart=always

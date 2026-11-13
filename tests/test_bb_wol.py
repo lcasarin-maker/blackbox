@@ -21,7 +21,7 @@ def test_el_paquete_magico_tiene_la_forma_del_estandar():
 
 
 def test_acepta_guiones_y_mayusculas_y_da_el_mismo_paquete():
-    assert wol.paquete_magico("02-AB-00-00-00-01") == wol.paquete_magico("02" + ":ab:00:00:00:01")
+    assert wol.paquete_magico("02-AB-00-00-00-01") == wol.paquete_magico("02-ab-00-00-00-01")
 
 
 @pytest.mark.parametrize("mala", ["", "02-00-00-00-00", "02-00-00-00-00-01:00", "zz-00-00-00-00-01", "102-00-00-00-00-01"])

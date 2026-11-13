@@ -6,7 +6,7 @@ GPU sin tocar el boton. El 2026-11-09 la vuelta de 7.0 a 6.17 con `reboot` dejo 
 apagar a mano; un apagado completo seguido de este paquete lo haria sin ir a la maquina.
 
 Uso:
-  python bb_wol.py                  # paquete a la ATOM (MAC de enP7s7) por broadcast de la red de casa
+  BB_WOL_CONFIG=/ruta/privada/wol.json python bb_wol.py  # destino configurado localmente
   python bb_wol.py --mac 02-00-00-00-00-01 --broadcast 192.0.2.255 --puerto 9
   python bb_wol.py --seco           # no envia: imprime longitud y destino (para probar sin efecto)
 
@@ -19,8 +19,6 @@ import os
 from pathlib import Path
 import socket
 import sys
-
-
 
 
 def paquete_magico(mac: str) -> bytes:
@@ -50,6 +48,8 @@ def main(argv=None) -> int:
         cfg = json.loads(Path(config).read_text()) if config else {}
     except (OSError, ValueError) as e:
         ap.error(f"configuracion WoL: {e}")
+    if not isinstance(cfg, dict):
+        ap.error("configuracion WoL: se espera un objeto JSON")
     a.mac = a.mac or cfg.get("mac")
     a.broadcast = a.broadcast or cfg.get("broadcast")
     if not a.mac or not a.broadcast:

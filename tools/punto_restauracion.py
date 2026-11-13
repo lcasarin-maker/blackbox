@@ -484,7 +484,11 @@ def firma(k: str, ruta_id: str, archivos: list[Dic], nvidia_sha: str) -> str:
 
 
 def crea() -> int:
-    ctx, ej = br.Ctx(), br.Ejecutor()
+    try:
+        ctx, ej = br.Ctx(), br.Ejecutor()
+    except br.ConfiguracionError as e:
+        print(f"COULD_NOT_RUN: {e}")
+        return 2
     cnr: list[str] = []
     puntos = revisa_puntos(cnr)
     s = salud(ctx, ej, SANO_MIN_S, estricto=True)
@@ -603,7 +607,11 @@ def fija_punto(ej: br.Ejecutor, cnr: list[str], entrada: str | None) -> str | No
 
 
 def arranque_ok() -> int:
-    ctx, ej = br.Ctx(), br.Ejecutor()
+    try:
+        ctx, ej = br.Ctx(), br.Ejecutor()
+    except br.ConfiguracionError as e:
+        print(f"COULD_NOT_RUN: {e}")
+        return 2
     cnr: list[str] = []
     s = salud(ctx, ej, OK_MIN_S, estricto=False)
     env = grubenv_lista(ej, cnr) or {}

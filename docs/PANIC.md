@@ -207,6 +207,16 @@ por `bb_autoarmado=1` y por `bb_prev_default` (grub-marca), no por `uname -r`.
 `sudo panic` y los dos servicios ejecutan una copia root-owned, nunca el repo: un root no corre código de un
 directorio que un usuario puede escribir.
 
+0. Antes de actualizar las copias root-owned, crear `/etc/blackbox/rojo.json`
+   fuera del repo: JSON con `usuario` igual a la cuenta local operadora.
+   Partir de `config/rojo.json.example`, completar el dato local y crear el archivo
+   con propietario root y modo 0600 (directorio /etc/blackbox con modo 0755).
+   Debe poder leerlo root; BB_ROJO_CONFIG permite otra ruta y BB_ROJO_USUARIO
+   prevalece. Comprobar localmente la clave y la cuenta antes del siguiente paso.
+   `bb-punto-restauracion.timer` y `bb-arranque-ok.timer` tambien construyen ese
+   contexto como root y dependen de esta configuracion. Mantener las copias
+   instaladas hasta crearla; los destinos de emergencia jamas se adivinan.
+
 1. El núcleo y lo que importa (lista exacta en `tools/panic.INSTALA`, comprobada por
    `tests/test_panic.py::test_la_copia_instalada_importa_con_python_I_y_solo_con_lo_de_INSTALA`):
 

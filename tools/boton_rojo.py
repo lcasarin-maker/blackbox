@@ -78,6 +78,10 @@ def en_raiz(ruta: str) -> Path:
     return Path(os.environ.get("BB_ROJO_RAIZ") or "/") / ruta.lstrip("/")
 
 
+class ConfiguracionError(ValueError):
+    """Destino de emergencia ausente o invalido; los entrypoints lo reportan con rc=2."""
+
+
 class Ctx:
     """Rutas y modo de ejecucion, resueltos una vez."""
 
@@ -85,9 +89,18 @@ class Ctx:
         self.usuario = os.environ.get("BB_ROJO_USUARIO")
         if not self.usuario:
             config = Path(os.environ.get("BB_ROJO_CONFIG", "/etc/blackbox/rojo.json"))
-            self.usuario = json.loads(config.read_text())["usuario"]
+            try:
+                cfg = json.loads(config.read_text())
+                self.usuario = cfg["usuario"]
+                if not isinstance(self.usuario, str) or not self.usuario.strip():
+                    raise ValueError("usuario vacio")
+            except (OSError, ValueError, KeyError, TypeError) as e:
+                raise ConfiguracionError(
+                    f"{config}: crear JSON con clave usuario del operador, legible por root "
+                    "(modo 0600, propietario root); alternativa BB_ROJO_USUARIO"
+                ) from e
         if not isinstance(self.usuario, str) or not self.usuario.strip():
-            raise ValueError("Configurar usuario en BB_ROJO_USUARIO o BB_ROJO_CONFIG")
+            raise ConfiguracionError("Configurar usuario en BB_ROJO_USUARIO o BB_ROJO_CONFIG")
         try:
             pw = pwd.getpwnam(self.usuario)
             self.uid, self.gid, home = pw.pw_uid, pw.pw_gid, pw.pw_dir
@@ -367,7 +380,11 @@ def ahora() -> str:
 
 def suspende(keep_ruta: Path, motivo: str) -> int:
     t0 = time.monotonic()
-    ctx, ej = Ctx(), Ejecutor()
+    try:
+        ctx, ej = Ctx(), Ejecutor()
+    except ConfiguracionError as e:
+        print(f"COULD_NOT_RUN: {e}")
+        return 2
     cnr: list[str] = []
     if not keep_ruta.is_file():
         print(f"COULD_NOT_RUN: no existe la lista KEEP {keep_ruta}; no se toca nada")
@@ -546,7 +563,11 @@ def verifica(u: Dic, dest: Path, orig: Path) -> str | None:
 
 
 def restaura(todo: bool, si: bool) -> int:
-    ctx, ej = Ctx(), Ejecutor()
+    try:
+        ctx, ej = Ctx(), Ejecutor()
+    except ConfiguracionError as e:
+        print(f"COULD_NOT_RUN: {e}")
+        return 2
     vivos = [r for r in manifiestos(ctx) if lee(r).get("estado") != "restaurado"]
     if not vivos:
         print("COULD_NOT_RUN: no hay manifiesto de suspension pendiente de restaurar")

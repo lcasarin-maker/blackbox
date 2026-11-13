@@ -193,6 +193,11 @@ def main(argv: list[str] | None = None) -> int:
         print("COULD_NOT_RUN: necesita root: sudo panic")
         return 2
     if not args:
+        try:
+            br.Ctx()
+        except br.ConfiguracionError as e:
+            print(f"COULD_NOT_RUN: {e}")
+            return 2
         return panic(br.KEEP, "sudo panic")
     if args[0] == "restaura" and args[1:] in ([], ["todo"], ["todo", "si"]):
         return br.restaura("todo" in args, "si" in args)
