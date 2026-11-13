@@ -1,5 +1,5 @@
 ---
-id: FEATURE-GATEWAY-VLLM-Y-RIESGOS-DE-MAQUINA-DESDE-proyecto-local-01
+id: FEATURE-GATEWAY-VLLM-Y-RIESGOS-DE-MAQUINA-DESDE-CONSUMIDOR-01
 kind: task
 domain: INFERENCE
 title: "Recibir de proyecto-local la unit y el main.py del gateway vLLM (voto D3) y los riesgos de maquina R1-R13 (voto D8)"

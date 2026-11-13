@@ -253,3 +253,15 @@ def test_control_negativo_una_gemela_que_diverge_se_detecta(tmp_path):
     assert gemelas_distintas(tmp_path) == []
     (tmp_path / "systemd/u.service").write_text("[Service]\nTimeoutStartSec=300\n", encoding="utf-8")
     assert gemelas_distintas(tmp_path) == ["u.service"]
+
+
+def test_gateway_publico_con_plantilla_conserva_control_de_propiedad(repo):
+    gateway = repo / 'adopted/gateway'
+    gateway.mkdir()
+    (gateway / 'w.sh').write_text('contenido')
+    spec = repo / 'SPEC.md'
+    sana = spec.read_text().replace('## Constraints', '| `/srv/@BB_GATEWAY@/gateway/w.sh` | wrapper |\n\n## Constraints')
+    spec.write_text(sana)
+    assert inventario.revisa(repo) == []
+    spec.write_text(sana.replace('/gateway/w.sh', '/gateway/ausente.sh'))
+    assert len(inventario.revisa(repo)) == 2

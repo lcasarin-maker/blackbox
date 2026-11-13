@@ -122,6 +122,9 @@ def revisa(root: Path) -> list[str]:
             fallos.append(f"funcion sin inventariar en SPEC.md: {s}")
 
     prop = filas_de_tabla(seccion(spec, SEC_PROPIEDAD))
+    # La plantilla publica conserva el contrato sin publicar el nombre del consumidor.
+    prop = {destino_desplegado(root / "adopted/gateway" / Path(p).name)
+            if p.startswith("/srv/@BB_GATEWAY@/gateway/") else p for p in prop}
     adoptados = sujetos_adoptados(root)
     for s in sorted(adoptados):
         if s not in prop:
