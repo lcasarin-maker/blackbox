@@ -7,18 +7,20 @@ apagar a mano; un apagado completo seguido de este paquete lo haria sin ir a la 
 
 Uso:
   python bb_wol.py                  # paquete a la ATOM (MAC de enP7s7) por broadcast de la red de casa
-  python bb_wol.py --mac AA:BB:CC:DD:EE:FF --broadcast 192.168.100.255 --puerto 9
+  python bb_wol.py --mac 02-00-00-00-00-01 --broadcast 192.0.2.255 --puerto 9
   python bb_wol.py --seco           # no envia: imprime longitud y destino (para probar sin efecto)
 
 Salida: 0 enviado (o --seco), 2 si la MAC o los argumentos son invalidos. Que la ATOM encienda NO lo prueba este programa:
 solo una prueba real (ATOM apagada, paquete enviado, ATOM encendida) lo prueba.
 """
 import argparse
+import json
+import os
+from pathlib import Path
 import socket
 import sys
 
-MAC_ATOM = "48:21:0b:95:41:f1"  # enP7s7, medida en /sys/class/net/enP7s7/address el 2026-11-09
-BROADCAST = "192.168.100.255"
+
 
 
 def paquete_magico(mac: str) -> bytes:
@@ -38,11 +40,20 @@ def envia(paquete: bytes, destino: str, puerto: int) -> None:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Wake-on-LAN")
-    ap.add_argument("--mac", default=MAC_ATOM)
-    ap.add_argument("--broadcast", default=BROADCAST)
+    ap.add_argument("--mac", default=None)
+    ap.add_argument("--broadcast", default=None)
     ap.add_argument("--puerto", type=int, default=9)
     ap.add_argument("--seco", action="store_true")
     a = ap.parse_args(argv)
+    config = os.environ.get("BB_WOL_CONFIG")
+    try:
+        cfg = json.loads(Path(config).read_text()) if config else {}
+    except (OSError, ValueError) as e:
+        ap.error(f"configuracion WoL: {e}")
+    a.mac = a.mac or cfg.get("mac")
+    a.broadcast = a.broadcast or cfg.get("broadcast")
+    if not a.mac or not a.broadcast:
+        ap.error("configurar BB_WOL_CONFIG o indicar --mac y --broadcast")
     try:
         p = paquete_magico(a.mac)
     except ValueError as e:

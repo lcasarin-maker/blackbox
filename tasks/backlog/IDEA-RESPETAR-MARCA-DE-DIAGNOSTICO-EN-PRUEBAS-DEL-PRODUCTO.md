@@ -20,4 +20,4 @@ bb activa y desactiva una marca de diagnóstico con caducidad, documentada en SP
 
 ## Origen
 
-Idea de Luis en sus conversaciones con agentes, cosecha de ideas de own_chats del 2026-11-10. Ideas agrupadas: I-Chat-0865.
+Idea de Luis en sus conversaciones con agentes, cosecha de ideas de proyecto-local del 2026-11-10. Ideas agrupadas: I-Chat-0865.

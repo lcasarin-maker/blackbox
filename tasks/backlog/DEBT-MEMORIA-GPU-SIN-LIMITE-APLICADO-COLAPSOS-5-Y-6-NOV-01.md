@@ -48,7 +48,7 @@ No se identifico quien lanzo `gpt-oss-runtime` ni que sesion de sisifo estaba mi
 ## Decisiones de Luis, 2026-11-06
 
 - **Quien muere primero cuando la memoria llega al 10 %:** el trabajo de GPU. Se logra con `--oom-score-adj 1000` en el lanzador de sisifo (hecho en `launch_gpt_oss_runtime.sh`, linea 179, archivo sin versionar, sin lanzamiento real todavia). Descartado: un guardian propio que detenga contenedores al 15 % (codigo nuevo sin probar) y dejar morir al escritorio como hoy (repite el ciclo de Codex). Medido con `earlyoom --dryrun`: con puntaje 1000 el contenedor es la primera victima, 1032 aun con `--avoid`; con la lista sin `vllm` el motor de chat real (`nemotron-server`, badness 1019) pasaria a ser la primera victima, por eso `/etc/default/earlyoom` NO se toca.
-- **`atlas-api`:** se deja apagada (se detuvo limpia a las 15:19:44, quien la detuvo no consta; la unidad instalada no tiene `KB_EMBEDDER_DEVICE`). Descartado: instalar la unidad de Atlas con embedder en CPU (cambio persistente pedido por Atlas, no verificado por otro canal) y arrancarla como esta (su embedder usa GPU). Motivo declarado: ninguno (eligio la opcion distinta de la recomendada). Consecuencia: Atlas no responde en :8011 y su chequeo de salud falla hasta que alguien la levante.
+- **`proyecto-local-api`:** se deja apagada (se detuvo limpia a las 15:19:44, quien la detuvo no consta; la unidad instalada no tiene `KB_EMBEDDER_DEVICE`). Descartado: instalar la unidad de proyecto-local con embedder en CPU (cambio persistente pedido por proyecto-local, no verificado por otro canal) y arrancarla como esta (su embedder usa GPU). Motivo declarado: ninguno (eligio la opcion distinta de la recomendada). Consecuencia: proyecto-local no responde en :8011 y su chequeo de salud falla hasta que alguien la levante.
 
 ## Decision de Luis, 2026-11-06 (boleta «Techo GPU»): no firmar; medir primero
 
@@ -59,7 +59,7 @@ No se identifico quien lanzo `gpt-oss-runtime` ni que sesion de sisifo estaba mi
 - **Reabrir si:** el modelo no arranca por debajo de 0.7; entonces la decision pasa a ser cuanta memoria se le quita al escritorio (el tope de `app.slice` de 42 GiB tiene su propia decision de 2026-10-17).
 
 ## Decision de Luis, 2026-11-09: se cancela la ventana de medicion; el alcance se reorienta
-- **Decidido:** sisifo se retira (Atlas DECISIONS 2026-11-09, DGX-706). El 0.60/0.55/0.50 de `gpt-oss-120b` ya no se mide: el modelo no tiene dueno ni cliente. Ficha de la ventana cerrada `void_wontfix`.
+- **Decidido:** sisifo se retira (proyecto-local DECISIONS 2026-11-09, DGX-706). El 0.60/0.55/0.50 de `gpt-oss-120b` ya no se mide: el modelo no tiene dueno ni cliente. Ficha de la ventana cerrada `void_wontfix`.
 - **Sigue abierto:** nada aplica un limite de memoria de GPU. El techo ya no se deriva de gpt-oss sino de lo que usa el motor de chat (`nemotron-server`) mas lo que lance un trabajo futuro. `guardia_gpu` solo detiene contenedores con `lanzado_por`; sin sisifo no hay ninguno, asi que queda sin objetivo hasta que alguien lance uno con la etiqueta.
 - **Pendiente de voto:** que techo firmar para el motor de chat, o dejar `presupuesto_gpu.json` retirado.
 - **Limite:** quien tiro los ~30 GB del 5 nov sigue sin identificarse.

@@ -20,4 +20,4 @@ Un documento lista cada ficha abierta con su bloqueador exacto (voto, despliegue
 
 ## Origen
 
-Idea de Luis en sus conversaciones con agentes, cosecha de ideas de own_chats del 2026-11-10. Ideas agrupadas: I-Chat-0685, I-Chat-0686.
+Idea de Luis en sus conversaciones con agentes, cosecha de ideas de proyecto-local del 2026-11-10. Ideas agrupadas: I-Chat-0685, I-Chat-0686.

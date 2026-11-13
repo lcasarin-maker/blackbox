@@ -59,5 +59,5 @@ Regla: una sola variable por etapa. El refugio de cada etapa es 6.17.0-1032 con 
 ### Recuperacion antes de la etapa 2 (nuevo requisito)
 Escalera, de mas a menos automatica; cada peldano lleva su prueba:
 1. Alarma de la Dell con una comprobacion de solo lectura por `ssh atom`: `GSP Timeout`/`Xid 119|154` en el diario del arranque actual, aviso por ntfy con la orden recomendada.
-2. Apagado en frio remoto: script sellado de `bb-root-run` que hace `systemctl poweroff`, y la Dell envia Wake-on-LAN (MAC enP7s7 48:21:0b:95:41:f1) a los 45 s. Sin probar: que la NIC y el BIOS enciendan desde apagado (`sudo ethtool enP7s7 | grep Wake-on`; `/sys/class/net/enP7s7/device/power/wakeup` dice `enabled`).
+2. Apagado en frio remoto: script sellado de `bb-root-run` que hace `systemctl poweroff`, y la Dell envia Wake-on-LAN (MAC enP7s7 02-00-00-00-00-01) a los 45 s. Sin probar: que la NIC y el BIOS enciendan desde apagado (`sudo ethtool enP7s7 | grep Wake-on`; `/sys/class/net/enP7s7/device/power/wakeup` dice `enabled`).
 3. Si `ssh-casa` esta caido: nada de la Dell llega. Solo el boton fisico, o un enchufe inteligente (corte real de energia) comandado desde la Dell. Decision de Luis y de hardware.

@@ -10,7 +10,7 @@ con el home medio roto.
     sudo panic              ... y, como paso (d), `suspende`
     sudo panic restaura     `restaura`: deshace SOLO la suspension (motor: `sudo panic restaura todo si`)
 
-Corre como root y actua sobre el usuario `lcasarin` (BB_ROJO_USUARIO). `sudo panic` ejecuta una COPIA
+Corre como root y lee el usuario de BB_ROJO_USUARIO o del archivo BB_ROJO_CONFIG. `sudo panic` ejecuta una COPIA
 root-owned de este archivo en /usr/local/lib/blackbox/tools/, nunca el repo: un root no ejecuta codigo
 de un directorio que un usuario escribe (mismo principio que tools/ultimo_aliento.py). Solo biblioteca
 estandar.
@@ -82,7 +82,12 @@ class Ctx:
     """Rutas y modo de ejecucion, resueltos una vez."""
 
     def __init__(self) -> None:
-        self.usuario = os.environ.get("BB_ROJO_USUARIO") or "lcasarin"
+        self.usuario = os.environ.get("BB_ROJO_USUARIO")
+        if not self.usuario:
+            config = Path(os.environ.get("BB_ROJO_CONFIG", "/etc/blackbox/rojo.json"))
+            self.usuario = json.loads(config.read_text())["usuario"]
+        if not isinstance(self.usuario, str) or not self.usuario.strip():
+            raise ValueError("Configurar usuario en BB_ROJO_USUARIO o BB_ROJO_CONFIG")
         try:
             pw = pwd.getpwnam(self.usuario)
             self.uid, self.gid, home = pw.pw_uid, pw.pw_gid, pw.pw_dir

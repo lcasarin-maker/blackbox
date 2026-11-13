@@ -6,7 +6,7 @@ por ntfy cuando uno falla `umbral` veces seguidas. Existe por el 2026-11-05: `ta
 19:59 y nadie lo supo en 17,6 h porque todo lo que vigila corria dentro de la ATOM o solo miraba el SSH de la red de casa.
 
 Configuracion (`alarma.json` en el directorio de datos; NO va al repo porque lleva el tema de ntfy, que es el secreto):
-  {"checks": [{"nombre": "ssh-casa", "host": "192.168.100.25", "puerto": 22}, ...],
+  {"checks": [{"nombre": "ssh-casa", "host": "192.0.2.25", "puerto": 22}, ...],
    "ntfy_url": "https://ntfy.sh/<tema-aleatorio>", "umbral": 3, "intervalo_s": 30,
    "recordatorio_s": 3600, "latido_diario_s": 86400}
 
