@@ -3,7 +3,7 @@
 Medido el 2026-10-11 (analisis de la frontera entre bb y su consumidor): el arbol ya publicaba MACs, IPs de LAN, el hostname y nombres de
 proyectos privados dentro de evidencias historicas. Esas evidencias llevan hashes de procedencia y NO se
 reescriben; quedan en `datos_privados_baseline.json` con su cuenta. La guarda falla si un archivo nuevo
-contiene estos datos o si uno de la lista sube su cuenta. La lista solo puede encogerse.
+contiene estos datos o si uno de la lista sube su cuenta. La lista solo puede encogerse salvo admision explicita de compatibilidad por boleta.
 
 Ampliada el 2026-11-01 (boleta #23 A de Luis: el repo publico no lleva datos personales de la maquina): el
 usuario, cualquier IP RFC 1918 (las de documentacion, 192.0.2.x, 198.51.100.x y 203.0.113.x, no lo son), los
@@ -75,6 +75,14 @@ _REF = "ruta de procedencia en la KB del consumidor (`ref_raiz` de rules/firmas_
 _LEGADO = "clave de legado del contrato neutro (boleta #18 A): se lee por compatibilidad hasta que el productor migre"
 _LAB = "la /24 RFC 1918 es la direccion de DISENO del puente propio del laboratorio (bblab0), no un dato de la maquina"
 MOTIVOS: dict[str, str] = {
+    "adopted/boton-rojo-keep.txt": "Identificador de compatibilidad de servicios o fixture de su contrato; clase B, boleta 2026-11-13.",
+    "adopted/gateway/admission_check_wrapper.sh": "Identificador de compatibilidad de servicios o fixture de su contrato; clase B, boleta 2026-11-13.",
+    "bin/bb": "Identificador de compatibilidad de servicios o fixture de su contrato; clase B, boleta 2026-11-13.",
+    "tests/test_boton_rojo.py": "Identificador de compatibilidad de servicios o fixture de su contrato; clase B, boleta 2026-11-13.",
+    "tests/test_inventario.py": "Identificador de compatibilidad de servicios o fixture de su contrato; clase B, boleta 2026-11-13.",
+    "tools/inventario.py": "Identificador de compatibilidad de servicios o fixture de su contrato; clase B, boleta 2026-11-13.",
+    "tools/motor_solicitudes.py": "Identificador de compatibilidad de servicios o fixture de su contrato; clase B, boleta 2026-11-13.",
+
     "SPEC.md": _LAB,
     "adopted/system-config/home_@BB_USUARIO@_.config_systemd_user_app.slice.d_99-blackbox.conf": _ADOPTADA,
     "data/cargas_externas.json": "nombre real del contenedor que la medicion excluye (`contenedores_excluidos`)",
