@@ -1,0 +1,32 @@
+[
+  {
+    "case": "antes_no_ejecutor",
+    "rc": 0,
+    "stdout": "no_ejecuta tasks/done/X.md: ningún ejecutor de la lista: test -f receipt.json\nfichas_cerradas=1 ejecuta=0 no_ejecuta=1\n",
+    "stderr": ""
+  },
+  {
+    "case": "despues_no_ejecutor",
+    "rc": 1,
+    "stdout": "no_ejecuta tasks/done/X.md: ningún ejecutor de la lista: test -f receipt.json\nfichas_cerradas=1 ejecuta=0 no_ejecuta=1\n",
+    "stderr": ""
+  },
+  {
+    "case": "sin_git",
+    "rc": 2,
+    "stdout": "",
+    "stderr": "COULD_NOT_RUN: close-check: git rev-parse: [Errno 2] No such file or directory: 'git'\n"
+  },
+  {
+    "case": "detector_retirado",
+    "rc": 0,
+    "stdout": "fichas_cerradas=1 ejecuta=1 no_ejecuta=0\n",
+    "stderr": ""
+  },
+  {
+    "case": "producto_real_ejecutado",
+    "rc": 0,
+    "stdout": "fichas_cerradas=1 ejecuta=1 no_ejecuta=0\n",
+    "stderr": ""
+  }
+]

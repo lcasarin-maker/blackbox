@@ -1,0 +1,103 @@
+--- a/policy/simple_policy/close_check_lint.py
++++ b/policy/simple_policy/close_check_lint.py
+@@ -18,7 +18,7 @@
+ every card in the working tree. Each `no_ejecuta` card is one line with its
+ path; the last line is `fichas_cerradas=N ejecuta=N no_ejecuta=N`.
+ 
+-Exit codes: 0 reported (never blocks in this phase), 2 COULD_NOT_RUN.
++Exit codes: 0 reported; with --enforce, 1 when no_ejecuta > 0; 2 COULD_NOT_RUN.
+ 
+ The front matter is read by line, without PyYAML (so a machine without it still
+ measures): `status:` and `close_check:` as single-line values, the form of every
+@@ -123,6 +123,7 @@
+     parser.add_argument("--base", help="commit the push replaces (default: PRE_COMMIT_FROM_REF, else SIMPLE_BASE)")
+     parser.add_argument("--head", help="commit being pushed (default: PRE_COMMIT_TO_REF, else HEAD)")
+     parser.add_argument("--all", action="store_true", help="every card under tasks/ in the working tree, no range")
++    parser.add_argument("--enforce", action="store_true", help="block closed cards without a product executor")
+     args = parser.parse_args(argv)
+     root = args.root.resolve()
+     try:
+@@ -141,7 +142,7 @@
+         if verdict == "no_ejecuta":
+             print(f"no_ejecuta {path}: {why}: {command[:120]}")
+     print(f"fichas_cerradas={sum(tally.values())} ejecuta={tally['ejecuta']} no_ejecuta={tally['no_ejecuta']}")
+-    return 0
++    return int(args.enforce and tally["no_ejecuta"] > 0)
+ 
+ 
+ if __name__ == "__main__":
+--- /dev/null
++++ b/tests/policy/test_close_check_lint_block.py
+@@ -0,0 +1,45 @@
++"""Opt-in blocking, real fixture execution, and a broken instrument through real Git."""
++import os
++from pathlib import Path
++import subprocess
++import sys
++
++import pytest
++
++sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'policy'))
++from simple_policy import close_check_lint as detector
++
++
++def card(command):
++    import json
++    return '---\nid: X\nstatus: done\nclose_check: '+json.dumps({'cmd': command})+'\n---\n'
++
++
++def test_closed_card_without_executor_blocks(tmp_path, capsys):
++    (tmp_path / 'tasks').mkdir()
++    (tmp_path / 'tasks/X.md').write_text(card('test -f receipt.json'))
++    assert detector.main(['--root',str(tmp_path),'--all','--enforce']) == 1
++    assert 'fichas_cerradas=1 ejecuta=0 no_ejecuta=1' in capsys.readouterr().out
++
++
++def test_real_product_fixture_passes(tmp_path):
++    (tmp_path/'tasks').mkdir()
++    (tmp_path/'product.py').write_text("from pathlib import Path\nPath('ran').write_text('producto ejecutado')\n")
++    subprocess.run([sys.executable,'product.py'],cwd=tmp_path,check=True)
++    assert (tmp_path/'ran').read_text() == 'producto ejecutado'
++    (tmp_path/'tasks/X.md').write_text(card('python3 product.py'))
++    assert detector.main(['--root',str(tmp_path),'--all','--enforce']) == 0
++
++
++def test_absent_git_is_could_not_run(tmp_path,monkeypatch,capsys):
++    monkeypatch.setenv('PATH',str(tmp_path/'sin_binarios'))
++    assert detector.main(['--root',str(tmp_path),'--base','HEAD^','--head','HEAD','--enforce']) == 2
++    assert 'COULD_NOT_RUN' in capsys.readouterr().err
++
++
++def test_detector_removed_breaks_negative_control(tmp_path,monkeypatch):
++    (tmp_path/'tasks').mkdir()
++    (tmp_path/'tasks/X.md').write_text(card('test -f receipt.json'))
++    monkeypatch.setattr(detector,'classify',lambda _: ('ejecuta','detector neutralizado'))
++    with pytest.raises(AssertionError):
++        assert detector.main(['--root',str(tmp_path),'--all','--enforce']) == 1
+--- a/tasks/backlog/IDEA-ENDURECER-EL-CIERRE-DE-FICHAS-CONTRA-CIERRES-SINTETICOS.md
++++ b/tasks/backlog/IDEA-ENDURECER-EL-CIERRE-DE-FICHAS-CONTRA-CIERRES-SINTETICOS.md
+@@ -10,2 +10,3 @@
+ created: 2026-11-10
++owner: simplecode
+ ---
+@@ -20,2 +21,20 @@
+ 
++## Medicion de falso verde — 2026-11-13
++
++Blackbox publico una fila close-check PASS con salida literal
++`fichas_cerradas=1 ejecuta=0 no_ejecuta=1` (rc=0).
++Evidencia sanitizada: blackbox:tasks/evidence/IDEA-ENDURECER-EL-CIERRE-DE-FICHAS-CONTRA-CIERRES-SINTETICOS/medicion.json.
++Se reutiliza esta ficha; ninguna ficha duplicada.
++
++Propuesta acotada: --enforce opt-in convierte no_ejecuta>0 en rc=1;
++error del instrumento conserva rc=2. Blackbox opta por ese modo; el modo
++reporte de otros contratos conserva su compatibilidad. Controles reales:
++fixture sin ejecutor bloquea; fixture de producto ejecutado pasa;
++Git ausente es CNR; retirar detector hace fallar el control negativo.
++
++Estado open conservado. Esta fase mide ejecutabilidad y no ejecuta todos los
++close_checks ni prueba la condicion mas amplia de diff y evidencia previa.
++No cerrar esta ficha solo por estos controles parciales. Requiere revision
++independiente y corredor con politica embebida actualizada antes de publicar.
++
+ ## Origen
