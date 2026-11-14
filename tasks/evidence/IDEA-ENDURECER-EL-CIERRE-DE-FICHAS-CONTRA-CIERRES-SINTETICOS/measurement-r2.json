@@ -1,0 +1,144 @@
+{
+  "summary": {
+    "controlled_cases": 6,
+    "false_alarms": 2,
+    "missed_no_product": 1,
+    "unadjudicated": 1,
+    "could_not_run": 1,
+    "scope": "controlled sample, not a fleet rate; no blocking threshold voted"
+  },
+  "cases": [
+    {
+      "case": "shellcheck",
+      "command": "shellcheck bin/bb",
+      "classification": "no_ejecuta",
+      "reason": "ningún ejecutor de la lista",
+      "oracle": "product_runs",
+      "could_not_run": 0,
+      "actual_rc": 0,
+      "actual_argv": [
+        "shellcheck",
+        "good.sh"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "negative_rc": 1,
+      "negative_argv": [
+        "shellcheck",
+        "bad.sh"
+      ],
+      "negative_stdout": "\nIn bad.sh line 2:\nprintf \"%s\\n\" $1\n              ^-- SC2086 (info): Double quote to prevent globbing and word splitting.\n\nDid you mean:\nprintf \"%s\\n\" \"$1\"\n\nFor more information:\n  https://www.shellcheck.net/wiki/SC2086 -- Double quote to prevent globbing ...\n",
+      "negative_stderr": "",
+      "adjudication": "false_alarm_for_future_blocking"
+    },
+    {
+      "case": "python_stdin",
+      "command": "python3 - <<'PY'\nfrom product import run\nrun()\nPY",
+      "classification": "no_ejecuta",
+      "reason": "ningún ejecutor de la lista",
+      "oracle": "product_runs",
+      "could_not_run": 0,
+      "actual_rc": 0,
+      "actual_argv": [
+        "sh",
+        "-c",
+        "python3 - <<'PY'\nfrom product import run\nrun()\nPY"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "negative_rc": 1,
+      "negative_argv": [
+        "sh",
+        "-c",
+        "python3 - <<'PY'\nfrom product import missing\nmissing()\nPY"
+      ],
+      "negative_stdout": "",
+      "negative_stderr": "Traceback (most recent call last):\n  File \"<stdin>\", line 1, in <module>\nImportError: cannot import name 'missing' from 'product' (/home/<dato-local>/scratch/blackbox/2026-11-13-close-check-r2/casos/product.py)\n",
+      "adjudication": "false_alarm_for_future_blocking"
+    },
+    {
+      "case": "receipt_only",
+      "command": "test -f receipt",
+      "classification": "no_ejecuta",
+      "reason": "ningún ejecutor de la lista",
+      "oracle": "metadata_only",
+      "could_not_run": 0,
+      "actual_rc": 0,
+      "actual_argv": [
+        "test",
+        "-f",
+        "receipt"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "negative_rc": 1,
+      "negative_argv": [
+        "test",
+        "-f",
+        "missing"
+      ],
+      "negative_stdout": "",
+      "negative_stderr": "",
+      "adjudication": "correct_no_product"
+    },
+    {
+      "case": "echo_runner_name",
+      "command": "echo pytest",
+      "classification": "ejecuta",
+      "reason": "pytest",
+      "oracle": "metadata_only",
+      "could_not_run": 0,
+      "actual_rc": 0,
+      "actual_argv": [
+        "sh",
+        "-c",
+        "echo pytest"
+      ],
+      "stdout": "pytest\n",
+      "stderr": "",
+      "negative_rc": 1,
+      "negative_argv": [
+        "sh",
+        "-c",
+        "exit 1"
+      ],
+      "negative_stdout": "",
+      "negative_stderr": "",
+      "adjudication": "missed_no_product"
+    },
+    {
+      "case": "python_script",
+      "command": "python3 product.py",
+      "classification": "ejecuta",
+      "reason": "python script",
+      "oracle": "product_runs",
+      "could_not_run": 0,
+      "actual_rc": 0,
+      "actual_argv": [
+        "/opt/miniforge3/bin/python3",
+        "product.py"
+      ],
+      "stdout": "",
+      "stderr": "",
+      "negative_rc": 2,
+      "negative_argv": [
+        "/opt/miniforge3/bin/python3",
+        "missing.py"
+      ],
+      "negative_stdout": "",
+      "negative_stderr": "/opt/miniforge3/bin/python3: can't open file '/home/<dato-local>/scratch/blackbox/2026-11-13-close-check-r2/casos/missing.py': [Errno 2] No such file or directory\n",
+      "adjudication": "correct_product"
+    },
+    {
+      "case": "systemctl_query",
+      "command": "systemctl is-active sample.service",
+      "classification": "no_ejecuta",
+      "reason": "ningún ejecutor de la lista",
+      "oracle": "unknown",
+      "could_not_run": 1,
+      "omission": "service query forbidden by scope; classification alone does not establish execution",
+      "adjudication": "unadjudicated"
+    }
+  ],
+  "sanitization": "runtime diagnostic paths masked with the signed repository pattern; original local bytes retained in private scratch"
+}
