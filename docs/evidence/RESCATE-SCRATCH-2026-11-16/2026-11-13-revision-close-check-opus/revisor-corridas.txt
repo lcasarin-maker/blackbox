@@ -1,0 +1,23 @@
+=== SUJETO=sc
+5 passed in 0.32s
+rc=0
+=== SUJETO=sinbarrera
+>       assert r.returncode == 1, (r.returncode, r.stdout, r.stderr)
+E       assert 0 == 1
+FAILED revisor/test_revisor_enforce.py::test_cierre_sin_ejecutor_en_rango_bloquea
+1 failed, 4 passed in 0.38s
+rc=1
+=== SUJETO=orig
+>       assert r.returncode == 1, (r.returncode, r.stdout, r.stderr)
+E       assert 2 == 1
+        assert corrida.returncode == 0 and (repo / "salida.txt").read_text() == "ok"
+>       assert r.returncode == 0, (r.returncode, r.stdout, r.stderr)
+E       assert 2 == 0
+>       assert r.returncode == 2 and "COULD_NOT_RUN" in r.stderr, (r.returncode, r.stdout, r.stderr)
+E       assert (2 == 2 and 'COULD_NOT_RUN' in 'usage: simple_policy close-check [-h] [--root ROOT] [--base BASE]\n                                 [--head HEAD] [--all]\nsimple_policy close-check: error: unrecognized arguments: --enforce\n')
+>       assert r.returncode == 2 and "COULD_NOT_RUN" in r.stderr, (r.returncode, r.stdout, r.stderr)
+E       assert (2 == 2 and 'COULD_NOT_RUN' in 'usage: simple_policy close-check [-h] [--root ROOT] [--base BASE]\n                                 [--head HEAD] [--all]\nsimple_policy close-check: error: unrecognized arguments: --enforce\n')
+FAILED revisor/test_revisor_enforce.py::test_cierre_sin_ejecutor_en_rango_bloquea
+FAILED revisor/test_revisor_enforce.py::test_positivo_real_cierre_que_ejecuta_producto
+FAILED revisor/test_revisor_enforce.py::test_ref_inexistente_es_cnr_no_fail
+rc=1

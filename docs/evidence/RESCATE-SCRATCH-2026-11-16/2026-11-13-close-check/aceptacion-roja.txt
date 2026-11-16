@@ -1,0 +1,72 @@
+FFF                                                                      [100%]
+=================================== FAILURES ===================================
+______________________ test_error_lector_es_could_not_run ______________________
+tasks/checks/test_revision_privacidad.py:31: in test_error_lector_es_could_not_run
+    assert resultado.returncode == 2, resultado.stdout + resultado.stderr
+E   AssertionError: F                                                                        [100%]
+E     =================================== FAILURES ===================================
+E     _____________________ test_el_repo_no_gana_datos_privados ______________________
+E     
+E         def test_el_repo_no_gana_datos_privados():
+E     >       base = _base_publicada()
+E                    ^^^^^^^^^^^^^^^^^
+E     
+E     tests/test_sin_datos_privados.py:158: 
+E     _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+E     tests/test_sin_datos_privados.py:118: in _base_publicada
+E         return json.loads(subprocess.check_output(
+E     /opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+E         return _default_decoder.decode(s)
+E                ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     /opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+E         obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E     _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+E     
+E     self = <json.decoder.JSONDecoder object at 0xecf87c4ad670>, s = 'JSON roto'
+E     idx = 0
+E     
+E         def raw_decode(self, s, idx=0):
+E             """Decode a JSON document from ``s`` (a ``str`` beginning with
+E             a JSON document) and return a 2-tuple of the Python
+E             representation and the index in ``s`` where the document ended.
+E         
+E             This can be used to decode a JSON document from a string that may
+E             have extraneous data at the end.
+E         
+E             """
+E             try:
+E                 obj, end = self.scan_once(s, idx)
+E             except StopIteration as err:
+E     >           raise JSONDecodeError("Expecting value", s, err.value) from None
+E     E           json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+E     
+E     /opt/miniforge3/lib/python3.12/json/decoder.py:356: JSONDecodeError
+E     =========================== short test summary info ============================
+E     FAILED tests/test_sin_datos_privados.py::test_el_repo_no_gana_datos_privados
+E     1 failed in 0.06s
+E     
+E   assert 1 == 2
+E    +  where 1 = CompletedProcess(args=['/opt/miniforge3/bin/python3', '-m', 'pytest', '-q', '-p', 'no:cacheprovider', 'tests/test_sin_...=======\nFAILED tests/test_sin_datos_privados.py::test_el_repo_no_gana_datos_privados\n1 failed in 0.06s\n', stderr='').returncode
+__________________ test_dato_nuevo_en_guarda_no_queda_exento ___________________
+tasks/checks/test_revision_privacidad.py:36: in test_dato_nuevo_en_guarda_no_queda_exento
+    assert resultado.returncode == 1, resultado.stdout + resultado.stderr
+E   AssertionError: .                                                                        [100%]
+E     1 passed in 0.03s
+E     
+E   assert 0 == 1
+E    +  where 0 = CompletedProcess(args=['/opt/miniforge3/bin/python3', '-m', 'pytest', '-q', '-p', 'no:cacheprovider', 'tests/test_sin_...dout='.                                                                        [100%]\n1 passed in 0.03s\n', stderr='').returncode
+______________________ test_spec_usa_una_notacion_gateway ______________________
+tasks/checks/test_revision_privacidad.py:41: in test_spec_usa_una_notacion_gateway
+    assert nombres == {'@BB_GATEWAY@'}, nombres
+E   AssertionError: {'@BB_GATEWAY@', 'proyecto-local'}
+E   assert {'@BB_GATEWAY...oyecto-local'} == {'@BB_GATEWAY@'}
+E     
+E     Extra items in the left set:
+E     'proyecto-local'
+E     Use -v to get more diff
+=========================== short test summary info ============================
+FAILED tasks/checks/test_revision_privacidad.py::test_error_lector_es_could_not_run
+FAILED tasks/checks/test_revision_privacidad.py::test_dato_nuevo_en_guarda_no_queda_exento
+FAILED tasks/checks/test_revision_privacidad.py::test_spec_usa_una_notacion_gateway
+3 failed in 1.40s

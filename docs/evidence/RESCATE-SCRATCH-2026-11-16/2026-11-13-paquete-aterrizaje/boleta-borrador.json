@@ -1,0 +1,31 @@
+{
+  "status": "draft_for_director_Luis; not issued or approved",
+  "question": "Publicar por push normal los tres commits dd5b7098..6194cf8f como fichas, evidencia y propuesta, con contrato report-only intacto?",
+  "options": [
+    {
+      "label": "Publicar rango documental (Recommended)",
+      "action": "Authorize normal push of fixed candidate after final native hook success and identity reconciliation. No canonical patch integration or debt closure.",
+      "cost_or_risk": "Publica tambien el commit intermedio 35fdb0e5 y su propuesta retirada como historia; exige mantener advertencias y ejecutar hooks sin omitir CNR."
+    },
+    {
+      "label": "Mantener rango local",
+      "action": "Do not publish these three commits; keep candidate fixed and revisit publication after broader adjudication.",
+      "cost_or_risk": "Las tres fichas y su evidencia quedan locales; retrasa compartirlas aunque el contrato no exige resolverlas para este alcance."
+    }
+  ],
+  "recommendation_reason": "Opus aprueba compatibilidad local y propuesta; el neto son 17 archivos tasks y contrato/producto iguales al remoto; report-only no exige backlog vacio. R1-R3 siguen siendo requisitos de integracion y cierre.",
+  "must_hold_before_publication": [
+    "remote master remains dd5b7098 and candidate/master/HEAD remain 6194cf8f",
+    "worktree/index clean; no unreviewed change",
+    "installed runner and policy hashes remain reconciled values",
+    "director/Luis explicitly authorizes this limited publication",
+    "native pre-push for exact remote..tip returns pass with fail=0 could_not_run=0 pending=0, preserving any report limitations",
+    "no force, no no-verify, no history rewrite; final ls-remote equals candidate"
+  ],
+  "prohibited_scope": [
+    "apply simplecode patch",
+    "enable enforce or change fleet policy",
+    "close privacy or false-green debts",
+    "touch services/GPU/Dell/private lists"
+  ]
+}

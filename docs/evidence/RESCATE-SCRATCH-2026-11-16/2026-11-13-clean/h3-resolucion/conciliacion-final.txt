@@ -1,0 +1,45 @@
+$ git status --porcelain=v1
+rc=0
+
+$ git status -sb
+## master...origin/master
+rc=0
+
+$ git rev-parse master origin/master
+6194cf8fb0bd1ac657935c98c5779e952079fa93
+6194cf8fb0bd1ac657935c98c5779e952079fa93
+rc=0
+
+$ git ls-remote origin refs/heads/master
+6194cf8fb0bd1ac657935c98c5779e952079fa93	refs/heads/master
+rc=0
+
+$ git cherry -v master codex/h3-gateway-receiver
++ bff519044561d4898107940436a0ab9e217b0da2 wip(cosecha): conservar contrato pendiente del handoff del gateway
+rc=0
+
+$ git merge-tree --write-tree master codex/h3-gateway-receiver
+46c26ce6607335d78f009f5718bc6af1a18a83d0
+rc=0
+
+$ git diff --stat master 46c26ce6607335d78f009f5718bc6af1a18a83d0
+ tests/test_gateway_handoff.py | 87 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 87 insertions(+)
+rc=0
+
+$ git worktree list --porcelain
+worktree ~/projects/blackbox
+HEAD 6194cf8fb0bd1ac657935c98c5779e952079fa93
+branch refs/heads/master
+
+rc=0
+
+$ git stash list
+rc=0
+
+$ git branch -a
+  codex/h3-gateway-receiver
+* master
+  remotes/origin/HEAD -> origin/master
+  remotes/origin/master
+rc=0

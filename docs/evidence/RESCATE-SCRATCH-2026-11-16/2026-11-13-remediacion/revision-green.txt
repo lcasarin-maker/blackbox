@@ -1,0 +1,30 @@
+...............................................
+[tiempo] sin contenedores: 0.22 s
+.
+[tiempo] con contenedores, docker stop 5 s: 5.19 s
+........................ [ 63%]
+............
+[tiempo] sudo panic con punto, configuracion cambiada y regeneracion de grub.cfg: 0.62 s
+.............................                                [100%]
+113 passed in 38.72s
+============== FAILURES ===================================
+__________ test_head_contaminado_bloquea_aunque_disco_limpio[limpio] ___________
+tests/test_guarda_snapshot.py:41: in test_head_contaminado_bloquea_aunque_disco_limpio
+    assert m.medir()['dato.txt'] == 1
+           ^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'dato.txt'
+__________ test_head_contaminado_bloquea_aunque_disco_limpio[borrado] __________
+tests/test_guarda_snapshot.py:41: in test_head_contaminado_bloquea_aunque_disco_limpio
+    assert m.medir()['dato.txt'] == 1
+           ^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'dato.txt'
+_______ test_head_contaminado_bloquea_aunque_disco_limpio[indice_limpio] _______
+tests/test_guarda_snapshot.py:41: in test_head_contaminado_bloquea_aunque_disco_limpio
+    assert m.medir()['dato.txt'] == 1
+           ^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'dato.txt'
+=========================== short test summary info ============================
+FAILED tests/test_guarda_snapshot.py::test_head_contaminado_bloquea_aunque_disco_limpio[limpio]
+FAILED tests/test_guarda_snapshot.py::test_head_contaminado_bloquea_aunque_disco_limpio[borrado]
+FAILED tests/test_guarda_snapshot.py::test_head_contaminado_bloquea_aunque_disco_limpio[indice_limpio]
+3 failed, 110 passed in 34.48s

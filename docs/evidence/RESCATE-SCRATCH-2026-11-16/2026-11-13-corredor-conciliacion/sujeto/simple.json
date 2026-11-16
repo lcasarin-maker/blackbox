@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "checks": [
+    {
+      "id": "datos-privados-publicacion",
+      "argv": [
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_sin_datos_privados.py"
+      ],
+      "timeout_ms": 20000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "read_only": true,
+      "hooks": [
+        "pre-push"
+      ]
+    },
+    {
+      "id": "close-check",
+      "policy": {
+        "kind": "close-check",
+        "python": "python3",
+        "args": []
+      },
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "timeout_ms": 20000,
+      "cache": false,
+      "inputs": [
+        "simple.json"
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [
+        2
+      ],
+      "base": "origin/master",
+      "read_only": true,
+      "hooks": [
+        "pre-push"
+      ]
+    },
+    {
+      "id": "safe-fallback-probe",
+      "argv": [
+        "python3",
+        "-c",
+        "print(\"SAFE_FALLBACK_FAIL\"); raise SystemExit(1)"
+      ],
+      "timeout_ms": 5000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "read_only": true,
+      "hooks": [
+        "pre-push"
+      ],
+      "applies_to": [
+        "bin/bb",
+        "tests/test_bb_bash.py"
+      ],
+      "could_not_run_exit_codes": [
+        2
+      ]
+    }
+  ]
+}

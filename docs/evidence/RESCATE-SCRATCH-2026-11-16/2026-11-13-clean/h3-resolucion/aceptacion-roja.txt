@@ -1,0 +1,89 @@
+$ python3 -m pytest -q -p no:cacheprovider tests/test_gateway_handoff.py --basetemp ~/scratch/blackbox/2026-11-13-clean/h3-resolucion/pytest
+FFFFFFFF                                                                 [100%]
+=================================== FAILURES ===================================
+____________ test_lanzador_recibido_conserva_aislamiento_y_memoria _____________
+tests/test_gateway_handoff.py:30: in test_lanzador_recibido_conserva_aislamiento_y_memoria
+    module = cargar()
+             ^^^^^^^^
+tests/test_gateway_handoff.py:13: in cargar
+    assert path.is_file(), "falta el lanzador recibido"
+E   AssertionError: falta el lanzador recibido
+E   assert False
+E    +  where False = is_file()
+E    +    where is_file = PosixPath('~/scratch/blackbox/2026-11-13-clean/h3-resolucion/head-con-test/tools/gateway/main.py').is_file
+________________ test_configuracion_invalida_bloquea[mutation0] ________________
+tests/test_gateway_handoff.py:43: in test_configuracion_invalida_bloquea
+    module = cargar()
+             ^^^^^^^^
+tests/test_gateway_handoff.py:13: in cargar
+    assert path.is_file(), "falta el lanzador recibido"
+E   AssertionError: falta el lanzador recibido
+E   assert False
+E    +  where False = is_file()
+E    +    where is_file = PosixPath('~/scratch/blackbox/2026-11-13-clean/h3-resolucion/head-con-test/tools/gateway/main.py').is_file
+________________ test_configuracion_invalida_bloquea[mutation1] ________________
+tests/test_gateway_handoff.py:43: in test_configuracion_invalida_bloquea
+    module = cargar()
+             ^^^^^^^^
+tests/test_gateway_handoff.py:13: in cargar
+    assert path.is_file(), "falta el lanzador recibido"
+E   AssertionError: falta el lanzador recibido
+E   assert False
+E    +  where False = is_file()
+E    +    where is_file = PosixPath('~/scratch/blackbox/2026-11-13-clean/h3-resolucion/head-con-test/tools/gateway/main.py').is_file
+________________ test_configuracion_invalida_bloquea[mutation2] ________________
+tests/test_gateway_handoff.py:43: in test_configuracion_invalida_bloquea
+    module = cargar()
+             ^^^^^^^^
+tests/test_gateway_handoff.py:13: in cargar
+    assert path.is_file(), "falta el lanzador recibido"
+E   AssertionError: falta el lanzador recibido
+E   assert False
+E    +  where False = is_file()
+E    +    where is_file = PosixPath('~/scratch/blackbox/2026-11-13-clean/h3-resolucion/head-con-test/tools/gateway/main.py').is_file
+________________ test_configuracion_invalida_bloquea[mutation3] ________________
+tests/test_gateway_handoff.py:43: in test_configuracion_invalida_bloquea
+    module = cargar()
+             ^^^^^^^^
+tests/test_gateway_handoff.py:13: in cargar
+    assert path.is_file(), "falta el lanzador recibido"
+E   AssertionError: falta el lanzador recibido
+E   assert False
+E    +  where False = is_file()
+E    +    where is_file = PosixPath('~/scratch/blackbox/2026-11-13-clean/h3-resolucion/head-con-test/tools/gateway/main.py').is_file
+______________ test_fuente_de_configuracion_explicita_y_ausencia _______________
+tests/test_gateway_handoff.py:52: in test_fuente_de_configuracion_explicita_y_ausencia
+    module = cargar()
+             ^^^^^^^^
+tests/test_gateway_handoff.py:13: in cargar
+    assert path.is_file(), "falta el lanzador recibido"
+E   AssertionError: falta el lanzador recibido
+E   assert False
+E    +  where False = is_file()
+E    +    where is_file = PosixPath('~/scratch/blackbox/2026-11-13-clean/h3-resolucion/head-con-test/tools/gateway/main.py').is_file
+_______________ test_unit_parametrizada_y_sin_rutas_del_donante ________________
+tests/test_gateway_handoff.py:70: in test_unit_parametrizada_y_sin_rutas_del_donante
+    assert path.is_file(), "falta la unit recibida"
+E   AssertionError: falta la unit recibida
+E   assert False
+E    +  where False = is_file()
+E    +    where is_file = PosixPath('~/scratch/blackbox/2026-11-13-clean/h3-resolucion/head-con-test/tools/gateway/ai-nemotron.service').is_file
+____________ test_wrapper_requiere_configuracion_sin_tocar_admision ____________
+tests/test_gateway_handoff.py:83: in test_wrapper_requiere_configuracion_sin_tocar_admision
+    assert wrapper.is_file(), "falta el adaptador de admisión"
+E   AssertionError: falta el adaptador de admisión
+E   assert False
+E    +  where False = is_file()
+E    +    where is_file = PosixPath('~/scratch/blackbox/2026-11-13-clean/h3-resolucion/head-con-test/tools/gateway/admission_check_wrapper.sh').is_file
+=========================== short test summary info ============================
+FAILED tests/test_gateway_handoff.py::test_lanzador_recibido_conserva_aislamiento_y_memoria
+FAILED tests/test_gateway_handoff.py::test_configuracion_invalida_bloquea[mutation0]
+FAILED tests/test_gateway_handoff.py::test_configuracion_invalida_bloquea[mutation1]
+FAILED tests/test_gateway_handoff.py::test_configuracion_invalida_bloquea[mutation2]
+FAILED tests/test_gateway_handoff.py::test_configuracion_invalida_bloquea[mutation3]
+FAILED tests/test_gateway_handoff.py::test_fuente_de_configuracion_explicita_y_ausencia
+FAILED tests/test_gateway_handoff.py::test_unit_parametrizada_y_sin_rutas_del_donante
+FAILED tests/test_gateway_handoff.py::test_wrapper_requiere_configuracion_sin_tocar_admision
+8 failed in 0.11s
+
+rc=1

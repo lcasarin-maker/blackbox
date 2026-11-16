@@ -1,0 +1,68 @@
+no_ejecuta tasks/done/DEBT-ATOM-CRASH-DETECTOR-TIMER-SIN-DESPLEGAR-01.md: ningún ejecutor de la lista: grep -qx OnBootSec=4min $HOME/.config/systemd/user/atom-crash-detector.timer
+no_ejecuta tasks/done/DEBT-AUDIT-AHOGADO-POR-RUSTDESK.md: ningún ejecutor de la lista: grep -q 'CERRADO' tasks/done/DEBT-AUDIT-AHOGADO-POR-RUSTDESK.md
+no_ejecuta tasks/done/DEBT-AUDIT-ANILLO-DESBORDADO-SIN-LIMITE-01.md: ningún ejecutor de la lista: grep -q -- "-b 32768" enable-privileged.sh
+no_ejecuta tasks/done/DEBT-BB-AVISO-GPU-RESET-UNIDAD-NUEVA-SIN-INSTALAR-01.md: ningún ejecutor de la lista: cmp systemd/bb-aviso-gpu-reset.timer "$HOME/.config/systemd/user/bb-aviso-gpu-reset.timer" && cmp systemd/bb-aviso-gpu-r
+no_ejecuta tasks/done/DEBT-BB-MODULO-NVIDIA-REGISTRO-UNIDAD-SIN-INSTALAR-01.md: ningún ejecutor de la lista: cmp systemd/bb-modulo-nvidia-registro.timer "$HOME/.config/systemd/user/bb-modulo-nvidia-registro.timer" && cmp systemd/
+no_ejecuta tasks/done/DEBT-BB-REBOOT-VERDICT-UNIDAD-NUEVA-SIN-INSTALAR-01.md: ningún ejecutor de la lista: cmp systemd/bb-reboot-verdict.timer "$HOME/.config/systemd/user/bb-reboot-verdict.timer" && cmp systemd/bb-reboot-verdic
+no_ejecuta tasks/done/DEBT-BB-SIN-COBERTURA-MEDIDA.md: ningún ejecutor de la lista: grep -qE '^bin/bb +[0-9]+' tasks/evidence/DEBT-BB-SIN-COBERTURA-MEDIDA/cobertura.txt
+no_ejecuta tasks/done/DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA.md: ningún ejecutor de la lista: grep -q 'CERRADO' tasks/done/DEBT-BB-USABLE-CIEGO-A-LA-LATENCIA.md
+no_ejecuta tasks/done/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01.md: ningún ejecutor de la lista: grep -q suites_pytest_con_techo tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/medicion.txt
+no_ejecuta tasks/done/DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01.md: ningún ejecutor de la lista: grep -q recarga_probada tasks/evidence/DEBT-DOCKER-CGROUP-SYSTEMD-RECARGA-QUITA-GPU-01/prueba.txt
+no_ejecuta tasks/done/DEBT-DOCKER-FUERA-DEL-TECHO.md: ningún ejecutor de la lista: grep -qx 17179869184 /sys/fs/cgroup/docker.slice/memory.max
+no_ejecuta tasks/done/DEBT-EARLYOOM-DESARMADO-POR-EL-AND-DEL-SWAP.md: ningún ejecutor de la lista: grep -qE "^EARLYOOM_ARGS=.*-s 100,100" /etc/default/earlyoom
+no_ejecuta tasks/done/DEBT-EARLYOOM-MATA-AL-MOTOR-VLLM-01.md: ningún ejecutor de la lista: grep -qF '|vllm|VLLM|docker|containerd|^bb-)' /etc/default/earlyoom
+no_ejecuta tasks/done/DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA.md: ningún ejecutor de la lista: grep -q 'CERRADO' tasks/done/DEBT-ENTRE-MATAR-UN-PROCESO-Y-REINICIAR-NO-HAY-NADA.md
+no_ejecuta tasks/done/DEBT-ESCRITORIO-Y-ARNESES-COMPARTEN-CGROUP.md: ningún ejecutor de la lista: grep -qvx 0 /sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/app.slice/memory.low
+no_ejecuta tasks/done/DEBT-ESTAMPIDA-DE-SYNC-DE-FLOTA-SIN-ESCALONAR-01.md: ningún ejecutor de la lista: grep -q sync_de_flota_escalonado DECISIONS.md
+no_ejecuta tasks/done/DEBT-GUARDIA-PROCESO-MUERE-EN-SILENCIO-01.md: ningún ejecutor de la lista: grep -q Restart=always systemd/bb-guardia-proceso.service
+no_ejecuta tasks/done/DEBT-KIT-SYNC-DE-FLOTA-NO-ESCALONA-LOS-PROYECTOS-01.md: ningún ejecutor de la lista: test ! -e .simplecode/run.py
+no_ejecuta tasks/done/DEBT-LAB-DOCKER-BORRO-DOCKER0-DE-PRODUCCION-01.md: ningún ejecutor de la lista: grep -q 'bridge=bblab0' tools/portero_docker_lab.sh
+no_ejecuta tasks/done/DEBT-LINEA-BASE-PURA-KERNEL-7-0-ANTES-DE-REPONER-PARCHE-01.md: ningún ejecutor de la lista: f=tasks/evidence/DEBT-LINEA-BASE-PURA-KERNEL-7-0-ANTES-DE-REPONER-PARCHE-01/estado-puro.txt; test -s $f && grep -qE '^ke
+no_ejecuta tasks/done/DEBT-MUESTREO-1S-FUERA-DEL-REPO-01.md: ningún ejecutor de la lista: git ls-files | grep -q 'muestreo_1s'
+no_ejecuta tasks/done/DEBT-NVRM-GSP-TIMEOUT-XID154-KERNEL-7-0-SIN-ALARMA-01.md: ningún ejecutor de la lista: grep -q '"gsp_timeout"' ~/.local/share/blackbox/reboots.jsonl
+no_ejecuta tasks/done/DEBT-PANIC-INSTALACION-Y-PRUEBA-EN-ARRANQUE-REAL-01.md: ningún ejecutor de la lista: test -x /usr/local/sbin/panic && grub-editenv list | grep -q '^bb_intentos=' && grep -q '"autoarmado": true.*"fijado_a":
+no_ejecuta tasks/done/DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS.md: ningún ejecutor de la lista: grep -q 'unit de systemd deja de casar' tasks/done/DEBT-PII-SCAN-LEE-UNITS-DE-SYSTEMD-COMO-CORREOS.md
+no_ejecuta tasks/done/DEBT-PSI-UMBRALES-SIN-CALIBRAR.md: ningún ejecutor de la lista: grep -q 'calibrado 2026' bin/bb
+no_ejecuta tasks/done/DEBT-PUSHES-ACUMULADOS-BLOQUEADOS-POR-DEUDA-ABIERTA-01.md: ningún ejecutor de la lista: grep -q repositorio_publicado tasks/evidence/DEBT-PUSHES-ACUMULADOS-BLOQUEADOS-POR-DEUDA-ABIERTA-01/publicacion.txt
+no_ejecuta tasks/done/DEBT-REBOOT-VERDICT-CIEGO-A-ARRANQUES-CORTOS-Y-RELOJ-01.md: ningún ejecutor de la lista: python3 - <<'E'
+import json,subprocess,os,datetime as dt,sys
+ids={json.loads(l).get('boot_id') for l in open(os.path.exp
+no_ejecuta tasks/done/DEBT-RELOJ-ARRANQUE-GPU-OCUPADA-POR-EL-MOTOR-01.md: ningún ejecutor de la lista: python3 -c "import json,os,sys;f=os.path.expanduser('~/.local/share/blackbox/interruptores/reloj_arranque.jsonl');r=[jso
+no_ejecuta tasks/done/DEBT-RESIDUO-MAS-RUIDOSO-QUE-SU-PROPIA-SENAL.md: ningún ejecutor de la lista: grep -q 'ruido de residuo_mb MEDIDO' tasks/done/DEBT-RESIDUO-MAS-RUIDOSO-QUE-SU-PROPIA-SENAL.md
+no_ejecuta tasks/done/DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01.md: ningún ejecutor de la lista: grep -q decisiones_de_revision_votadas tasks/evidence/DEBT-REVISION-DE-LO-INSTALADO-Y-LO-USADO-01/informe.txt
+no_ejecuta tasks/done/DEBT-SHELLCHECK-BB-SUBJECT-01.md: ningún ejecutor de la lista: shellcheck bin/bb
+no_ejecuta tasks/done/DEBT-SIGTERM-SIN-CAUSA-RAIZ.md: ningún ejecutor de la lista: grep -q 'CERRADO' tasks/done/DEBT-SIGTERM-SIN-CAUSA-RAIZ.md
+no_ejecuta tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md: ningún ejecutor de la lista: grep -q 'CERRADO' tasks/done/DEBT-SLUGGISH-SIN-CAUSA-PROBADA.md
+no_ejecuta tasks/done/DEBT-SYSCTL-NMI-WATCHDOG-NO-ESCRIBIBLE-EN-KERNEL-7-0-01.md: ningún ejecutor de la lista: systemctl is-active --quiet systemd-sysctl.service
+no_ejecuta tasks/done/DEBT-TEST-PORTERO-CONGELAR-REAL-INTERMITENTE-BAJO-GATE-01.md: ningún ejecutor de la lista: grep -qx test_portero_congelar_estable tasks/evidence/DEBT-TEST-PORTERO-CONGELAR-REAL-INTERMITENTE-BAJO-GATE-01/medicion
+no_ejecuta tasks/done/DEBT-VERIFICAR-REFERENCIA-OOM-LLAMADORES-CONCURRENTES-01.md: ningún ejecutor de la lista: grep -q dgx30_verificado tasks/evidence/DEBT-VERIFICAR-REFERENCIA-OOM-LLAMADORES-CONCURRENTES-01/verificacion.txt
+no_ejecuta tasks/done/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01.md: ningún ejecutor de la lista: grep -q sin_enfriamiento_externo_declarado tasks/evidence/DELTA-ROOT-SUBAMBIENT-COOLING-AND-UMA-CANARY-01/decision.txt
+no_ejecuta tasks/done/FEATURE-1358-CGROUP-02-TRAZA.md: ningún ejecutor de la lista: grep -q "class=0x3e" tasks/evidence/FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01/barrido-ioctl-20261012.txt
+no_ejecuta tasks/done/FEATURE-1358-CGROUP-03-NATIVO.md: ningún ejecutor de la lista: grep -q 268435456 tasks/evidence/FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01/medicion.txt
+no_ejecuta tasks/done/FEATURE-1358-CGROUP-04-PARCHE.md: ningún ejecutor de la lista: grep -q "d2 tope 512M, pide 1024 MiB" tasks/evidence/FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01/medicion-v2-carga
+no_ejecuta tasks/done/FEATURE-CLOCK-THROTTLE-CRUZADO.md: ningún ejecutor de la lista: grep -q 'clock.*throttle\|throttle.*clock' tasks/done/FEATURE-CLOCK-THROTTLE-CRUZADO.md
+no_ejecuta tasks/done/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01.md: ningún ejecutor de la lista: grep -q runtime_oci_probado tasks/evidence/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01/medicion.txt
+no_ejecuta tasks/done/FEATURE-COSECHA-DISTROS-ALTERNAS-GB10-01.md: ningún ejecutor de la lista: grep -q cosecha_distros_leida tasks/evidence/FEATURE-COSECHA-DISTROS-ALTERNAS-GB10-01/cosecha.txt
+no_ejecuta tasks/done/FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01.md: ningún ejecutor de la lista: grep -q '^cobertura_completa: True' tasks/evidence/FEATURE-COSECHA-FORO-CATEGORIAS-722-723-01/cobertura-final.txt
+no_ejecuta tasks/done/FEATURE-COSECHA-FORO-ENERGIA-Y-DGXTOP-01.md: ningún ejecutor de la lista: grep -q cosecha_evaluada tasks/evidence/FEATURE-COSECHA-FORO-ENERGIA-Y-DGXTOP-01/evaluacion.txt
+no_ejecuta tasks/done/FEATURE-COSECHA-FORO-ETAPA2-LECTURA-POR-MECANISMO-01.md: ningún ejecutor de la lista: grep -q '^etapa2_cobertura_completa: True' tasks/evidence/FEATURE-COSECHA-FORO-ETAPA2-LECTURA-POR-MECANISMO-01/cobertura
+no_ejecuta tasks/done/FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01.md: ningún ejecutor de la lista: grep -q memacct_backport_probado tasks/evidence/FEATURE-DMEM-BACKPORT-MEMACCT-580-REVERSIBLE-01/medicion.txt
+no_ejecuta tasks/done/FEATURE-DMEM-LLENAR-CAPACIDAD-GPU-01.md: ningún ejecutor de la lista: grep -q dmem_llenado_y_medido tasks/evidence/FEATURE-DMEM-LLENAR-CAPACIDAD-GPU-01/medicion.txt
+no_ejecuta tasks/done/FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01.md: ningún ejecutor de la lista: grep -q parche_dmem_gb10_medido tasks/evidence/FEATURE-DMEM-PARCHE-REGION-Y-COBRO-SYSMEM-GB10-01/medicion.txt
+no_ejecuta tasks/done/FEATURE-FAN-RPM.md: ningún ejecutor de la lista: grep -q 'RPM\|fan.*speed\|rpm' tasks/done/FEATURE-FAN-RPM.md
+no_ejecuta tasks/done/FEATURE-GDM-BOOT-COLGADO.md: ningún ejecutor de la lista: grep -q 'journalctl -b -1\|boot anterior' tasks/done/FEATURE-GDM-BOOT-COLGADO.md
+no_ejecuta tasks/done/FEATURE-GPU-UTIL-CERO-FALLBACK-CPU.md: ningún ejecutor de la lista: grep -q 'fallback.*CPU\|fallback a CPU' tasks/done/FEATURE-GPU-UTIL-CERO-FALLBACK-CPU.md
+no_ejecuta tasks/done/FEATURE-GPU-XID-DETECTION.md: ningún ejecutor de la lista: grep -q 'Xid' tasks/done/FEATURE-GPU-XID-DETECTION.md
+no_ejecuta tasks/done/FEATURE-GUI-KERNEL-VS-USERSPACE.md: ningún ejecutor de la lista: grep -q 'lsmod.*nvidia\|systemctl status gdm' tasks/done/FEATURE-GUI-KERNEL-VS-USERSPACE.md
+no_ejecuta tasks/done/FEATURE-KDUMP-PSTORE-PREAPAGADO.md: ningún ejecutor de la lista: grep -q 'kdump\|pstore' tasks/done/FEATURE-KDUMP-PSTORE-PREAPAGADO.md
+no_ejecuta tasks/done/FEATURE-LECTOR-PSTORE-BERT-ROOT-01.md: ningún ejecutor de la lista: grep -q . /var/lib/blackbox/pstore/arranque.jsonl
+no_ejecuta tasks/done/FEATURE-LIMITADOR-LD-PRELOAD-CUDA-GB10-01.md: ningún ejecutor de la lista: grep -q limitador_cuda_probado tasks/evidence/FEATURE-LIMITADOR-LD-PRELOAD-CUDA-GB10-01/medicion.txt
+no_ejecuta tasks/done/FEATURE-MONITOR-DISTROS-ALTERNAS-GB10-01.md: ningún ejecutor de la lista: grep -q monitor_distros_probado tasks/evidence/FEATURE-MONITOR-DISTROS-ALTERNAS-GB10-01/primera-pasada.txt
+no_ejecuta tasks/done/FEATURE-NVIDIA-CONTAINER-RUNTIME-HOOK.md: ningún ejecutor de la lista: grep -q 'nvidia-container-runtime\|prestart hook' tasks/done/FEATURE-NVIDIA-CONTAINER-RUNTIME-HOOK.md
+no_ejecuta tasks/done/FEATURE-RED-CPU-SCAN.md: ningún ejecutor de la lista: grep -q 'red y CPU por nucleo (muestras de blackbox)' bin/bb
+no_ejecuta tasks/done/FEATURE-RESIDENTES-INACTIVOS-CONTRA-CALOR-01.md: ningún ejecutor de la lista: grep -qx residentes_medido tasks/evidence/FEATURE-RESIDENTES-INACTIVOS-CONTRA-CALOR-01/medicion.txt
+no_ejecuta tasks/done/FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md: ningún ejecutor de la lista: grep -q 'clasificador de causa' tasks/done/FEATURE-SHUTDOWN-CAUSA-CLASIFICADOR.md
+no_ejecuta tasks/done/FEATURE-USB-XHCI-FORENSICS.md: ningún ejecutor de la lista: grep -q 'USB/xHCI' tasks/done/FEATURE-USB-XHCI-FORENSICS.md
+no_ejecuta tasks/done/FEATURE-VENTANA-GPU-NOCTURNA-SECUENCIA-01.md: ningún ejecutor de la lista: test -s ~/.local/share/blackbox/ventana-gpu/resumen.txt && grep -q 'quien_mata=' ~/.local/share/blackbox/ventana-gpu/res
+no_ejecuta tasks/done/FEATURE-VIGILANTE-MEMAVAILABLE-UMA-01.md: ningún ejecutor de la lista: grep -q vigilante_uma_probado tasks/evidence/FEATURE-VIGILANTE-MEMAVAILABLE-UMA-01/medicion.txt
+fichas_cerradas=273 ejecuta=208 no_ejecuta=65

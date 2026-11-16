@@ -1,0 +1,220 @@
+diff --git a/tasks/backlog/DEBT-GUARDA-PUBLICA-ARCHIVOS-EXENTOS-01.md b/tasks/backlog/DEBT-GUARDA-PUBLICA-ARCHIVOS-EXENTOS-01.md
+new file mode 100644
+index 00000000..26901d5a
+--- /dev/null
++++ b/tasks/backlog/DEBT-GUARDA-PUBLICA-ARCHIVOS-EXENTOS-01.md
+@@ -0,0 +1,30 @@
++---
++id: DEBT-GUARDA-PUBLICA-ARCHIVOS-EXENTOS-01
++kind: debt
++domain: SECURITY
++title: "Definir y probar cobertura de las dos exenciones manteniendo los tokens firmados y los fixtures necesarios."
++status: open
++severity: P2
++origin: measured
++owner: blackbox
++created: 2026-11-13
++close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider tasks/checks/test_revision_privacidad.py::test_dato_nuevo_en_guarda_no_queda_exento", "expect": "exit_zero", "porque": "Dato nuevo en el archivo de la guarda debe bloquear; preservar los tokens firmados y fixtures imprescindibles mediante excepciones acotadas. Prueba de producto, no existencia de evidencia."}
++---
++
++## Fuente y evidencia
++
++Generada desde `tasks/evidence/REVISION-PRIVACIDAD-2026-11-13/pendientes-revision.json`.
++ID conservado; estado de origen: pendiente_no_bloqueante_preexistente.
++SHA256 del JSON fuente: `859b4d0178145f1c59c26bf14b9c0fd9f4ac793e0affe0740502938103fea64a`.
++
++Revision final C6: dato sintetico en HEAD dentro del archivo de la guarda produce 5 passed; archivo de guarda y base estan exentos.
++
++## Responsable y aceptacion
++
++Owner: blackbox; revision independiente antes de publicar el arreglo.
++Dato nuevo en el archivo de la guarda debe bloquear; preservar los tokens firmados y fixtures imprescindibles mediante excepciones acotadas.
++
++Accion pendiente: Definir y probar cobertura de las dos exenciones manteniendo los tokens firmados y los fixtures necesarios.
++
++El close_check ejecuta una regresion contra el producto actual y queda rojo
++hasta corregirlo. Registrar esta ficha no lo resuelve ni autoriza su cierre.
+diff --git a/tasks/backlog/DEBT-GUARDA-PUBLICA-ERROR-LECTOR-COMO-FAIL-01.md b/tasks/backlog/DEBT-GUARDA-PUBLICA-ERROR-LECTOR-COMO-FAIL-01.md
+new file mode 100644
+index 00000000..d0af2085
+--- /dev/null
++++ b/tasks/backlog/DEBT-GUARDA-PUBLICA-ERROR-LECTOR-COMO-FAIL-01.md
+@@ -0,0 +1,30 @@
++---
++id: DEBT-GUARDA-PUBLICA-ERROR-LECTOR-COMO-FAIL-01
++kind: debt
++domain: SECURITY
++title: "Distinguir fallo del lector de hallazgo con salida de instrumento y controles para base rota y git ausente."
++status: open
++severity: P2
++origin: measured
++owner: blackbox
++created: 2026-11-13
++close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider tasks/checks/test_revision_privacidad.py::test_error_lector_es_could_not_run", "expect": "exit_zero", "porque": "Base ilegible y Git ausente deben ser CNR; hallazgo real debe seguir siendo fail, y HEAD limpio pass. Prueba de producto, no existencia de evidencia."}
++---
++
++## Fuente y evidencia
++
++Generada desde `tasks/evidence/REVISION-PRIVACIDAD-2026-11-13/pendientes-revision.json`.
++ID conservado; estado de origen: pendiente_no_bloqueante.
++SHA256 del JSON fuente: `859b4d0178145f1c59c26bf14b9c0fd9f4ac793e0affe0740502938103fea64a`.
++
++Revision final G4 y C7: base ilegible o ausencia de .git produce pytest rc=1, fila fail y could_not_run=0; instrumento caido se confunde con sujeto sucio.
++
++## Responsable y aceptacion
++
++Owner: blackbox; revision independiente antes de publicar el arreglo.
++Base ilegible y Git ausente deben ser CNR; hallazgo real debe seguir siendo fail, y HEAD limpio pass.
++
++Accion pendiente: Distinguir fallo del lector de hallazgo con salida de instrumento y controles para base rota y git ausente.
++
++El close_check ejecuta una regresion contra el producto actual y queda rojo
++hasta corregirlo. Registrar esta ficha no lo resuelve ni autoriza su cierre.
+diff --git a/tasks/backlog/DEBT-SPEC-GATEWAY-DOS-NOTACIONES-01.md b/tasks/backlog/DEBT-SPEC-GATEWAY-DOS-NOTACIONES-01.md
+new file mode 100644
+index 00000000..addf0931
+--- /dev/null
++++ b/tasks/backlog/DEBT-SPEC-GATEWAY-DOS-NOTACIONES-01.md
+@@ -0,0 +1,30 @@
++---
++id: DEBT-SPEC-GATEWAY-DOS-NOTACIONES-01
++kind: debt
++domain: DOCUMENTATION
++title: "Unificar la notacion documental en un cambio posterior revisado."
++status: open
++severity: P3
++origin: measured
++owner: blackbox
++created: 2026-11-13
++close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider tasks/checks/test_revision_privacidad.py::test_spec_usa_una_notacion_gateway", "expect": "exit_zero", "porque": "Tabla y narrativa deben usar la misma notacion del gateway, comprobando el contenido real de SPEC. Prueba de producto, no existencia de evidencia."}
++---
++
++## Fuente y evidencia
++
++Generada desde `tasks/evidence/REVISION-PRIVACIDAD-2026-11-13/pendientes-revision.json`.
++ID conservado; estado de origen: pendiente_no_bloqueante.
++SHA256 del JSON fuente: `859b4d0178145f1c59c26bf14b9c0fd9f4ac793e0affe0740502938103fea64a`.
++
++SPEC.md:380 usa @BB_GATEWAY@; SPEC.md:404 conserva nombre generico de sustitucion para active_engine.json.
++
++## Responsable y aceptacion
++
++Owner: blackbox; revision independiente antes de publicar el arreglo.
++Tabla y narrativa deben usar la misma notacion del gateway, comprobando el contenido real de SPEC.
++
++Accion pendiente: Unificar la notacion documental en un cambio posterior revisado.
++
++El close_check ejecuta una regresion contra el producto actual y queda rojo
++hasta corregirlo. Registrar esta ficha no lo resuelve ni autoriza su cierre.
+diff --git a/tasks/checks/test_revision_privacidad.py b/tasks/checks/test_revision_privacidad.py
+new file mode 100644
+index 00000000..8871e8cf
+--- /dev/null
++++ b/tasks/checks/test_revision_privacidad.py
+@@ -0,0 +1,55 @@
++"""Aceptacion roja de pendientes; solo se invoca por sus close_checks explicitos."""
++import os
++import re
++import subprocess
++import sys
++
++import pytest
++from pathlib import Path
++
++RAIZ = Path(__file__).resolve().parents[2]
++GUARDA = RAIZ / 'tests/test_sin_datos_privados.py'
++
++
++def medir_copia(tmp_path, *, base='{}', dato_en_guarda=False, sin_git=False, dato_ordinario=False):
++    tmp_path.mkdir(parents=True, exist_ok=True)
++    tests = tmp_path / 'tests'
++    (tests / 'fixtures').mkdir(parents=True)
++    src = GUARDA.read_text()
++    if dato_en_guarda:
++        src += '\n# Control sintetico: ' + '10.' + '194.' + '62.85\n'
++    (tests / GUARDA.name).write_text(src)
++    (tests / 'fixtures/datos_privados_baseline.json').write_text(base)
++    archivos = ['tests/test_sin_datos_privados.py', 'tests/fixtures/datos_privados_baseline.json']
++    if dato_ordinario:
++        (tmp_path / 'dato.txt').write_text('10.' + '194.' + '62.85')
++        archivos.append('dato.txt')
++    for args in [('init', '-q'), ('add', '--', *archivos),
++                 ('-c', 'user.name=Prueba', '-c', 'user.email=prueba@example.org', 'commit', '-qm', 'fixture')]:
++        subprocess.run(['git', *args], cwd=tmp_path, check=True, capture_output=True)
++    if sin_git:
++        (tmp_path / '.git').rename(tmp_path / 'git-inactivo')
++    return subprocess.run([sys.executable, '-m', 'pytest', '-q', '-p', 'no:cacheprovider',
++                           'tests/test_sin_datos_privados.py::test_el_repo_no_gana_datos_privados'],
++                          cwd=tmp_path, capture_output=True, text=True,
++                          env={**os.environ, 'PYTHONDONTWRITEBYTECODE': '1'})
++
++
++@pytest.mark.parametrize('fallo', ['base', 'git'])
++def test_error_lector_es_could_not_run(tmp_path, fallo):
++    resultado = medir_copia(tmp_path / 'roto', base='JSON roto' if fallo == 'base' else '{}', sin_git=fallo == 'git')
++    assert resultado.returncode == 2, resultado.stdout + resultado.stderr
++    limpio = medir_copia(tmp_path / 'limpio')
++    assert limpio.returncode == 0, limpio.stdout + limpio.stderr
++    privado = medir_copia(tmp_path / 'privado', dato_ordinario=True)
++    assert privado.returncode == 1, privado.stdout + privado.stderr
++
++
++def test_dato_nuevo_en_guarda_no_queda_exento(tmp_path):
++    resultado = medir_copia(tmp_path, dato_en_guarda=True)
++    assert resultado.returncode == 1, resultado.stdout + resultado.stderr
++
++
++def test_spec_usa_una_notacion_gateway():
++    nombres = set(re.findall(r'/srv/([^/`]+)/gateway/', (RAIZ / 'SPEC.md').read_text()))
++    assert nombres == {'@BB_GATEWAY@'}, nombres
+diff --git a/tasks/evidence/IDEA-ENDURECER-EL-CIERRE-DE-FICHAS-CONTRA-CIERRES-SINTETICOS/medicion.json b/tasks/evidence/IDEA-ENDURECER-EL-CIERRE-DE-FICHAS-CONTRA-CIERRES-SINTETICOS/medicion.json
+new file mode 100644
+index 00000000..a5eaa190
+--- /dev/null
++++ b/tasks/evidence/IDEA-ENDURECER-EL-CIERRE-DE-FICHAS-CONTRA-CIERRES-SINTETICOS/medicion.json
+@@ -0,0 +1,19 @@
++{
++  "id_existente": "IDEA-ENDURECER-EL-CIERRE-DE-FICHAS-CONTRA-CIERRES-SINTETICOS",
++  "owner": "simplecode",
++  "ficha_existente": "simplecode:tasks/backlog/IDEA-ENDURECER-EL-CIERRE-DE-FICHAS-CONTRA-CIERRES-SINTETICOS.md",
++  "sujeto": "blackbox dc1b5442..dd5b7098",
++  "cmd": "PYTHONDONTWRITEBYTECODE=1 TMPDIR=\"$HOME/scratch/blackbox/r13\" git push origin master",
++  "fila": "close-check",
++  "state": "pass",
++  "exit_code": 0,
++  "stdout": "no_ejecuta tasks/done/FEATURE-VENTANA-GPU-NOCTURNA-SECUENCIA-01.md: ningún ejecutor de la lista: test -s ~/.local/share/blackbox/ventana-gpu/resumen.txt && grep -q 'quien_mata=' ~/.local/share/blackbox/ventana-gpu/res\nfichas_cerradas=1 ejecuta=0 no_ejecuta=1\n",
++  "fuente": "publicacion.md y push-normal.txt locales del 2026-11-13",
++  "aceptacion": [
++    "Ficha cerrada sin ejecutor bloquea, con o sin cambios de codigo.",
++    "Fixture positivo con producto realmente ejecutado pasa el detector.",
++    "Git o instrumento ausente produce CNR=2; nunca PASS.",
++    "Retirar o neutralizar el detector hace fallar el control negativo."
++  ],
++  "estado": "open; correccion pendiente de revision y corredor; no se publica"
++}
+diff --git a/tasks/evidence/REVISION-PRIVACIDAD-2026-11-13/pendientes-revision.json b/tasks/evidence/REVISION-PRIVACIDAD-2026-11-13/pendientes-revision.json
+new file mode 100644
+index 00000000..82ab81ec
+--- /dev/null
++++ b/tasks/evidence/REVISION-PRIVACIDAD-2026-11-13/pendientes-revision.json
+@@ -0,0 +1,20 @@
++[
++  {
++    "id": "DEBT-GUARDA-PUBLICA-ERROR-LECTOR-COMO-FAIL-01",
++    "estado": "pendiente_no_bloqueante",
++    "evidencia": "Revision final G4 y C7: base ilegible o ausencia de .git produce pytest rc=1, fila fail y could_not_run=0; instrumento caido se confunde con sujeto sucio.",
++    "accion": "Distinguir fallo del lector de hallazgo con salida de instrumento y controles para base rota y git ausente."
++  },
++  {
++    "id": "DEBT-GUARDA-PUBLICA-ARCHIVOS-EXENTOS-01",
++    "estado": "pendiente_no_bloqueante_preexistente",
++    "evidencia": "Revision final C6: dato sintetico en HEAD dentro del archivo de la guarda produce 5 passed; archivo de guarda y base estan exentos.",
++    "accion": "Definir y probar cobertura de las dos exenciones manteniendo los tokens firmados y los fixtures necesarios."
++  },
++  {
++    "id": "DEBT-SPEC-GATEWAY-DOS-NOTACIONES-01",
++    "estado": "pendiente_no_bloqueante",
++    "evidencia": "SPEC.md:380 usa @BB_GATEWAY@; SPEC.md:404 conserva nombre generico de sustitucion para active_engine.json.",
++    "accion": "Unificar la notacion documental en un cambio posterior revisado."
++  }
++]
