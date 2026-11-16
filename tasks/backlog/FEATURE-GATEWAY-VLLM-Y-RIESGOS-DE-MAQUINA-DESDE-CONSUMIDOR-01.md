@@ -73,7 +73,10 @@ La espera de la rama `codex/h3-gateway-receiver` era una instruccion de la
 pasada del 2026-11-13; la pasada de /clean del 2026-11-16 (encargo del
 Director, run_f932f7efa49f) no la renovo, y la skill no hereda esperas de
 pasadas anteriores. `bff51904` se aterrizo en master con el merge `363aeb6f`.
-Los ocho tests de `tests/test_gateway_handoff.py` fallan en master hasta que
-exista `tools/gateway/` (lanzador, unit y adaptador): son el contrato de
-aceptacion del alcance D3 de esta ficha, deuda que entra con su dueño, no
-una regresion. La rama local se podo; su punta era `bff519044561d4898107940436a0ab9e217b0da2`.
+Los ocho tests de `tests/test_gateway_handoff.py` son el contrato de
+aceptacion del alcance D3 de esta ficha. El pre-push los bloqueo como 8
+fallos; desde `38da9222` llevan `xfail(strict=True)` mientras falte alguno de
+`tools/gateway/{main.py,ai-nemotron.service,admission_check_wrapper.sh}`.
+Con los tres presentes la marca se apaga y corren como tests reales; un test
+que pase antes de tiempo falla por XPASS estricto. Cerrar D3 = crear esos
+tres entregables y que los ocho pasen sin marca. La rama local se podo; su punta era `bff519044561d4898107940436a0ab9e217b0da2`.
