@@ -6,6 +6,18 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 GATEWAY = ROOT / "tools" / "gateway"
+ENTREGABLES = ("main.py", "ai-nemotron.service", "admission_check_wrapper.sh")
+
+# Contrato de aceptacion de un trabajo aun no hecho (alcance D3 de
+# tasks/backlog/FEATURE-GATEWAY-VLLM-Y-RIESGOS-DE-MAQUINA-DESDE-CONSUMIDOR-01.md).
+# Mientras falte algun entregable, los tests son fallos esperados; strict=True
+# convierte en fallo cualquier test que pase antes de tiempo. En cuanto los
+# tres existen, la marca se apaga sola y los tests corren como tests reales.
+pytestmark = pytest.mark.xfail(
+    not all((GATEWAY / nombre).is_file() for nombre in ENTREGABLES),
+    reason="falta tools/gateway/ (alcance D3 de FEATURE-GATEWAY-VLLM-...-01)",
+    strict=True,
+)
 
 
 def cargar():
