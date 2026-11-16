@@ -66,3 +66,14 @@ proposito: queda sin aterrizar hasta implementar el alcance D3 de esta ficha.
 El worktree secundario se retira despues de conservar el commit; el trabajo se
 retoma creando un worktree de esa rama. /clean no implementa el gateway ni
 modifica servicios instalados.
+
+## Aterrizaje de /clean (2026-11-16)
+
+La espera de la rama `codex/h3-gateway-receiver` era una instruccion de la
+pasada del 2026-11-13; la pasada de /clean del 2026-11-16 (encargo del
+Director, run_f932f7efa49f) no la renovo, y la skill no hereda esperas de
+pasadas anteriores. `bff51904` se aterrizo en master con el merge `363aeb6f`.
+Los ocho tests de `tests/test_gateway_handoff.py` fallan en master hasta que
+exista `tools/gateway/` (lanzador, unit y adaptador): son el contrato de
+aceptacion del alcance D3 de esta ficha, deuda que entra con su dueño, no
+una regresion. La rama local se podo; su punta era `bff519044561d4898107940436a0ab9e217b0da2`.

@@ -68,3 +68,11 @@ falla tambien sobre el commit inicial en clon independiente. El control de
 identidad del codigo (`git diff --exit-code`) da 0 entre ese commit y master
 en bin/tools/tests/adopted/rules, y da 1 al comparar el test nuevo de la rama.
 La privacidad lleva su ficha P1 y una revision separada; /clean no la remedia.
+
+## Actualizacion /clean (2026-11-16)
+
+La rama del contrato del gateway se aterrizo en master (merge `363aeb6f`).
+Desde ahi los ocho nodos de `tests/test_gateway_handoff.py` cuentan dentro
+de la suite de master; su cierre depende de
+`FEATURE-GATEWAY-VLLM-Y-RIESGOS-DE-MAQUINA-DESDE-CONSUMIDOR-01` (alcance D3),
+no de esta ficha.
