@@ -28,3 +28,11 @@ Accion pendiente: Definir y probar cobertura de las dos exenciones manteniendo l
 
 El close_check ejecuta una regresion contra el producto actual y queda rojo
 hasta corregirlo. Registrar esta ficha no lo resuelve ni autoriza su cierre.
+
+## Decision (voto de Luis, 2026-11-16)
+
+Opcion elegida: **exentar solo lineas firmadas**. La guarda escanea todo su
+archivo; solo se exentan las lineas de tokens firmados, identificadas por el
+sha256 de cada linea. Descartadas: fijar el archivo por sha256, ofuscar tokens
+sin exencion, dejarlo abierto. Costo aceptado: codigo nuevo en una guarda de
+seguridad, que exige control negativo (editar una linea firmada debe disparar).
