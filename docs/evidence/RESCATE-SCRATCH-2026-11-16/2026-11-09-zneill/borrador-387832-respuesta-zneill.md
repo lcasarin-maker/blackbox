@@ -1,4 +1,4 @@
-# Borrador de respuesta a zneill, tema 387832 (NO publicado)
+# Borrador de respuesta a zneill, tema 387832 (SUPERADO: publicado el 2026-11-16 como post 7, ver respuesta-387832-PUBLICADA-2026-11-16.md)
 
 Para revisar y pegar en https://forums.developer.nvidia.com/t/387832 (responder al post #6).
 Restaurado el 2026-11-09 desde la conversacion: el scratchpad de /tmp se borro con el reinicio.
