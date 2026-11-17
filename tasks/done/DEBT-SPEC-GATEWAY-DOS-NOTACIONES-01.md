@@ -3,11 +3,12 @@ id: DEBT-SPEC-GATEWAY-DOS-NOTACIONES-01
 kind: debt
 domain: DOCUMENTATION
 title: "Unificar la notacion documental en un cambio posterior revisado."
-status: open
+status: done
 severity: P3
 origin: measured
 owner: blackbox
 created: 2026-11-13
+closed_at: 2026-11-16
 close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider tasks/checks/test_revision_privacidad.py::test_spec_usa_una_notacion_gateway", "expect": "exit_zero", "porque": "Tabla y narrativa deben usar la misma notacion del gateway, comprobando el contenido real de SPEC. Prueba de producto, no existencia de evidencia."}
 ---
 

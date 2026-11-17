@@ -1,0 +1,19 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+______________________ test_spec_usa_una_notacion_gateway ______________________
+
+    def test_spec_usa_una_notacion_gateway():
+        nombres = set(re.findall(r'/srv/([^/`]+)/gateway/', (RAIZ / 'SPEC.md').read_text()))
+>       assert nombres == {'@BB_GATEWAY@'}, nombres
+E       AssertionError: {'@BB_GATEWAY@', 'proyecto-local'}
+E       assert {'@BB_GATEWAY...oyecto-local'} == {'@BB_GATEWAY@'}
+E         
+E         Extra items in the left set:
+E         'proyecto-local'
+E         Use -v to get more diff
+
+tasks/checks/test_revision_privacidad.py:55: AssertionError
+=========================== short test summary info ============================
+FAILED tasks/checks/test_revision_privacidad.py::test_spec_usa_una_notacion_gateway
+1 failed in 0.06s
+rc=1

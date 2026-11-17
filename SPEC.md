@@ -401,7 +401,7 @@ la actualización.
 `tasks/evidence/FEATURE-OWNEAR-EN-BB-LO-QUE-ACTUA-SOBRE-LA-MAQUINA-01/inventario.txt`):
 `active_engine.json`, `main.py`, `ai-nemotron.service`, modelos, imagenes y datos
 se quedan donde estan. La relacion es de informacion: bb LEE
-`/srv/proyecto-local/gateway/active_engine.json` (`admission_check_gb`, `container_memory_gb`)
+`/srv/@BB_GATEWAY@/gateway/active_engine.json` (`admission_check_gb`, `container_memory_gb`)
 y `/srv/ai/models/_coredumps`, y actua sobre la unidad del motor solo por
 `systemctl` (vigilante y gate de admision), sin versionar su configuracion.
 
