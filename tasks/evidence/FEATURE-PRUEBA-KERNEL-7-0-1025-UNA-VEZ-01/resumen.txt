@@ -1,0 +1,9 @@
+resultado=1025_LIMPIO_3H28_GSP_XID119_EN_REINICIO_EN_CALIENTE_DE_VUELTA_A_6.17
+fecha=2026-11-09
+kernel=7.0.0-1025-nvidia modulo=empaquetado srcversion=B9F87D2C66AEAE721A6DFF6 (580.178.04)
+boot_1025=0acf5c1e 15:53-19:21 (12478 s) cierre ordenado por sudo reboot; 0 lineas Xid/Oops/soft lockup/BUG/list corruption en journal -k
+carga_1025=GPU util max 96 %, 2388 de 2455 muestras >50 %, temp max 68 C, vllm activo
+vuelta_a_6.17=boot 316ca4f0 19:21:57: Xid 119 GSP Timeout a +10 s (Xorg, funcion 76 GSP_RM_CONTROL), GPU en RESET_REQUIRED 2 h, corte duro 21:20:18
+segundo_intento=boot 21836d3b 21:22:05: Xid 119 a +14 s; apagado ordenado 21:22:50; arranque en frio 21:47 sin Xid, 5.99 d
+decision=cerrar con evidencia (voto de Luis 2026-11-16); se queda en 6.17.0-1032, GRUB fijo
+fuente=reboots.jsonl, journalctl -b -4/-3/-2, atom_gpu_telemetry.jsonl, netconsole de la Dell (tasks/evidence: post 7 del hilo 387832)

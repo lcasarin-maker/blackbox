@@ -3,10 +3,11 @@ id: FEATURE-PRUEBA-KERNEL-7-0-1025-UNA-VEZ-01
 kind: task
 domain: GPU
 title: "Probar una sola vez el kernel 7.0.0-1025 con vuelta automatica al 6.17.0-1032, con captura de arranque y alguien presente"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: UNCLASSIFIED_DEBT
+closed_at: 2026-11-16
 created: 2026-11-09
 close_check: {"cmd": "test -s ~/data/blackbox/prueba-kernel-1025/resumen.txt && grep -q 'resultado=' ~/data/blackbox/prueba-kernel-1025/resumen.txt", "expect": "exit_zero", "porque": "Falla hoy (no existe el resumen). Cierra cuando una prueba supervisada deja resumen.txt con resultado=ARRANCO_ESTABLE|COLGO|BUCLE y la ATOM de vuelta en 6.17.0-1032."}
 ---
@@ -61,3 +62,12 @@ Escalera, de mas a menos automatica; cada peldano lleva su prueba:
 1. Alarma de la Dell con una comprobacion de solo lectura por `ssh atom`: `GSP Timeout`/`Xid 119|154` en el diario del arranque actual, aviso por ntfy con la orden recomendada.
 2. Apagado en frio remoto: script sellado de `bb-root-run` que hace `systemctl poweroff`, y la Dell envia Wake-on-LAN (MAC enP7s7 02-00-00-00-00-01) a los 45 s. Sin probar: que la NIC y el BIOS enciendan desde apagado (`sudo ethtool enP7s7 | grep Wake-on`; `/sys/class/net/enP7s7/device/power/wakeup` dice `enabled`).
 3. Si `ssh-casa` esta caido: nada de la Dell llega. Solo el boton fisico, o un enchufe inteligente (corte real de energia) comandado desde la Dell. Decision de Luis y de hardware.
+
+## Cierre 2026-11-16 (voto de Luis: cerrar con la evidencia)
+
+La prueba ocurrio el 2026-11-09: 1025 aguanto 3 h 28 min con vLLM activo y cero Xid/Oops;
+el primer reinicio en caliente de vuelta a 6.17.0-1032 dio Xid 119 (GSP Timeout) y un corte duro
+2 h despues; el segundo reinicio en caliente repitio el Xid 119; un apagado en frio lo limpio.
+Resumen y fuentes: `tasks/evidence/FEATURE-PRUEBA-KERNEL-7-0-1025-UNA-VEZ-01/resumen.txt`.
+Limite declarado: una sola muestra; no aisla si el fallo es del reinicio en caliente o de venir de 7.0.
+Publicado en el hilo 387832, post 7.
