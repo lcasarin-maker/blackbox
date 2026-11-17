@@ -3,7 +3,8 @@ id: DEBT-GUARDA-PUBLICA-ARCHIVOS-EXENTOS-01
 kind: debt
 domain: SECURITY
 title: "Definir y probar cobertura de las dos exenciones manteniendo los tokens firmados y los fixtures necesarios."
-status: open
+status: done
+closed_at: 2026-11-16
 severity: P2
 origin: measured
 owner: blackbox
@@ -36,3 +37,13 @@ archivo; solo se exentan las lineas de tokens firmados, identificadas por el
 sha256 de cada linea. Descartadas: fijar el archivo por sha256, ofuscar tokens
 sin exencion, dejarlo abierto. Costo aceptado: codigo nuevo en una guarda de
 seguridad, que exige control negativo (editar una linea firmada debe disparar).
+
+## Cierre (2026-11-16)
+
+Commit 6d045169: `medir()` ya no salta el archivo de la guarda ni su linea base;
+`cuenta_blob` descuenta solo las lineas de `LINEAS_FIRMADAS` (sha256 de la linea,
+ruta exacta). Dos lineas firmadas: el MAC sintetico de un control de la guarda y
+la ruta de evidencia de la linea base que cita un proyecto ajeno.
+`test_cada_linea_firmada_existe_y_lleva_dato` obliga a quitar firmas huerfanas.
+Controles en `tests/test_guarda_lineas_firmadas.py`; salidas y mutantes en
+`tasks/evidence/DEBT-GUARDA-PUBLICA-ARCHIVOS-EXENTOS-01.{fail,pass}.txt`.

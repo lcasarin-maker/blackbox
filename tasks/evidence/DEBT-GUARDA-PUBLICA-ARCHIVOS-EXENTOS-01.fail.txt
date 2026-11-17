@@ -1,0 +1,16 @@
+# close_check antes del arreglo, HEAD 8e3315a1 (master con el voto), worktree sin cambios
+$ python3 -m pytest -q -p no:cacheprovider tasks/checks/test_revision_privacidad.py::test_dato_nuevo_en_guarda_no_queda_exento
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________________ test_dato_nuevo_en_guarda_no_queda_exento ___________________
+tasks/checks/test_revision_privacidad.py:50: in test_dato_nuevo_en_guarda_no_queda_exento
+    assert resultado.returncode == 1, resultado.stdout + resultado.stderr
+E   AssertionError: .                                                                        [100%]
+E     1 passed in 0.04s
+E
+E   assert 0 == 1
+E    +  where 0 = CompletedProcess(args=['/opt/miniforge3/bin/python3', '-m', 'pytest', '-q', '-p', 'no:cacheprovider', 'tests/test_sin_...dout='.                                                                        [100%]\n1 passed in 0.04s\n', stderr='').returncode
+=========================== short test summary info ============================
+FAILED tasks/checks/test_revision_privacidad.py::test_dato_nuevo_en_guarda_no_queda_exento
+1 failed in 1.00s
+rc=1

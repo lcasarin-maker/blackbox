@@ -18,6 +18,11 @@ LAN salen de la evidencia, las fichas y los documentos, y los nombres ajenos de 
 de la entrega; la linea base pasa de 494 archivos (4361 datos) a 38 (80). Quedan los nombres de compatibilidad que la
 maquina usa hoy, las MAC e IP sinteticas de fixtures, la direccion de diseno del laboratorio y lo que la boleta #32 A
 deja sin tocar. Los tokens del patron ya no van literales en este archivo (ver TOKENS).
+
+Cerrada la exencion el 2026-11-16 (voto de Luis, DEBT-GUARDA-PUBLICA-ARCHIVOS-EXENTOS-01): este archivo y su linea base
+ya no se saltan enteros; un dato nuevo en cualquiera de los dos bloquea. Solo se exentan las lineas de LINEAS_FIRMADAS,
+cada una fijada por el sha256 de sus bytes y acotada a su ruta exacta: cambiar un caracter de una linea firmada la saca
+de la exencion.
 """
 
 from __future__ import annotations
@@ -111,6 +116,33 @@ def cuenta(texto: str) -> int:
     return len(PATRON.findall(texto))
 
 
+# Lineas exentas, por ruta exacta y sha256 de los bytes de la linea (sin el salto). Una linea entra solo si lleva un
+# dato imprescindible; `test_cada_linea_firmada_existe_y_lleva_dato` obliga a quitar la firma que ya no lo lleva.
+LINEAS_FIRMADAS: dict[str, frozenset[str]] = {
+    # el MAC sintetico del control de `test_la_guarda_detecta_un_archivo_nuevo_y_una_subida`
+    "tests/test_sin_datos_privados.py": frozenset({
+        "f6a7d5f98e669a0efd5426c46c83355e84f921fedbaf4eeed0afbc561edf5a3a",
+    }),
+    # la linea base registra por su ruta una evidencia cuyo nombre cita un proyecto ajeno
+    "tests/fixtures/datos_privados_baseline.json": frozenset({
+        "6912db590546a0c1aa2bb2ca3d95079c3be52e9082900a8b1124daf1fdc7c19a",
+    }),
+}
+
+
+def cuenta_blob(rel: str, data: bytes) -> int:
+    """Cuenta los datos de un blob; descuenta solo las lineas firmadas para esa ruta exacta."""
+    firmadas = LINEAS_FIRMADAS.get(rel)
+    if not firmadas:
+        return cuenta(data.decode("utf-8", errors="ignore"))
+    n = 0
+    for linea in data.split(b"\n"):
+        k = cuenta(linea.decode("utf-8", errors="ignore"))
+        if k and hashlib.sha256(linea).hexdigest() not in firmadas:
+            n += k
+    return n
+
+
 def archivos_versionados() -> list[str]:
     r = subprocess.check_output(["git", "ls-tree", "-r", "--name-only", "-z", "HEAD"], cwd=RAIZ)
     return [p for p in r.decode().split("\0") if p]
@@ -160,9 +192,7 @@ def medir() -> dict[str, int]:
         data = stream.read(size)
         if not (len(data) == size and stream.read(1) == b"\n"):
             raise LectorCaido(f"blob truncado: {rel}")
-        if rel in ("tests/fixtures/datos_privados_baseline.json", "tests/test_sin_datos_privados.py"):
-            continue
-        n = cuenta(data.decode("utf-8", errors="ignore"))
+        n = cuenta_blob(rel, data)
         if n:
             out[rel] = n
     return out
@@ -178,6 +208,14 @@ def test_el_repo_no_gana_datos_privados():
     base = _lee_o_could_not_run(_base_publicada)
     actual = _lee_o_could_not_run(medir)
     assert compara(actual, base) == []
+
+
+def test_cada_linea_firmada_existe_y_lleva_dato():
+    for rel, firmas in LINEAS_FIRMADAS.items():
+        blob = _lee_o_could_not_run(lambda: subprocess.check_output(["git", "show", f"HEAD:{rel}"], cwd=RAIZ))
+        con_dato = {hashlib.sha256(linea).hexdigest() for linea in blob.split(b"\n")
+                    if cuenta(linea.decode("utf-8", errors="ignore"))}
+        assert sorted(firmas - con_dato) == [], f"{rel}: firma sin linea con dato en HEAD: quitarla"
 
 
 def test_lo_que_queda_fuera_de_tasks_y_docs_lleva_su_motivo():
