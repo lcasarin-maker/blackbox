@@ -1,0 +1,34 @@
+# close_check despues del arreglo, HEAD 6d045169
+$ python3 -m pytest -q -p no:cacheprovider tasks/checks/test_revision_privacidad.py::test_dato_nuevo_en_guarda_no_queda_exento
+.                                                                        [100%]
+1 passed in 1.07s
+rc=0
+
+$ python3 -m pytest -q -p no:cacheprovider tests/test_sin_datos_privados.py tasks/checks/test_revision_privacidad.py tests/test_guarda_lineas_firmadas.py
+................                                                         [100%]
+16 passed in 16.69s
+rc=0
+
+# controles (a)-(d): rc literal de test_el_repo_no_gana_datos_privados en copias git aisladas (helper _corre de tests/test_guarda_lineas_firmadas.py)
+a dato nuevo en guarda: rc=1 | E         Left contains one more item: 'tests/test_sin_datos_privados.py: archivo nuevo con 1 dato(s) privado(s)' / 1 failed in 0.06s
+b linea firmada editada (ultimo caracter 2->3): rc=1 | E         Left contains one more item: 'tests/test_sin_datos_privados.py: archivo nuevo con 1 dato(s) privado(s)' / 1 failed in 0.06s
+c guarda sin cambios: rc=0 | 1 passed in 0.04s
+d1 base real con su linea firmada: rc=0 | 1 passed in 0.04s
+d2 base con linea con dato sin firma: rc=1 | E         Left contains one more item: 'tests/fixtures/datos_privados_baseline.json: archivo nuevo con 1 dato(s) privado(s)' / 1 failed in 0.06s
+d3 linea firmada de la base copiada a otra ruta: rc=1 | E         Left contains one more item: 'tests/fixtures/otro.json: archivo nuevo con 1 dato(s) privado(s)' / 1 failed in 0.07s
+
+# mutantes del arreglo (aplicados en el worktree y revertidos; cmp confirmo el archivo restaurado)
+== MUTANTE 1: exencion de archivo entero restaurada en medir()
+FAILED tests/test_guarda_lineas_firmadas.py::test_a_dato_nuevo_en_la_guarda_bloquea
+FAILED tests/test_guarda_lineas_firmadas.py::test_b_editar_una_linea_firmada_bloquea
+FAILED tests/test_guarda_lineas_firmadas.py::test_d_linea_base_firmada_pasa_y_sin_firma_bloquea
+FAILED tasks/checks/test_revision_privacidad.py::test_dato_nuevo_en_guarda_no_queda_exento
+4 failed, 3 passed in 7.56s
+== MUTANTE 2: firma sin ruta (union de todas las firmas para cualquier archivo)
+FAILED tests/test_guarda_lineas_firmadas.py::test_d_la_firma_no_viaja_a_otra_ruta
+FAILED tests/test_guarda_lineas_firmadas.py::test_cuenta_blob_solo_descuenta_lineas_firmadas
+2 failed, 4 passed in 5.95s
+== MUTANTE 3: firma huerfana (hash de la linea base alterado)
+FAILED tests/test_sin_datos_privados.py::test_el_repo_no_gana_datos_privados
+FAILED tests/test_sin_datos_privados.py::test_cada_linea_firmada_existe_y_lleva_dato
+2 failed, 4 passed in 3.41s
