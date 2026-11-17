@@ -8,7 +8,7 @@ severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-02
-close_check: {"cmd": "systemctl --user is-active --quiet bb-ultimo-aliento.service && ! bash tools/opt_in_captura.sh estado 2>&1 | grep -qE 'netconsole-arranque: no aplicada|pstore-tras-panico: no aplicada'", "expect": "exit_zero", "porque": "Falla hoy (medido 2026-11-02): bb-ultimo-aliento.service no existe como unidad de usuario (rc 4) y las capas netconsole-arranque y pstore-tras-panico salen 'no aplicada'. Pasa solo con el muestreador de 250 ms activo y esas dos capas aplicadas."}
+close_check: {"cmd": "bash tools/opt_in_captura.sh estado 2>&1 | grep -q 'netconsole-arranque: APLICADA'", "expect": "exit_zero", "porque": "Tras dividir la ficha el 2026-11-16 (voto de Luis) queda solo la capa netconsole-arranque; bb-ultimo-aliento pasa a DEBT-OBSERVADOR-ULTIMO-ALIENTO-INSTALADO-01. Falla hoy: estado dice no aplicada."}
 ---
 
 ## Medido el 2026-11-02
@@ -43,3 +43,17 @@ El `close_check` falla hoy por las dos ramas (unidad ausente y capas sin aplicar
 ## Limite
 
 Instalar no prueba que capture un corte real; eso lo prueba el proximo corte. Mientras no haya uno, el estado correcto es "instalado, sin captura probada".
+
+## Division 2026-11-16 (voto de Luis: dividir la ficha en dos)
+
+Medido hoy: `bb-ultimo-aliento.service` SI esta instalado y activo, como unidad de SISTEMA (no de usuario):
+`systemctl is-active` = active, `is-enabled` = enabled, arranque 2026-11-15 21:37, reinicio 2026-11-16 14:37, 0 reinicios
+posteriores, anillo `/var/lib/bb-ultimo-aliento/anillo.bin` (4 MiB) con mtime avanzando. El renglon "not-found" de la tabla de
+arriba esta obsoleto, y el close_check anterior preguntaba por `systemctl --user`, que nunca podia pasar. Eso pasa a
+`DEBT-OBSERVADOR-ULTIMO-ALIENTO-INSTALADO-01` (cerrada).
+
+Queda en esta ficha: `netconsole-arranque`. `opt_in_captura.sh plan netconsole-arranque` (2026-11-16): NO se puede aplicar,
+3 precondiciones sin cumplir: DRIVER sin definir en `/etc/blackbox/netconsole.conf`, falta `--kernel VER`, y
+`netconsole-runtime` esta aplicada (dos destinos duplicarian cada mensaje). Aplicarla exige retirar el runtime y deja la
+captura apagada hasta el siguiente reinicio. Estado de las demas capas: `pstore-tras-panico`, `panic-temprano`, `grub-marca`
+aplicadas. Decision pendiente de Luis: retirar el runtime con hueco, o esperar a una ventana.
