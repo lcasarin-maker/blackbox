@@ -3,10 +3,11 @@ id: DEBT-OBSERVADORES-CONSTRUIDOS-SIN-INSTALAR-01
 kind: task
 domain: SYSTEM
 title: "Los observadores que sobreviven a un corte estan construidos y votados pero no instalados: el bucle de reinicios del 2026-11-01 y 11-02 corrio sin ninguno"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
+closed_at: 2026-11-16
 created: 2026-11-02
 close_check: {"cmd": "bash tools/opt_in_captura.sh estado 2>&1 | grep -q 'netconsole-arranque: APLICADA'", "expect": "exit_zero", "porque": "Tras dividir la ficha el 2026-11-16 (voto de Luis) queda solo la capa netconsole-arranque; bb-ultimo-aliento pasa a DEBT-OBSERVADOR-ULTIMO-ALIENTO-INSTALADO-01. Falla hoy: estado dice no aplicada."}
 ---
@@ -57,3 +58,12 @@ Queda en esta ficha: `netconsole-arranque`. `opt_in_captura.sh plan netconsole-a
 `netconsole-runtime` esta aplicada (dos destinos duplicarian cada mensaje). Aplicarla exige retirar el runtime y deja la
 captura apagada hasta el siguiente reinicio. Estado de las demas capas: `pstore-tras-panico`, `panic-temprano`, `grub-marca`
 aplicadas. Decision pendiente de Luis: retirar el runtime con hueco, o esperar a una ventana.
+
+## Cierre 2026-11-16 (Luis aplico netconsole-arranque con sudo)
+
+`opt_in_captura.sh estado`: `netconsole-arranque: APLICADA`, `netconsole-runtime: no aplicada` (retirada para aplicar; la
+captura estuvo apagada desde ese momento hasta el proximo arranque). Verificado por el orquestador: el initrd
+`/boot/initrd.img-6.17.0-1032-nvidia` trae `r8127` y `netconsole`; `/etc/initramfs-tools/modules` lista `r8127` y `netconsole`
+en ese orden; `/etc/default/grub.d/90-bb-netconsole.cfg` anade `netconsole.netconsole=+6665@...` solo a `_DEFAULT` (las entradas
+recovery quedan sin el, como salida). Limite declarado: "aplicada" no es "funciona en el arranque"; esa prueba es
+`DEBT-NETCONSOLE-ARRANQUE-SIN-PRUEBA-DE-ARRANQUE-01`. Solo instrumenta 6.17.0-1032; el 7.0 queda sin la capa.
