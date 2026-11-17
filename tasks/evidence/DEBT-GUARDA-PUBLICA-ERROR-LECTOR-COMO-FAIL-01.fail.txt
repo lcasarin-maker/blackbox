@@ -1,0 +1,175 @@
+# close_check contra la guarda de HEAD 8080b02d sin arreglo (copia extraida de HEAD; la corrida previa en el worktree dio lo mismo y su temporal fue sobrescrito por otra sesion; usuario de las rutas temporales sustituido por @BB_USUARIO@)
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+___________________ test_error_lector_es_could_not_run[base] ___________________
+
+tmp_path = PosixPath('/tmp/claude-1000/pytest-of-@BB_USUARIO@/pytest-112/test_error_lector_es_could_not0')
+fallo = 'base'
+
+    @pytest.mark.parametrize('fallo', ['base', 'git'])
+    def test_error_lector_es_could_not_run(tmp_path, fallo):
+        resultado = medir_copia(tmp_path / 'roto', base='JSON roto' if fallo == 'base' else '{}', sin_git=fallo == 'git')
+>       assert resultado.returncode == 2, resultado.stdout + resultado.stderr
+E       AssertionError: F                                                                        [100%]
+E         =================================== FAILURES ===================================
+E         _____________________ test_el_repo_no_gana_datos_privados ______________________
+E         
+E             def test_el_repo_no_gana_datos_privados():
+E         >       base = _base_publicada()
+E                        ^^^^^^^^^^^^^^^^^
+E         
+E         tests/test_sin_datos_privados.py:158: 
+E         _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+E         tests/test_sin_datos_privados.py:118: in _base_publicada
+E             return json.loads(subprocess.check_output(
+E         /opt/miniforge3/lib/python3.12/json/__init__.py:346: in loads
+E             return _default_decoder.decode(s)
+E                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         /opt/miniforge3/lib/python3.12/json/decoder.py:338: in decode
+E             obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+E                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E         _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+E         
+E         self = <json.decoder.JSONDecoder object at 0xf259c3a5cb30>, s = 'JSON roto'
+E         idx = 0
+E         
+E             def raw_decode(self, s, idx=0):
+E                 """Decode a JSON document from ``s`` (a ``str`` beginning with
+E                 a JSON document) and return a 2-tuple of the Python
+E                 representation and the index in ``s`` where the document ended.
+E             
+E                 This can be used to decode a JSON document from a string that may
+E                 have extraneous data at the end.
+E             
+E                 """
+E                 try:
+E                     obj, end = self.scan_once(s, idx)
+E                 except StopIteration as err:
+E         >           raise JSONDecodeError("Expecting value", s, err.value) from None
+E         E           json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+E         
+E         /opt/miniforge3/lib/python3.12/json/decoder.py:356: JSONDecodeError
+E         =========================== short test summary info ============================
+E         FAILED tests/test_sin_datos_privados.py::test_el_repo_no_gana_datos_privados
+E         1 failed in 0.07s
+E         
+E       assert 1 == 2
+E        +  where 1 = CompletedProcess(args=['/opt/miniforge3/bin/python3', '-m', 'pytest', '-q', '-p', 'no:cacheprovider', 'tests/test_sin_...=======\nFAILED tests/test_sin_datos_privados.py::test_el_repo_no_gana_datos_privados\n1 failed in 0.07s\n', stderr='').returncode
+
+/tmp/claude-1000/af1dd-guarda/head/tasks/checks/test_revision_privacidad.py:41: AssertionError
+___________________ test_error_lector_es_could_not_run[git] ____________________
+
+tmp_path = PosixPath('/tmp/claude-1000/pytest-of-@BB_USUARIO@/pytest-112/test_error_lector_es_could_not1')
+fallo = 'git'
+
+    @pytest.mark.parametrize('fallo', ['base', 'git'])
+    def test_error_lector_es_could_not_run(tmp_path, fallo):
+        resultado = medir_copia(tmp_path / 'roto', base='JSON roto' if fallo == 'base' else '{}', sin_git=fallo == 'git')
+>       assert resultado.returncode == 2, resultado.stdout + resultado.stderr
+E       AssertionError: F                                                                        [100%]
+E         =================================== FAILURES ===================================
+E         _____________________ test_el_repo_no_gana_datos_privados ______________________
+E         
+E             def test_el_repo_no_gana_datos_privados():
+E         >       base = _base_publicada()
+E                        ^^^^^^^^^^^^^^^^^
+E         
+E         tests/test_sin_datos_privados.py:158: 
+E         _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+E         tests/test_sin_datos_privados.py:118: in _base_publicada
+E             return json.loads(subprocess.check_output(
+E         /opt/miniforge3/lib/python3.12/subprocess.py:466: in check_output
+E             return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+E         _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+E         
+E         input = None, capture_output = False, timeout = None, check = True
+E         popenargs = (['git', 'show', 'HEAD:tests/fixtures/datos_privados_baseline.json'],)
+E         kwargs = {'cwd': PosixPath('/tmp/claude-1000/pytest-of-@BB_USUARIO@/pytest-112/test_error_lector_es_could_not1/roto'), 'stdout': -1}
+E         process = <Popen: returncode: 128 args: ['git', 'show', 'HEAD:tests/fixtures/datos_pri...>
+E         stdout = b'', stderr = None, retcode = 128
+E         
+E             def run(*popenargs,
+E                     input=None, capture_output=False, timeout=None, check=False, **kwargs):
+E                 """Run command with arguments and return a CompletedProcess instance.
+E             
+E                 The returned instance will have attributes args, returncode, stdout and
+E                 stderr. By default, stdout and stderr are not captured, and those attributes
+E                 will be None. Pass stdout=PIPE and/or stderr=PIPE in order to capture them,
+E                 or pass capture_output=True to capture both.
+E             
+E                 If check is True and the exit code was non-zero, it raises a
+E                 CalledProcessError. The CalledProcessError object will have the return code
+E                 in the returncode attribute, and output & stderr attributes if those streams
+E                 were captured.
+E             
+E                 If timeout (seconds) is given and the process takes too long,
+E                  a TimeoutExpired exception will be raised.
+E             
+E                 There is an optional argument "input", allowing you to
+E                 pass bytes or a string to the subprocess's stdin.  If you use this argument
+E                 you may not also use the Popen constructor's "stdin" argument, as
+E                 it will be used internally.
+E             
+E                 By default, all communication is in bytes, and therefore any "input" should
+E                 be bytes, and the stdout and stderr will be bytes. If in text mode, any
+E                 "input" should be a string, and stdout and stderr will be strings decoded
+E                 according to locale encoding, or by "encoding" if set. Text mode is
+E                 triggered by setting any of text, encoding, errors or universal_newlines.
+E             
+E                 The other arguments are the same as for the Popen constructor.
+E                 """
+E                 if input is not None:
+E                     if kwargs.get('stdin') is not None:
+E                         raise ValueError('stdin and input arguments may not both be used.')
+E                     kwargs['stdin'] = PIPE
+E             
+E                 if capture_output:
+E                     if kwargs.get('stdout') is not None or kwargs.get('stderr') is not None:
+E                         raise ValueError('stdout and stderr arguments may not be used '
+E                                          'with capture_output.')
+E                     kwargs['stdout'] = PIPE
+E                     kwargs['stderr'] = PIPE
+E             
+E                 with Popen(*popenargs, **kwargs) as process:
+E                     try:
+E                         stdout, stderr = process.communicate(input, timeout=timeout)
+E                     except TimeoutExpired as exc:
+E                         process.kill()
+E                         if _mswindows:
+E                             # Windows accumulates the output in a single blocking
+E                             # read() call run on child threads, with the timeout
+E                             # being done in a join() on those threads.  communicate()
+E                             # _after_ kill() is required to collect that and add it
+E                             # to the exception.
+E                             exc.stdout, exc.stderr = process.communicate()
+E                         else:
+E                             # POSIX _communicate already populated the output so
+E                             # far into the TimeoutExpired exception.
+E                             process.wait()
+E                         raise
+E                     except:  # Including KeyboardInterrupt, communicate handled that.
+E                         process.kill()
+E                         # We don't call process.wait() as .__exit__ does that for us.
+E                         raise
+E                     retcode = process.poll()
+E                     if check and retcode:
+E         >               raise CalledProcessError(retcode, process.args,
+E                                                  output=stdout, stderr=stderr)
+E         E               subprocess.CalledProcessError: Command '['git', 'show', 'HEAD:tests/fixtures/datos_privados_baseline.json']' returned non-zero exit status 128.
+E         
+E         /opt/miniforge3/lib/python3.12/subprocess.py:571: CalledProcessError
+E         ----------------------------- Captured stderr call -----------------------------
+E         fatal: no es un repositorio git (ni ninguno de los directorios superiores): .git
+E         =========================== short test summary info ============================
+E         FAILED tests/test_sin_datos_privados.py::test_el_repo_no_gana_datos_privados
+E         1 failed in 0.09s
+E         
+E       assert 1 == 2
+E        +  where 1 = CompletedProcess(args=['/opt/miniforge3/bin/python3', '-m', 'pytest', '-q', '-p', 'no:cacheprovider', 'tests/test_sin_...=======\nFAILED tests/test_sin_datos_privados.py::test_el_repo_no_gana_datos_privados\n1 failed in 0.09s\n', stderr='').returncode
+
+/tmp/claude-1000/af1dd-guarda/head/tasks/checks/test_revision_privacidad.py:41: AssertionError
+=========================== short test summary info ============================
+FAILED ../../../../../../../tmp/claude-1000/af1dd-guarda/head/tasks/checks/test_revision_privacidad.py::test_error_lector_es_could_not_run[base]
+FAILED ../../../../../../../tmp/claude-1000/af1dd-guarda/head/tasks/checks/test_revision_privacidad.py::test_error_lector_es_could_not_run[git]
+2 failed in 2.07s
+rc=1

@@ -3,7 +3,8 @@ id: DEBT-GUARDA-PUBLICA-ERROR-LECTOR-COMO-FAIL-01
 kind: debt
 domain: SECURITY
 title: "Distinguir fallo del lector de hallazgo con salida de instrumento y controles para base rota y git ausente."
-status: open
+status: done
+closed_at: 2026-11-16
 severity: P2
 origin: measured
 owner: blackbox
