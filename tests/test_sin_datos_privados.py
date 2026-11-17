@@ -31,6 +31,8 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 RAIZ = Path(__file__).resolve().parent.parent
 BASE = Path(__file__).parent / "fixtures" / "datos_privados_baseline.json"
 IP_RFC1918 = (
@@ -114,9 +116,25 @@ def archivos_versionados() -> list[str]:
     return [p for p in r.decode().split("\0") if p]
 
 
+class LectorCaido(Exception):
+    """El instrumento no pudo leer HEAD o la linea base: eso es COULD_NOT_RUN, nunca un hallazgo."""
+
+
 def _base_publicada() -> dict[str, int]:
-    return json.loads(subprocess.check_output(
+    base = json.loads(subprocess.check_output(
         ["git", "show", "HEAD:tests/fixtures/datos_privados_baseline.json"], cwd=RAIZ))
+    if not (isinstance(base, dict) and all(isinstance(k, str) and type(v) is int for k, v in base.items())):
+        raise LectorCaido("la linea base no es un mapa archivo -> cuenta")
+    return base
+
+
+def _lee_o_could_not_run(lector):
+    """Medido 2026-11-13 (revision G4/C7): base ilegible o .git ausente salian como rc=1, igual que un dato privado.
+    Un fallo del lector termina la sesion con rc 2 (COULD_NOT_RUN); solo `compara` puede producir rc 1."""
+    try:
+        return lector()
+    except (OSError, subprocess.CalledProcessError, ValueError, LectorCaido) as e:
+        pytest.exit(f"COULD_NOT_RUN: la guarda no pudo leer su sujeto: {e!r}", returncode=2)
 
 
 def medir() -> dict[str, int]:
@@ -136,10 +154,12 @@ def medir() -> dict[str, int]:
     out: dict[str, int] = {}
     for rel, oid in blobs:
         header = stream.readline().split()
-        assert len(header) == 3 and header[0] == oid and header[1] == b"blob", "blob ilegible"
+        if not (len(header) == 3 and header[0] == oid and header[1] == b"blob"):
+            raise LectorCaido(f"blob ilegible: {rel}")
         size = int(header[2])
         data = stream.read(size)
-        assert len(data) == size and stream.read(1) == b"\n", "blob truncado"
+        if not (len(data) == size and stream.read(1) == b"\n"):
+            raise LectorCaido(f"blob truncado: {rel}")
         if rel in ("tests/fixtures/datos_privados_baseline.json", "tests/test_sin_datos_privados.py"):
             continue
         n = cuenta(data.decode("utf-8", errors="ignore"))
@@ -155,12 +175,13 @@ def compara(actual: dict[str, int], base: dict[str, int]) -> list[str]:
 
 
 def test_el_repo_no_gana_datos_privados():
-    base = _base_publicada()
-    assert compara(medir(), base) == []
+    base = _lee_o_could_not_run(_base_publicada)
+    actual = _lee_o_could_not_run(medir)
+    assert compara(actual, base) == []
 
 
 def test_lo_que_queda_fuera_de_tasks_y_docs_lleva_su_motivo():
-    base = _base_publicada()
+    base = _lee_o_could_not_run(_base_publicada)
     fuera = {r for r in base if not r.startswith(("tasks/", "docs/"))}
     assert sorted(fuera - MOTIVOS.keys()) == [], "en la linea base sin motivo en MOTIVOS"
     assert sorted(MOTIVOS.keys() - fuera) == [], "motivo de algo que ya no esta en la linea base: quitarlo"
