@@ -3,12 +3,17 @@ id: DEBT-OOMD-PROBAR-Y-DIAGNOSTICAR-01
 kind: task
 domain: MEMORY
 title: "Probar systemd-oomd en esta maquina, diagnosticar su fallo de registro y medir que mataria"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-12
 close_check: {"cmd": "grep -q oomd_mata_y_medido tasks/evidence/DEBT-OOMD-PROBAR-Y-DIAGNOSTICAR-01/medicion.txt", "expect": "exit_zero", "porque": "Peticion de Luis 2026-10-12: medir (no inferir), diagnosticar oomctl y buscar correcciones. Cierra con una medicion que diga si oomd mata un cgroup bajo presion en esta maquina, a cual y en cuanto tiempo, y su convivencia con earlyoom y el escalon de bb-usable."}
+closure_type: verified
+closed_at: 2026-11-18
+evidence:
+  medicion: tasks/evidence/DEBT-OOMD-PROBAR-Y-DIAGNOSTICAR-01/medicion.txt
+reason: "CERRADO 2026-11-18 con un evento real, no con la prueba de juguete: oomd mato app-orca-1461376.scope (70 procesos) el 2026-11-17 19:51:50 por presion 55.26 % > 50 % durante mas de 20 s. La decision de politica pasa a DEBT-OOMD-MATA-EL-SCOPE-DE-ORCA-CON-TODAS-LAS-SESIONES-01."
 ---
 
 ## Medido (2026-10-12)
@@ -41,3 +46,8 @@ Dejar systemd-oomd activo y medir la presion por slice mientras se diagnostica e
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Disparador doble, ninguno es de solo lectura: (a) el log de depuracion exige un drop-in de root (`sudo systemctl edit systemd-oomd` con `Environment=SYSTEMD_LOG_LEVEL=debug` y `sudo systemctl restart systemd-oomd`; el `edit` recarga systemd, mismo riesgo P1 de la GPU: va en la ventana del motor de 60 min que anuncia Luis); (b) el kill medido arriesga sesiones y motor (la ficha lo dice desde el 2026-10-13): otra vez esa ventana, con Luis presente. Paso exacto que falta: repetir la prueba del slice `bbtest-oomd.slice` leyendo cada segundo su `memory.pressure` hasta que `some avg10` supere el 60 % durante 20 s, anotar que cgroup mata oomd y en cuanto tiempo, y escribir `oomd_mata_y_medido` en `medicion.txt`.
+
+## Cierre 2026-11-18 (voto de Luis: registrar la medicion y abrir ficha de politica)
+
+Los cuatro pendientes de "Que falta": (1) el log de depuracion con root ya no hace falta: el journal trae el evento; (2) `oomctl` responde hoy (el 2026-10-12 expiraba) y muestra `user@1000.service` vigilado al 50 % durante 20 s; (3) que cgroup mata oomd: el scope de Orca, medido, con su fecha y su presion; (4) la convivencia queda medida (earlyoom no actuo con `-m 10` y 20.56 % de memoria disponible; `bb-usable` estaba inactivo) y la DECISION de que hacer pasa a `DEBT-OOMD-MATA-EL-SCOPE-DE-ORCA-CON-TODAS-LAS-SESIONES-01`. Las slices de prueba, `DEBT-SLICES-OOMD-DE-PRUEBA-CADUCAN-2026-12-18-01`. Limite declarado: esta medicion es UN evento; no se midio que habria pasado sin ese scope.
+

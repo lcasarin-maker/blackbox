@@ -1,0 +1,34 @@
+# DEBT-OOMD-PROBAR-Y-DIAGNOSTICAR-01 -- medicion con un evento REAL, 2026-11-17 (registrada 2026-11-18)
+# Fuente: journal del sistema y de usuario de la ATOM, copiado tal cual salvo el nombre del host, sustituido por <host> (blackbox es publico).
+# Marca de la ficha: oomd_mata_y_medido
+
+## 1. systemd-oomd mato un cgroup entero (journalctl -u systemd-oomd, unica linea 'Killed' que conserva el journal)
+2026-11-17T19:51:50-06:00 <host> systemd-oomd[1433463]: Killed /user.slice/user-1000.slice/user@1000.service/app.slice/app-orca-1461376.scope due to memory pressure for /user.slice/user-1000.slice/user@1000.service being 55.26% > 50.00% for > 20s with reclaim activity
+
+## 2. Lo que el gestor de usuario registro de ese scope (journalctl --user, 19:51:30-19:52:30)
+2026-11-17T19:51:50-06:00 <host> systemd[2875]: app-orca-1461376.scope: systemd-oomd killed 70 process(es) in this unit.
+2026-11-17T19:51:50-06:00 <host> systemd[2875]: app-orca-1461376.scope: Failed with result 'oom-kill'.
+2026-11-17T19:51:50-06:00 <host> systemd[2875]: app-orca-1461376.scope: Consumed 5h 22min 7.269s CPU time, 32.7G memory peak, 320.0K memory swap peak.
+2026-11-17T19:52:06-06:00 <host> systemd[2875]: Started app-orca-3414058.scope.
+
+## 3. Convivencia: earlyoom NO actuo (journalctl -u earlyoom, 19:49:50-19:53:50: solo sus latidos de memoria, ninguna linea 'sending SIG')
+2026-11-17T19:50:48-06:00 <host> earlyoom[1433045]: mem avail: 67048 of 123970 MiB (54.08%), swap free: 9798 of 16383 MiB (59.80%)
+2026-11-17T19:51:48-06:00 <host> earlyoom[1433045]: mem avail: 25483 of 123970 MiB (20.56%), swap free: 9195 of 16383 MiB (56.13%)
+2026-11-17T19:52:48-06:00 <host> earlyoom[1433045]: mem avail: 56906 of 123970 MiB (45.90%), swap free: 9428 of 16383 MiB (57.55%)
+2026-11-17T19:53:48-06:00 <host> earlyoom[1433045]: mem avail: 56184 of 123970 MiB (45.32%), swap free: 9431 of 16383 MiB (57.56%)
+
+## 4. Convivencia: bb-usable NO estaba armado (journalctl --user -u bb-usable, 19:45-19:55; systemctl --user is-active):
+-- No entries --
+is-active: inactive
+
+## 5. oomctl responde hoy (el 2026-10-12 expiraba); vigila user@1000.service al 50 % durante 20 s
+Default Memory Pressure Limit: 60.00%
+Default Memory Pressure Duration: 20s
+	Path: /user.slice/user-1000.slice/user@1000.service
+		Memory Pressure Limit: 50.00%
+
+## Lectura (no es dato, es mi lectura de las cinco secciones)
+- A cual: app-orca-1461376.scope, el scope de la app de escritorio donde corren las sesiones de agentes (70 procesos, 32.7G de pico de memoria).
+- Cuando: presion de user@1000.service 55.26 % > 50 % durante mas de 20 s con actividad de reclaim; Orca quedo relanzado 16 s despues (19:52:06).
+- Convivencia: earlyoom (`-m 10`, es decir 10 % de memoria disponible, leido de /proc/<pid>/cmdline) vio memoria disponible bajar de 54.08 % a 20.56 % y no cruzo su umbral; oomd actuo por PRESION, no por falta de memoria. bb-usable estaba inactivo.
+- NO medido: que habria matado oomd sin ese scope, ni si ManagedOOMPreference lo habria desviado (decision pendiente: DEBT-OOMD-MATA-EL-SCOPE-DE-ORCA-CON-TODAS-LAS-SESIONES-01).

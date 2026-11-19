@@ -312,7 +312,7 @@ cmd_prueba() {
 
 # --- vllm: arranca vLLM REAL (modelo chico) bajo el envoltorio, mide memoria y lo apaga -------------
 # Uso: sudo BB_LAB_MEM=16G BB_LAB_IMAGE=vllm/vllm-openai:v0.27.1 bash tools/portero_docker_lab.sh up
-#      sudo bash tools/portero_docker_lab.sh vllm [modelo=qwen3-8b-nvfp4] [gpu_gib=12]
+#      sudo bash tools/portero_docker_lab.sh vllm <modelo> [gpu_gib=12]   (modelo: carpeta de /srv/ai/models/llm; sin default)
 # Mide: tope de cgroup que dejo el envoltorio, pico de cgroup, MemAvailable minimo del anfitrion a 1 Hz durante la carga,
 # si el servidor responde una peticion, y que el contenedor se apaga y deja el lab limpio. Aborta (docker stop) si
 # MemAvailable baja de 12 GiB: el lab NO puede repetir lo que el techo evita.
@@ -320,7 +320,8 @@ cmd_vllm() {
     requiere_root vllm
     guarda
     asegura_lab
-    local modelo=${1:-qwen3-8b-nvfp4} gpu_gib=${2:-12} n=bblab-vllm cg t0 min_kb=999999999 estado=""
+    local modelo=${1:-} gpu_gib=${2:-12} n=bblab-vllm cg t0 min_kb=999999999 estado=""
+    [ -n "$modelo" ] || die "uso: vllm <modelo> [gpu_gib]; el modelo es una carpeta de /srv/ai/models/llm (el default anterior se borro el 2026-11-09, DGX-709)"
     local ruta="/srv/ai/models/llm/$modelo"
     [ -d "$ruta" ] || die "no existe el modelo $ruta"
     case "$IMAGE" in vllm/*) ;; *)

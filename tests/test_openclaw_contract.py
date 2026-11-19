@@ -11,21 +11,21 @@ from tools import openclaw_contract as contract
 
 def _bundle() -> dict[str, Any]:
     return {
-        "models_response": {"status_code": 200, "body": {"object": "list", "data": [{"id": "gpt-oss-120b"}]}},
+        "models_response": {"status_code": 200, "body": {"object": "list", "data": [{"id": "nemotron-local"}]}},
         "openclaw_config": {
-            "agents": {"defaults": {"model": {"primary": "vllm/gpt-oss-120b"}}},
+            "agents": {"defaults": {"model": {"primary": "vllm/nemotron-local"}}},
             "models": {"providers": {"vllm": {"models": [{
-                "id": "gpt-oss-120b", "contextWindow": 131072,
+                "id": "nemotron-local", "contextWindow": 131072,
                 "contextTokens": 120000, "maxTokens": 8192,
             }]}}},
         },
         "checkpoint_context": {
-            "checkpoint_id": "org/gpt-oss-120b@sha256:abc",
-            "served_model_id": "gpt-oss-120b",
+            "checkpoint_id": "org/nemotron-local@sha256:abc",
+            "served_model_id": "nemotron-local",
             "context_limit_tokens": 131072,
         },
         "request_observation": {
-            "model_id": "gpt-oss-120b", "checkpoint_id": "org/gpt-oss-120b@sha256:abc",
+            "model_id": "nemotron-local", "checkpoint_id": "org/nemotron-local@sha256:abc",
             "prompt_tokens": 120000, "max_tokens": 8192,
         },
     }
@@ -35,7 +35,7 @@ def test_valid_captured_contract_computes_bounded_generation_budget_without_prom
     result = contract.analyze(_bundle(), "capture.json")
     assert result["status"] == "observed"
     assert result["capture_path_provenance"] == "caller_supplied_unverified"
-    assert result["checks"]["client_model"]["configured_model_id"] == "gpt-oss-120b"
+    assert result["checks"]["client_model"]["configured_model_id"] == "nemotron-local"
     assert result["checks"]["configured_generation_budget"]["output_budget_tokens"] == 8192
     assert result["checks"]["request_generation_budget"]["output_budget_tokens"] == 11072
     assert result["could_not_run_count"] == 0
@@ -169,7 +169,7 @@ def test_unreadable_shapes_duplicates_and_incomplete_openclaw_model_are_unknown_
     assert result["checks"]["client_model"]["status"] == "unknown"
 
     bundle = _bundle()
-    bundle["models_response"]["body"]["data"].append({"id": "gpt-oss-120b"})
+    bundle["models_response"]["body"]["data"].append({"id": "nemotron-local"})
     result = contract.analyze(bundle, "capture.json")
     assert result["checks"]["models_schema"]["status"] == "mismatch"
 

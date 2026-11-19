@@ -60,8 +60,7 @@ def directorio() -> Path:
 
 def config_motor() -> Path:
     """La config del motor, la misma variable y el mismo default que `bb status`."""
-    nueva, vieja = Path("/srv/Atlas/gateway/active_engine.json"), Path("/srv/ai/gateway/active_engine.json")  # el gateway pasa de /srv/ai a /srv/Atlas (DGX-703)
-    return Path(os.environ.get("BLACKBOX_MOTOR_CONFIG") or (nueva if nueva.exists() else vieja))
+    return Path(os.environ.get("BLACKBOX_MOTOR_CONFIG") or "/srv/Atlas/gateway/active_engine.json")  # DGX-703: /srv/ai/gateway ya no existe
 
 
 def iso(t: datetime) -> str:

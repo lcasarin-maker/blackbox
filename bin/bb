@@ -470,7 +470,7 @@ psi_campo() { # recurso, linea(some|full), clave(avg10|avg60) -> valor o ""
 GATEWAY_URL="${BLACKBOX_GATEWAY_URL:-http://127.0.0.1:8000/v1/models}"
 GATEWAY_CHAT="${BLACKBOX_GATEWAY_CHAT:-http://127.0.0.1:8000/v1/chat/completions}"
 MOTOR_UNIDAD="${BLACKBOX_MOTOR_UNIDAD:-ai-nemotron.service}"
-MOTOR_CONFIG="${BLACKBOX_MOTOR_CONFIG:-$([ -f /srv/Atlas/gateway/active_engine.json ] && echo /srv/Atlas/gateway/active_engine.json || echo /srv/ai/gateway/active_engine.json)}"  # el gateway pasa de /srv/ai a /srv/Atlas (DGX-703): la ruta nueva gana si existe
+MOTOR_CONFIG="${BLACKBOX_MOTOR_CONFIG:-/srv/Atlas/gateway/active_engine.json}"  # el gateway vive en /srv/Atlas desde DGX-703; /srv/ai/gateway ya no existe
 MOTOR_VOLCADOS="${BLACKBOX_MOTOR_VOLCADOS:-/srv/ai/models/_coredumps}"
 
 gateway_modelo() { # -> nombre del modelo servido, o "" si no responde
@@ -3548,6 +3548,7 @@ bb -- caja negra de la maquina
   bb origen [--desde T] [--hasta T]  registros de origen guardados, agrupados por lanzador
   bb sigterm ["hace X"]  QUIEN mando SIGTERM/SIGKILL a quien (DEBT-SIGTERM-SIN-CAUSA-RAIZ)
   bb cap <GB> <cmd...>   lanza algo con techo de memoria propio (el kernel lo aplica)
+  bb techo --pid N [--max-gib G] [--sin-swap]  techo de memoria del cgroup de un proceso (JSON; rc 0 acotado, 1 no, 2 no se pudo leer)
   bb portero estado      que arboles pesados ve el portero y que decidiria (solo lectura)
   bb portero run --clase suite -- <cmd...>  pide turno en la cola FIFO y lanza con el tope de su clase
   bb install             instala los timers de usuario (muestreo cada minuto, drift diario)
@@ -3590,6 +3591,7 @@ case "${1:-}" in
   proveedor-gpu) shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.verifica_proveedor_gpu "$@") ;;
   calor)    shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.calibra_calor "$@") ;;
   enjambre) shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.atribucion_enjambre "$@") ;;
+  techo)    shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.techo_memoria "$@") ;;
   install)  shift; cmd_install "$@" ;;
   ""|-h|--help|help) usage ;;
   *) echo "subcomando desconocido: $1" >&2; usage >&2; exit 2 ;;

@@ -1,0 +1,25 @@
+# Parche PROPUESTO para tools/idle_skill_candidates.py del consumidor de conocimiento (NO aplicado: ese repo no se edita desde blackbox).
+# Probado: el detector de tests/test_dgx483_blackbox_telemetry_ownership.py del consumidor da [] sobre el archivo parcheado y
+# ['lee o escribe los techos de memoria del kernel'] sobre el original; ver pass.txt.
+--- a/tools/idle_skill_candidates.py
++++ b/tools/idle_skill_candidates.py
+@@ -454,12 +454,13 @@
+ 
+ 
+ def _bounded():
+-    group = Path("/proc/self/cgroup").read_text().splitlines()[0].split(":", 2)[2]
+-    cgroup = Path("/sys/fs/cgroup") / group.lstrip("/")
+-    maximum = (cgroup / "memory.max").read_text().strip()
+-    swap = (cgroup / "memory.swap.max").read_text().strip()
+-    if maximum == "max" or int(maximum) > 2 * 1024 ** 3 or swap != "0":
+-        raise RuntimeError("worker requiere cgroup de hasta2GiB y sin swap")
++    import os
++    import subprocess
++    bb = Path.home() / "projects" / "blackbox" / "bin" / "bb"
++    r = subprocess.run([str(bb), "techo", "--pid", str(os.getpid()), "--max-gib", "2", "--sin-swap"],
++                       capture_output=True, text=True, timeout=15)
++    if r.returncode != 0:
++        raise RuntimeError("worker requiere cgroup de hasta2GiB y sin swap: " + r.stdout.strip())
+ 
+ 
+ def _result_exit_status(result):

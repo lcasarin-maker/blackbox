@@ -249,7 +249,7 @@ def _openclaw() -> dict[str, Any]:
             "function": {"name": "mock", "arguments": '{"ok":true}'}}]}, "finish_reason": None}]}) + "\n\n"
     tool += "data: " + json.dumps({"id": "c", "object": "chat.completion.chunk", "choices": [
         {"index": 0, "delta": {}, "finish_reason": "tool_calls"}]}) + "\n\n" + "data: [DONE]\n\n"
-    doc["positive_request"] = {"raw_request": {"model": "gpt-oss-120b"}, "raw_response": {"status_code": 200},
+    doc["positive_request"] = {"raw_request": {"model": "nemotron-local"}, "raw_response": {"status_code": 200},
                                "sse_raw": tool, "expected_tool_calls": [{"name": "mock", "arguments": {"ok": True}}]}
     return doc
 

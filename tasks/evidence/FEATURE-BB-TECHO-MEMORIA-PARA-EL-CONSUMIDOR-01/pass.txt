@@ -1,0 +1,30 @@
+# FEATURE-BB-TECHO-MEMORIA-PARA-EL-CONSUMIDOR-01 -- salidas literales, 2026-11-18
+
+## Contra scopes REALES de systemd de usuario (bb techo desde la funcion parcheada del consumidor)
+$ systemd-run --user --scope -p MemoryMax=2G -p MemorySwapMax=0 python3 corre_bounded.py    # bb de este worktree
+bounded OK (no lanzo)
+rc=0
+$ python3 corre_bounded.py    # sin scope: cgroup del shell
+RuntimeError: worker requiere cgroup de hasta2GiB y sin swap: {"formato": "bb-techo-memoria/1", ..., "memory_max_bytes": "max", "memory_swap_max_bytes": "max", "veredicto": "NO_ACOTADO"}
+rc=1
+$ systemd-run --user --scope -p MemoryMax=4G -p MemorySwapMax=0 python3 corre_bounded.py    # excede lo exigido (2G)
+RuntimeError: worker requiere cgroup de hasta2GiB y sin swap: {"formato": "bb-techo-memoria/1", ..., "memory_max_bytes": 4294967296, "memory_swap_max_bytes": 0, "veredicto": "NO_ACOTADO"}
+rc=1
+
+## Falla cerrado cuando bb no tiene el verbo (master antes de aterrizar este cambio)
+$ bash ~/projects/blackbox/bin/bb techo --pid 1
+subcomando desconocido: techo
+rc=2   -> el consumidor ve returncode != 0 y levanta RuntimeError: no corre sin techo
+
+## Detector de la suite del consumidor (tests/test_dgx483_blackbox_telemetry_ownership.py::conductas_fisicas, importado solo de lectura)
+idle_original.py  -> ['lee o escribe los techos de memoria del kernel']
+idle_parcheado.py -> []
+$ cd <repo-consumidor> && python3 -m pytest -q tests/test_dgx483_blackbox_telemetry_ownership.py   # hoy, sin editar ese repo
+E       tools/idle_skill_candidates.py: lee o escribe los techos de memoria del kernel
+1 failed, 13 passed
+
+## Pruebas de blackbox
+$ python3 -m pytest -q tests/test_techo_memoria.py
+15 passed
+Mutantes (cada uno hace fallar las pruebas): A lo ilegible se lee NO_ACOTADO -> 4 failed; B limite estricto (>=) -> 3 failed; C se ignora swap -> 3 failed.
+Gate de inventario: sin la fila de SPEC rc=1 ("funcion sin inventariar en SPEC.md: tools/techo_memoria.py"); con ella rc=0.

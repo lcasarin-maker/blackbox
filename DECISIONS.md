@@ -514,3 +514,12 @@ El repositorio es publico y debe quedar limpio de temas ajenos. Estas son las de
 - **Descarta:** actualizar a Ubuntu 26.04 o todo lo actualizable junto con el kernel (mezcla causas); reinstalar el parche en 6.17 antes (se rehace para cada kernel).
 - **Costo aceptado:** una semana mas sin tope de memoria de GPU por cgroup; el cuelgue sin reinicio automatico exige a Luis fisicamente.
 - **Se reabre si:** el 1025 muestra `Xid 154`, `rpcRecvPoll` o un corte duro; entonces se vuelve al 6.17 y se pregunta a zneill.
+
+## 2026-11-18 — Política de systemd-oomd: Orca con ManagedOOMPreference=avoid, ensayado antes de aplicarlo (voto de Luis)
+
+- **Decidido:** systemd-oomd sigue activo (voto del 2026-10-12, que vivía solo en la ficha `DEBT-OOMD-PROBAR-Y-DIAGNOSTICAR-01`) y el scope de Orca se protege con `ManagedOOMPreference=avoid` en un drop-in `app-orca-.scope.d` de systemd de usuario, versionado en `adopted/system-config/`. Antes de desplegarlo se ensaya en las slices `bbtest-oomd*` (caducan 2026-12-18) y el ensayo deja `ensayo.txt` con la marca `ensayo_avoid_medido`. Ficha con el cierre verificable: `DEBT-OOMD-MATA-EL-SCOPE-DE-ORCA-CON-TODAS-LAS-SESIONES-01`.
+- **Motivo medido:** el 2026-11-17 19:51:50 oomd mató `app-orca-1461376.scope` (70 procesos, 32.7G de pico) por presión de `user@1000.service` 55.26 % > 50 % durante más de 20 s; earlyoom (`-m 10`) no actuó con 20.56 % de memoria libre y `bb-usable` estaba inactivo (`tasks/evidence/DEBT-OOMD-PROBAR-Y-DIAGNOSTICAR-01/medicion.txt`).
+- **Descarta:** desactivar oomd (revertiría el voto del 2026-10-12 y dejaría sin respuesta la presión sostenida con memoria libre) y no hacer nada (el mismo evento puede repetirse sobre todas las sesiones de Orca).
+- **Costo aceptado:** `avoid` no es exención; oomd elegirá otra víctima entre los descendientes de `user@1000.service` (cuál, no está medido) y Orca sigue siendo candidato bajo presión sostenida. El drop-in va en `~/.config/systemd/user`, fuera del alcance de las sesiones de agente: lo aplica o aprueba Luis.
+- **Se reabre si:** el ensayo muestra que `avoid` no cambia la víctima, o oomd vuelve a matar el scope de Orca con el drop-in desplegado.
+
