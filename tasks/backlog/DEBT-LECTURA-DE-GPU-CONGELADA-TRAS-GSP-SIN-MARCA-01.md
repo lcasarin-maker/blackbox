@@ -32,7 +32,7 @@ La afirmacion «la potencia de GPU (5 a 9,7 W) descarta la GPU como causa» de l
 
 1. `tools/muestreo_1s.py`: anotar por muestra la edad de la lectura de GPU (segundos desde que cambio la linea) y `gpu_congelada: true` pasados N s identicos (N a medir: la racha sana maxima fue 4 s).
 2. Lo mismo en `atom_gpu_telemetry` (evento `gpu_lectura_congelada`) y aviso por el canal de `aviso_gpu_reset`.
-3. Revisar `adopted/gpu_governance/gpu_sampler.sh` (suspendido desde 2026-09-07): su `timeout 10 nvidia-smi` marcaria `TIMEOUT` si el binario colgara, pero estos arranques indican que nvidia-smi RESPONDE con valores viejos; el sampler grabaria filas `OK` iguales. No cierra este hueco por si solo.
+3. (Punto cerrado 2026-11-18: el sampler se RETIRO por voto de Luis y su copia salio de `adopted/`; copia en `~/archive/retirado/blackbox/gpu_sampler/2026-11-18/`. El analisis siguiente queda como razon.) Revisar `gpu_sampler.sh` (suspendido desde 2026-09-07): su `timeout 10 nvidia-smi` marcaria `TIMEOUT` si el binario colgara, pero estos arranques indican que nvidia-smi RESPONDE con valores viejos; el sampler grabaria filas `OK` iguales. No cierra este hueco por si solo.
 4. Corregir el tema publicado en el foro de NVIDIA (post 2 dice «muestras tranquilas») con esta salvedad: decision de Luis.
 
 ## Limite

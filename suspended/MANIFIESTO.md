@@ -3,16 +3,16 @@
 Suspender es RENOMBRAR, nunca borrar. Una suspensión sin fecha de caducidad se
 vuelve permanente en silencio, así que cada entrada lleva la suya y quién vigila.
 
-## gpu_sampler.sh — suspendido 2026-09-07
+## gpu_sampler.sh — suspendido 2026-09-07, RETIRADO 2026-11-18
 
 | | |
 |---|---|
-| **Ruta original** | `/srv/ai/gpu_governance/gpu_sampler.sh` |
+| **Ruta original (retirada)** | `/srv/ai/gpu_governance/gpu_sampler.sh` |
 | **Renombrado a** | `gpu_sampler.sh.suspendido-2026-09-07` |
 | **sha256** | `ce823854e9b1dd5da6dd92c6a5a8e69d609b008d97c00a6219f3ce82e5354122` |
 | **modo** | `775` |
 | **Unit parada** | `ai-gpu-telemetry.service` (disable --now) |
-| **Caduca** | **2026-11-14** (extendida el 2026-11-08 desde 2026-11-07, sin decisión de fondo: restaurarlo reactivaría `ai-gpu-telemetry.service`, un bucle de `nvidia-smi` que la ficha `DEBT-LECTURA-DE-GPU-CONGELADA-TRAS-GSP-SIN-MARCA-01` ya señala como instrumento ciego tras un fallo del GSP; su telemetría la cubre el muestreador absorbido) |
+| **Estado** | **RETIRADO 2026-11-18** por voto de Luis al vencer la suspension (extendida antes sin decision de fondo). Copia con MANIFEST en `~/archive/retirado/blackbox/gpu_sampler/2026-11-18/`; la copia de `adopted/` salio del repo para que `bb drift` deje de esperarla. |
 | **Vigila** | `bb status`, que comprueba la frescura de la telemetría absorbida |
 
 **Por qué.** Sus campos los absorbió una referencia externa el

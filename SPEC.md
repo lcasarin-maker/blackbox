@@ -327,7 +327,6 @@ disco.
 | --- | --- |
 | `/srv/ai/gpu_governance/admission_check.sh` | veta arrancar un motor que no cabe en memoria. Presion de memoria. |
 | `/srv/ai/gpu_governance/gpu_lock.sh` | exclusion mutua sobre la GPU. |
-| `/srv/ai/gpu_governance/gpu_sampler.sh` | muestreo de GPU (SUSPENDIDO, ver suspended/MANIFIESTO.md). |
 | `/srv/ai/gpu_governance/monitor_memory.sh` | el cuerpo del monitor de memoria. |
 | `/etc/default/kdump-tools` | captura del volcado tras un panic. Cuelgue. |
 | `/etc/modprobe.d/99-blackbox-uvm.conf` | `uvm_global_oversubscription=0`, mitigación parcial para NVIDIA #1358: puede convertir algunos fallos de asignación UVM en OOM recuperable, pero no evita todos los cuelgues. |
