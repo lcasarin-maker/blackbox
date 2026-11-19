@@ -72,7 +72,7 @@ carga y responde. Además otro proyecto pasó a usar el gateway ya cargado
 Verificado: `50/1664 (área movida: 23)` contra los `área movida: 0` anteriores,
 0 errores del LLM y 0 volcados nuevos.
 
-## bb-vigilante-gpuoom.service — suspendido 2026-10-14
+## bb-vigilante-gpuoom.service — suspendido 2026-10-14, RETIRADO 2026-11-18
 
 | | |
 |---|---|
@@ -81,7 +81,7 @@ Verificado: `50/1664 (área movida: 23)` contra los `área movida: 0` anteriores
 | **sha256** | `9780615c3f685284409df1b5fe99144e10c9b581f750bb7bbcfd5ed47cae3ed9` |
 | **modo** | `664` |
 | **Unit parada** | `bb-vigilante-gpuoom.service` (disable --now); interruptor `gpuoom` en `off` |
-| **Caduca** | **2026-11-13** — si sigue suspendido sin decisión, se revisa |
+| **Estado** | **RETIRADO 2026-11-18** por voto de Luis al vencer la suspension. Unit y marca con MANIFEST en `~/archive/retirado/blackbox/bb-vigilante-gpuoom/2026-11-18/`. |
 | **Vigila** | `bb status` (marca `$BLACKBOX_DATA/suspendidos/gpuoom`: FALTA al vencer) |
 
 **Por qué (voto de Luis 2026-10-14, tras estudio de solo lectura).** `tools/gpuoom_bb.py` no habría servido en ninguno de los
