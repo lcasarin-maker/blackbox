@@ -109,7 +109,7 @@ import sys
 from pathlib import Path
 from typing import Any, Mapping
 
-from tools import etapas_arranque, hallazgo, medidor_energia, observador_ping, ultimo_aliento
+from tools import etapas_arranque, hallazgo, medidor_energia, observador_ping, reboot_ledger, ultimo_aliento
 
 DATOS = Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blackbox"))
 TELEMETRIA = DATOS / "atom_gpu_telemetry.jsonl"
@@ -1439,17 +1439,16 @@ def recoge_fantasma(
 
 
 def _ya_escritos() -> set[str]:
-    """boot_id con fila vigente. El ledger es solo-anexar: una fila `{"boot_id", "anula": true, "corrige_linea": N}` deja
-    sin efecto la anterior de ese boot (gana la ultima), y `--pendientes` lo vuelve a juzgar."""
-    if not SALIDA.exists():
+    """boot_id con fila vigente, usando el contrato comun del historial."""
+    try:
+        SALIDA.stat()
+    except FileNotFoundError:
         return set()
-    vigentes: set[str] = set()
-    for ln in SALIDA.read_text(encoding="utf-8").splitlines():
-        if not ln.strip():
-            continue
-        f = json.loads(ln)
-        (vigentes.discard if f.get("anula") else vigentes.add)(f["boot_id"])
-    return vigentes
+    except OSError as e:
+        raise reboot_ledger.LedgerReadError(f"no se pudo consultar {SALIDA}: {e!r}") from e
+    avisos: list[str] = []
+    vigentes = reboot_ledger.leer_filas([SALIDA], avisos, estricta=True)
+    return set(vigentes)
 
 
 def _publica_hallazgos(filas: list[dict[str, Any]]) -> None:
@@ -1497,7 +1496,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"COULD_NOT_RUN: journalctl --list-boots no devolvio JSON: {r.stdout[:80]!r}", file=sys.stderr)
         return 2
     filas = []
-    ya = _ya_escritos() if a.escribe or a.pendientes else set()
+    if a.escribe or a.pendientes:
+        try:
+            ya = _ya_escritos()
+        except reboot_ledger.LedgerReadError as e:
+            print(f"COULD_NOT_RUN: no se pudo leer {SALIDA}: {e}", file=sys.stderr)
+            return 2
+    else:
+        ya = set()
     almacenamiento: dict[str, Any] | None = None  # una foto por corrida, no por fila
     actual = _boot_actual()
     if actual is None or all(_norm(b["boot_id"]) != actual for b in boots):

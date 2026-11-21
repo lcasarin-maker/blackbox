@@ -1,0 +1,16 @@
+Control rojo del close_check original, ejecutado antes del cambio:
+
+```sh
+SCRATCH_DIR="${SCRATCH_DIR:?ruta privada en scratch}"
+BLACKBOX_LEDGER_PATH="${BLACKBOX_LEDGER_PATH:?ruta privada del ledger}"
+export BLACKBOX_LEDGER_PATH
+python3 -c "import json,os,sys; p=os.environ['BLACKBOX_LEDGER_PATH']; u={}; [u.__setitem__(f['boot_id'], f) for f in map(json.loads, open(p)) ]; sys.exit(0 if u['7cd0848b8fc742e982970cc9697c34e9']['boot_id_siguiente'] == '2f73178e3f4c4e4084ba38a6012c56ab' and u['fc60e471d9c149648b0d1ea922fc9e57']['boot_id_siguiente'] != 'cd2e65eee13846249fc0d5a7145aa565' else 1)"
+rc=$?
+printf 'close_check_before_rc=%s\n' "$rc" | tee "$SCRATCH_DIR/reboots-close-check.fail.txt"
+```
+
+Salida literal:
+
+```text
+close_check_before_rc=1
+```

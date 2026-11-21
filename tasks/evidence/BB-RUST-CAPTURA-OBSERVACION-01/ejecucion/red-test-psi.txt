@@ -1,0 +1,25 @@
+   Compiling blackbox-captura v0.1.0 ($HOME/scratch/blackbox/2026-11-21-captura-correccion-luna/red-9698522)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.37s
+     Running tests/captura_observacion.rs ($HOME/scratch/blackbox/2026-11-21-captura-correccion-luna/red-9698522/target/debug/deps/captura_observacion-87af87d38bec4635)
+
+running 1 test
+test marked_fixture_rejects_external_psi_symlink ... FAILED
+
+failures:
+
+---- marked_fixture_rejects_external_psi_symlink stdout ----
+
+thread 'marked_fixture_rejects_external_psi_symlink' panicked at tests/captura_observacion.rs:106:5:
+assertion failed: row.get("ausente").and_then(|missing|
+                missing.get("psi_memory")).and_then(Value::as_str).is_some_and(|error|
+        error.contains("fuera del fixture"))
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    marked_fixture_rejects_external_psi_symlink
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 17 filtered out; finished in 0.04s
+
+error: test failed, to rerun pass `--test captura_observacion`
+rc=101

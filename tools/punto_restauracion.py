@@ -55,6 +55,7 @@ if __package__ in (None, ""):  # `python3 -I .../tools/punto_restauracion.py`: -
 from tools import boton_rojo as br  # noqa: E402
 from tools import modulo_nvidia_registro as mnr  # noqa: E402
 from tools.reboot_verdict import gpu_del_boot  # noqa: E402
+from tools import reboot_ledger  # noqa: E402
 
 ESQUEMA = "bb-restore-point/1"
 ESQUEMA_OK = "bb-arranque-ok/1"
@@ -108,8 +109,7 @@ def _lee(ruta: Path) -> str | None:
         return None
 
 
-def _norm(boot_id: str) -> str:
-    return boot_id.strip().replace("-", "").lower()
+_norm = reboot_ledger.normaliza_id
 
 
 def boot_id() -> str | None:
@@ -210,22 +210,8 @@ def journal_kernel(ej: br.Ejecutor, bid: str) -> list[str] | None:
 
 def arranque_anterior(ctx: br.Ctx, bid: str) -> str | None:
     """Etiqueta de reboots.jsonl del arranque que termino justo antes de este (su boot_id_siguiente = este)."""
-    texto = _lee(ctx.home / ".local/share/blackbox/reboots.jsonl")
-    if not texto:
-        return None
-    filas: dict[str, Dic] = {}
-    for ln in texto.splitlines():
-        try:
-            f = json.loads(ln)
-        except ValueError:
-            continue
-        if not isinstance(f, dict) or "boot_id" not in f:
-            continue
-        if f.get("anula"):
-            filas.pop(_norm(str(f["boot_id"])), None)
-        else:
-            filas[_norm(str(f["boot_id"]))] = f
-    previas = [f for f in filas.values() if _norm(str(f.get("boot_id_siguiente") or "")) == bid]
+    filas = reboot_ledger.leer_filas([ctx.home / ".local/share/blackbox/reboots.jsonl"])
+    previas = [f for f in filas.values() if _norm(str(f.get("boot_id_siguiente") or "")) == _norm(bid)]
     return str(previas[-1].get("etiqueta")) if previas else None
 
 

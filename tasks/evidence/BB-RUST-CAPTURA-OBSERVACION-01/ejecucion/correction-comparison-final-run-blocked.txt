@@ -1,0 +1,12 @@
+Corrida de comparación final intermedia
+
+Comando ejecutado: reconstrucción de baseline Python y capturador Rust con destinos bajo `$HOME/scratch/blackbox/2026-11-21-captura-correccion-luna-final/`, seguida de `compare_rings.py` y `comparison_negative.py`.
+
+Salida literal:
+
+```text
+COULD_NOT_RUN: destino existente; se conserva evidencia previa
+baseline_rc=1 rust_rc=2 comparison_rc=2 negatives_rc=1
+```
+
+El primer destino preexistía; el baseline salió con rc 1, el capturador rechazó el destino y salió con rc 2, y los pasos dependientes quedaron sin informes válidos. Se repite en el scratch nuevo `2026-11-21-captura-correccion-luna-final-2`.

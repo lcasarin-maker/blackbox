@@ -1,0 +1,51 @@
+   Compiling serde_core v1.0.229
+   Compiling zmij v1.0.23
+   Compiling serde_json v1.0.149
+   Compiling libc v0.2.191
+   Compiling itoa v1.0.19
+   Compiling memchr v2.8.3
+   Compiling blackbox-captura v0.1.0 ($HOME/scratch/blackbox/2026-11-21-usable-revalida-terra-5UfwSe/mutant)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.88s
+     Running tests/usable_paridad.rs ($HOME/scratch/blackbox/2026-11-21-usable-revalida-terra-5UfwSe/mutant-target/debug/deps/usable_paridad-5a1041b70d8baa22)
+
+running 3 tests
+test isolated_worker ... ignored, worker sólo corre por close_check dentro de bwrap
+test worker_protocol_separates_instrument_failure_from_subject_failure ... ok
+test close_check_runs_subject_and_negative_in_private_bwrap ... FAILED
+
+failures:
+
+---- close_check_runs_subject_and_negative_in_private_bwrap stdout ----
+
+thread 'close_check_runs_subject_and_negative_in_private_bwrap' panicked at tests/usable_paridad.rs:1051:13:
+FAIL: bwrap/strace subject: rc=Some(101), stdout=
+running 1 test
+ISOLATION_OK mode=subject
+TRACE_FILE=subject-1795295083755824693.trace
+test isolated_worker ... FAILED
+
+failures:
+
+failures:
+    isolated_worker
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.18s
+
+, stderr=detector alias=3/3 watchdog_normalizado=3/3 execveat=1/1 argv_dato_limpio=0
+paso_confinado real: presiones sintéticas=3 modos=3 contadores previos=3 discrepancias=0
+
+thread 'isolated_worker' panicked at tests/usable_paridad.rs:719:9:
+assertion `left == right` failed: notify paso 10
+  left: true
+ right: false
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    close_check_runs_subject_and_negative_in_private_bwrap
+
+test result: FAILED. 1 passed; 1 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.19s
+
+error: test failed, to rerun pass `--test usable_paridad`

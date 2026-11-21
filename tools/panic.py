@@ -46,10 +46,10 @@ from tools import punto_restauracion as pr  # noqa: E402
 
 T_MKCONFIG = 300
 # Lo que se instala en /usr/local/lib/blackbox/tools/ (docs/PANIC.md, Instalacion): panic, punto_restauracion y
-# todo lo que importan, transitivamente (reboot_verdict arrastra cinco modulos), mas la lista KEEP.
+# todo lo que importan, transitivamente (reboot_verdict arrastra sus modulos), mas la lista KEEP.
 # tests/test_panic.py comprueba que con exactamente esto `python3 -I` importa, y que sin uno no.
 INSTALA = ("tools/__init__.py", "tools/panic.py", "tools/punto_restauracion.py", "tools/boton_rojo.py",
-           "tools/modulo_nvidia_registro.py", "tools/reboot_verdict.py", "tools/etapas_arranque.py",
+           "tools/modulo_nvidia_registro.py", "tools/reboot_verdict.py", "tools/reboot_ledger.py", "tools/etapas_arranque.py",
            "tools/hallazgo.py", "tools/medidor_energia.py", "tools/observador_ping.py", "tools/ultimo_aliento.py",
            "tools/interruptores.py", "adopted/boton-rojo-keep.txt")
 USO = "uso: sudo panic            (regresa al punto de restauracion y suspende)\n" \

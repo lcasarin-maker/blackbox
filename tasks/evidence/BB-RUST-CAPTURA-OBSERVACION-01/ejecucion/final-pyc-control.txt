@@ -1,0 +1,6 @@
+Comando:
+D=$HOME/scratch/blackbox/2026-11-21-bb-captura-final/pyc-control; mkdir -p "$D/without-b" "$D/with-b"; printf 'VALUE = 1\n' > "$D/without-b/probe.py"; printf 'VALUE = 1\n' > "$D/with-b/probe.py"; PYTHONDONTWRITEBYTECODE=1 python3 -I -c 'import sys; sys.path.insert(0, sys.argv[1]); import probe' "$D/without-b"; printf 'control_without_B_pyc='; find "$D/without-b" -name '*.pyc' -type f | wc -l; PYTHONDONTWRITEBYTECODE=1 python3 -B -I -c 'import sys; sys.path.insert(0, sys.argv[1]); import probe' "$D/with-b"; printf 'control_with_B_pyc='; find "$D/with-b" -name '*.pyc' -type f | wc -l
+
+Salida literal:
+control_without_B_pyc=1
+control_with_B_pyc=0

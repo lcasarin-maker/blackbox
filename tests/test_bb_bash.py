@@ -2472,6 +2472,30 @@ def test_control_negativo_veredicto_sin_fila_de_ESTE_arranque_FALTA(datos, tmp_p
     assert "FALTA" in _fila(_status_seis(datos, tmp_path, corridas=corridas, arr=arr), _VEREDICTO)
 
 
+def test_control_negativo_veredicto_ignora_fila_supersedida_y_lee_la_reposicion(datos, tmp_path):
+    arr, corridas = _sano(datos, tmp_path)
+    este = _boot_id().replace("-", "")
+    (datos / "reboots.jsonl").write_text(
+        json.dumps({"boot_id": "anterior", "boot_id_siguiente": este}) + "\n"
+        + json.dumps({"boot_id": "anterior", "anula": True, "corrige_linea": 1}) + "\n"
+        + json.dumps({"boot_id": "anterior", "boot_id_siguiente": "otro"}) + "\n",
+        encoding="utf-8")
+    r = _status_seis(datos, tmp_path, corridas=corridas, arr=arr)
+    assert "FALTA" in _fila(r, _VEREDICTO)
+    (datos / "reboots.jsonl").write_text(
+        (datos / "reboots.jsonl").read_text(encoding="utf-8")
+        + json.dumps({"boot_id": "anterior", "boot_id_siguiente": este}) + "\n",
+        encoding="utf-8")
+    assert "ARMADO" in _fila(_status_seis(datos, tmp_path, corridas=corridas, arr=arr), _VEREDICTO)
+
+
+def test_control_negativo_veredicto_con_ledger_corrupto_muestra_COULD_NOT_READ(datos, tmp_path):
+    arr, corridas = _sano(datos, tmp_path)
+    (datos / "reboots.jsonl").write_bytes(b'{"boot_id":"x"}\nnot-json\n')
+    fila = _fila(_status_seis(datos, tmp_path, corridas=corridas, arr=arr), _VEREDICTO)
+    assert "FALTA" in fila and "COULD_NOT_READ" in fila
+
+
 @pytest.mark.parametrize("fila,unidad", [(_AVISO, "bb-aviso-termico.service"),
                                          (_PORTERO, "bb-portero.service")])
 def test_control_negativo_demonio_parado_FALTA(datos, tmp_path, fila, unidad):

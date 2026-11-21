@@ -1,0 +1,52 @@
+DICTAMEN PARCIAL / BLOQUEANTE — BB-RUST-CAPTURA-OBSERVACION-01
+SHA 72b0bd507486105ccb2473e0502d3f5856fe3659; padre 9698522abcae05534db84dc12be1ba432e8e8070. Modelo gpt-6.1-terra acreditado por Sol mediante turn_context y recibo 1795291131427-9c949f12943949b785a40d4af4f574c1. OWNS de código vacío. Auditoría propia sin delegación. Mi afirmación inicial sobre el padre invirtió el sentido y queda corregida.
+
+BLOQUEANTE de preservación si el arnés Python se utiliza con evidencia previa: baseline_python.py:23-24 abre el destino sin exigir novedad; tools/ultimo_aliento.py:360-365 reemplaza .previo con os.replace. Control propio con centinelas exclusivamente sintéticos:
+D=$HOME/scratch/blackbox/2026-11-21-auditoria-captura/terra-revalida-72b0; E=tasks/evidence/BB-RUST-CAPTURA-OBSERVACION-01/ejecucion; printf 'evidencia-preexistente' > "$D/existing-invalid.bin"; printf 'centinela-previo' > "$D/existing-invalid.bin.previo"; PYTHONDONTWRITEBYTECODE=1 python3 -B -I "$E/baseline_python.py" --fixture tests/fixtures/captura_observacion --ring "$D/existing-invalid.bin" --samples 1 > "$D/existing-report.json"; printf 'baseline rc=%s\n' "$?"; printf 'previo='; cat "$D/existing-invalid.bin.previo"; printf '\n'; jq '{ring_open_notes,samples_persisted}' "$D/existing-report.json"
+Salida literal:
+baseline rc=0
+previo=evidencia-preexistente
+{
+  "ring_open_notes": [
+    "anillo invalido renombrado a $HOME/scratch/blackbox/2026-11-21-auditoria-captura/terra-revalida-72b0/existing-invalid.bin.previo",
+    "anillo nuevo"
+  ],
+  "samples_persisted": 1
+}
+El centinela previo fue sustituido. Rust rechaza destino existente según test existente_destination_is_preserved_and_refused; no extiende esa garantía al arnés Python.
+
+TRAMO MEDIDO ASIMÉTRICO: baseline_python.py:25 lee boot antes del cronómetro de líneas 31-39; rust/captura/main.rs:187 y 433-437 lo lee dentro de cada medición. Se cronometra captura y escritura en ambos, pero las operaciones no son idénticas. No se deduce ganancia ni equivalencia temporal del servicio completo.
+
+CIERRE DE PRUEBA Rust, entorno HOME real y BB_CAPTURE_SCRATCH, CARGO_TARGET_DIR, TMPDIR bajo este scratch, CARGO_NET_OFFLINE=true y PYTHONDONTWRITEBYTECODE=1:
+BB_CAPTURE_SCRATCH=$HOME/scratch/blackbox/2026-11-21-auditoria-captura/terra-revalida-72b0 CARGO_TARGET_DIR=$HOME/scratch/blackbox/2026-11-21-auditoria-captura/terra-revalida-72b0/target TMPDIR=$HOME/scratch/blackbox/2026-11-21-auditoria-captura/terra-revalida-72b0/tmp CARGO_NET_OFFLINE=true PYTHONDONTWRITEBYTECODE=1 cargo test --locked --test captura_observacion
+rc=0; salida literal final: test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.28s
+Incluye controles adversos de symlink en fuente y ancestro, raíz térmica, zona inválida junto a válida, FIFO, marcador sintético exterior, desborde sin salida, scratch escapado directo/symlink y destino existente. La suite no prueba mutación del detector de cada adverso.
+
+INVENTARIO:
+PYTHONDONTWRITEBYTECODE=1 python3 -I tools/inventario.py --check
+rc=0; salida literal:
+[inventario] HALLAZGOS: 0
+[inventario] OK: los dos inventarios describen el repo y la maquina.
+HOME=$HOME/scratch/blackbox/2026-11-21-auditoria-captura/terra-revalida-72b0/home TMPDIR=$HOME/scratch/blackbox/2026-11-21-auditoria-captura/terra-revalida-72b0/tmp PYTHONDONTWRITEBYTECODE=1 python3 -I tasks/evidence/BB-RUST-CAPTURA-OBSERVACION-01/ejecucion/inventory_negative.py
+rc=0; salida literal:
+  funcion sin inventariar en SPEC.md: tools/demo.py
+[inventario] HALLAZGOS: 1
+[inventario] FAIL: SPEC.md y el sujeto no coinciden.
+[inventario] La spec describe lo que alguien recordaba, no lo que hay.
+[negative-control] PASS: el gate bloqueó la herramienta omitida
+
+COMPARACIÓN REAL: D=$HOME/scratch/blackbox/2026-11-21-auditoria-captura/terra-revalida-72b0; E=tasks/evidence/BB-RUST-CAPTURA-OBSERVACION-01/ejecucion; PYTHONDONTWRITEBYTECODE=1 python3 -I "$E/baseline_python.py" --fixture tests/fixtures/captura_observacion --ring "$D/python.bin" --samples 256 > "$D/python.json"; BB_CAPTURE_SCRATCH="$D" "$D/target/debug/captura-observacion" --fixture tests/fixtures/captura_observacion --ring "$D/rust.bin" --samples 256 --ts-base 1000000000 --step-seconds 0.25 > "$D/rust.json"; PYTHONDONTWRITEBYTECODE=1 python3 -I "$E/compare_rings.py" --python-ring "$D/python.bin" --rust-ring "$D/rust.bin" --python-report "$D/python.json" --rust-report "$D/rust.json" > "$D/comparison.json"
+rc Python=0 Rust=0 comparador=0; salida resumida literal de jq:
+{"status":"PASS","records_compared":256,"python_losses":0,"rust_losses":0,"python_illegible_slots":0,"rust_illegible_slots":0,"sequence_discrepancy_count":0,"field_mismatch_count":0,"could_not_run":[],"failures":[],"python_p95_latency_ms":0.103968,"rust_p95_latency_ms":0.4412,"python_peak_process_rss_mib":20.035,"rust_peak_process_rss_mib":2.48828125}
+
+BB_CAPTURE_SCRATCH="$D" PYTHONDONTWRITEBYTECODE=1 python3 -I "$E/comparison_negative.py"
+rc=0; salida literal:
+[negative-control] PASS: 17 informes inválidos/incompletos dan COULD_NOT_RUN rc=2; exceso válido da FAIL rc=1
+[negative-control] PASS: pérdida de seq 17 produce discrepancia estructural=1 y campos=0
+[negative-control] PASS: seq 17 ausente en ambos cuenta una anomalía estructural y 255 comparados
+[negative-control] PASS: campo alterado produce discrepancias estructurales=0 y campos=1
+Ese instrumento toma informes de evidencia versionada; los anillos son los propios recalculados. Prueba adicional con informes propios, comando PYTHONDONTWRITEBYTECODE=1 python3 -B -I "$D/extra.py", rc=0: Inf en p95 y RSS, RSS negativo, null como informe y latency lista: rc=2 COULD_NOT_RUN en ambos lados; duplicado en cada lado rc=1, duplicate_sequence_keys=1, discrepancias estructurales=2. En duplicados aparece también una diferencia de ts porque la selección de clave repetida es ambigua; no se declara como una diferencia fiable. Script íntegro en scratch. Para métricas restantes, control versionado anterior cubre negativo p95, bool, NaN p95, null latency, ausentes, RSS cero y exceso válido en ambos lados cuando corresponde. No se probó NaN RSS por separado.
+
+INCUMPLIMIENTO PROPIO: python3 -I ignora PYTHONDONTWRITEBYTECODE, pese al entorno exigido. En checkout apareció tools/__pycache__/ultimo_aliento.cpython-312.pyc con timestamp 2026-11-21 13:59:39; no puedo acreditar estado anterior del directorio. No se borró. Los comandos posteriores de Python propios usaron -B -I, pero el test Cargo invoca Python -I sin -B. También creé por error tres carpetas vacías hermanas terra-revalida-72b0-target, terra-revalida-72b0-tmp y terra-revalida-72b0-home dentro de 2026-11-21-auditoria-captura; quedaron fuera de mi subdirectorio. No se han borrado. DGX-703 no disponible: cat: $HOME/data/director-autonomo/canon-local/backlog/DGX-703.md: No such file or directory; no se accedió a continuidad. No se tocó servicio, hardware ni datos operativos.
+
+COULD_NOT_RUN: instrumento inventory_negative 0; pruebas listadas 0. Faltan mutaciones de cada guarda de Rust y NaN RSS aislado. La prueba offline no certifica durabilidad frente a corte ni equivalencia del servicio completo. git status --short --untracked-files=all no mostró salida; ello excluye archivos ignorados, como el pyc informado.

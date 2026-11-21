@@ -1,0 +1,59 @@
+   Compiling blackbox-captura v0.1.0 ($HOME/orca/workspaces/blackbox/bb-rust-usable-luna)
+warning: unused import: `step_confinement`
+  --> tests/usable_paridad.rs:11:25
+   |
+11 |     classify_pressures, step_confinement, Escalator, Outcome, Sample, SlicePressures, State,
+   |                         ^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: function `step_confinement` is never used
+  --> tests/../rust/usable/main.rs:63:8
+   |
+63 | pub fn step_confinement(
+   |        ^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` on by default
+
+warning: `blackbox-captura` (test "usable_paridad") generated 2 warnings (run `cargo fix --test "usable_paridad"` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.34s
+     Running tests/usable_paridad.rs ($HOME/scratch/blackbox/2026-11-21-bb-usable-paridad/target/debug/deps/usable_paridad-5a1041b70d8baa22)
+
+running 2 tests
+test isolated_worker ... ok
+test close_check_runs_subject_and_negative_in_private_bwrap ... FAILED
+
+failures:
+
+---- close_check_runs_subject_and_negative_in_private_bwrap stdout ----
+
+thread 'close_check_runs_subject_and_negative_in_private_bwrap' panicked at tests/usable_paridad.rs:613:13:
+FAIL: bwrap/strace subject: rc=Some(101), stdout=
+running 1 test
+ISOLATION_OK mode=subject
+TRACE_FILE=subject-1795293311840461560.trace
+test isolated_worker ... FAILED
+
+failures:
+
+failures:
+    isolated_worker
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+, stderr=
+thread 'isolated_worker' panicked at tests/usable_paridad.rs:293:5:
+assertion `left == right` failed: el modo actuar debe iniciar una racha confinada nueva después de off/general
+  left: 33
+ right: 1
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    close_check_runs_subject_and_negative_in_private_bwrap
+
+test result: FAILED. 1 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--test usable_paridad`

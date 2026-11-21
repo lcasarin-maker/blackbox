@@ -1,0 +1,21 @@
+# BB-RUST-MOTOR-PARIDAD-01
+
+Fase 3 en medición condicionante. Base exacta `9b094d50983d05389f08f9c307181505dfbcf58b`, cierre auditado de fase 2. El listado previo mostró sólo el chat coordinador activo en Blackbox.
+
+- Ejecutor Terra `gpt-6.1-terra`, worktree `cadb575d-7ee5-41d7-8af1-586180412a1d::$HOME/orca/workspaces/blackbox/bb-rust-motor-medicion-terra`, rama `lcasarin-maker/bb-rust-motor-medicion-terra`, sesión `orca_session_id:9b39c6f2-bdbc-4bcd-801c-449d6f22c5a5`.
+- Args `--base-branch 9b094d50983d05389f08f9c307181505dfbcf58b --setup skip --agent codex --model gpt-6.1-terra --surface chat`. Operación `1795295248216-76ccc8b277b74cbaad3188a2823a2a1d`, prompt `journaled` `1795295249403-d8169ea8c5d3407f894a4fb1c54c6b6e`. Runtime Codex `01a1ffef-85a5-78b2-9fd0-0725f56103bd`, modelo y cwd exactos. Se avisó a Terra `msg_7783eca6dd02` y al padre `msg_c16170193d21`.
+- OWNS sólo `tasks/evidence/BB-RUST-MOTOR-PARIDAD-01/ejecucion/`. La medición real de Bash/Python usa entradas, unidad y dependencias externas sintéticas dentro de aislamiento. No se abrió implementación Rust. Se exige auditoría independiente y resultado del disparador antes de decidir.
+
+Terra congeló el criterio antes de ejecutar el sujeto (`msg_1f35518d7578`). Salida local de `sha256sum ../bb-rust-motor-medicion-terra/tasks/evidence/BB-RUST-MOTOR-PARIDAD-01/ejecucion/criterio.md`:
+
+```text
+f07a1d99105a58b41e7948d784acc1f761db41a6321d2ac425461fa3a7040dc0  ../bb-rust-motor-medicion-terra/tasks/evidence/BB-RUST-MOTOR-PARIDAD-01/ejecucion/criterio.md
+```
+
+El disparador es p95 local >1.2 s en una carga sintética válida, plazo incumplido o discrepancia atribuible al control. El umbral es de cribado (1% de 120 s de inactividad que configura el timer). Se distinguen gracia y latido de 600 s, y timeout HTTP de 120 s. Se fijaron cargas sin solicitudes y de 100 válidas en una vuelta. Descarte sólo si carga y contrato pasan, negativos detectados y `could_not_run=0`. Primera lectura de criterio todavía mostraba únicamente la ruta de evidencia no rastreada. Terra reportó bwrap rc=0 en preflight anterior al sujeto. Reportó también incumplimiento al consultar continuidad en paralelo con detectar que la ruta DGX-703 no existía. Se leyó estado general y esa consulta no modificó memoria.
+
+Terra retiró ambas cifras exploratorias (`msg_2fd9483f5f5d`): `awk` era inaccesible en el sandbox, el vigilante terminó rc=0 y el instrumento inicial enmascaró stderr. El padre reprodujo el hueco (`msg_352c5c52119e`). Se dio acceso a `gawk` real y se exigió stderr vacío en las vueltas normales. Se preservaron las corridas inválidas y se repitió el sujeto. El padre corroboró dos corridas diagnósticas a 100 solicitudes con 404 syncs (1.209359 y 1.212811 s acumulados) y a cero con 4 syncs (0.012903 y 0.012111 s), usando `strace -f -qq -T -e trace=fsync,fdatasync` en scratch aislado (`msg_6a29f26de4df`). Este diagnóstico no es p95.
+
+Entrega `a69911dcaf575cf5833c911eb364d14e364b935d` (`msg_4fa851866957`), 13 rutas añadidas bajo OWNS. Repetición válida literal en `ejecucion/resultado.txt`: `normal: n=20 p95_s=0.068481 max_s=0.072953 cpu_p95_s=0.057545 cpu_max_s=0.063360`; `carga_100: n=20 p95_s=1.824724 max_s=1.838667 cpu_p95_s=0.253392 cpu_max_s=0.255086`; 53 PASS, 0 FAIL y 0 `COULD_NOT_RUN`. Se abrió la evaluación (cribado >1.2 s) sólo para carga sintética de 100 solicitudes/una acción deduplicada. Diagnóstico trazado separado: 404 `fsync`, 1.189441 s acumulados; 302 `renameat`, 0.016433 s. Se preserva el contrato de durabilidad. Distinción explícita de latencia, CPU y traza. El operador insistió en decidir la condición por la causa medida y representatividad, sin tomar el cruce como autorización automática (`msg_67bfe0082150`).
+
+Auditor Terra en worktree nuevo `bb-rust-motor-auditoria-terra`, sesión `orca_session_id:748df57a-5a70-48c3-a121-718718604a38`, base `a69911dcaf575cf5833c911eb364d14e364b935d`, `--setup skip --agent codex --model gpt-6.1-terra --surface chat`. OWNS de escritura vacío. Operación `1795295730149-3f0422bfccbd487f983e9a3161a4d203`, prompt journaled `1795295731315-5e7842ae88274fc0afe126d6d85e03d5`. Turn_context del thread `01a1fff6-dffc-7e50-9aa8-d44c4faaf80e` confirma modelo y cwd. Notificaciones `msg_76d16617166a` y `msg_fd8e851e86bc`. Está pendiente el dictamen de medición y atribución.

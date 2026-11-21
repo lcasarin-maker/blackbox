@@ -225,7 +225,7 @@ sudo install -d -o root -g root -m 0755 /usr/local/lib/blackbox/tools
 ```
 
 ```
-sudo install -o root -g root -m 0644 -t /usr/local/lib/blackbox/tools tools/__init__.py tools/panic.py tools/punto_restauracion.py tools/boton_rojo.py tools/modulo_nvidia_registro.py tools/reboot_verdict.py tools/etapas_arranque.py tools/hallazgo.py tools/medidor_energia.py tools/observador_ping.py tools/ultimo_aliento.py tools/interruptores.py adopted/boton-rojo-keep.txt
+sudo install -o root -g root -m 0644 -t /usr/local/lib/blackbox/tools tools/__init__.py tools/panic.py tools/punto_restauracion.py tools/boton_rojo.py tools/modulo_nvidia_registro.py tools/reboot_verdict.py tools/reboot_ledger.py tools/etapas_arranque.py tools/hallazgo.py tools/medidor_energia.py tools/observador_ping.py tools/ultimo_aliento.py tools/interruptores.py adopted/boton-rojo-keep.txt
 ```
 
 2. El comando:

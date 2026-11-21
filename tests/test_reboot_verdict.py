@@ -1222,6 +1222,32 @@ def test_fila_anula_deja_sin_efecto_la_anterior_y_solo_esa(tmp_path, monkeypatch
     assert rv._ya_escritos() == {"x1", "x2"}
 
 
+def test_anulacion_con_referencia_de_otro_boot_no_borra_la_fila_vigente(tmp_path, monkeypatch):
+    f = tmp_path / "r.jsonl"
+    f.write_text(
+        '{"boot_id": "x1", "etiqueta": "CORTE_ABRUPTO"}\n'
+        '{"boot_id": "x2", "etiqueta": "CIERRE_ORDENADO"}\n'
+        '{"boot_id": "x1", "anula": true, "corrige_linea": 2}\n',
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(rv, "SALIDA", f)
+    avisos = []
+    assert rv.reboot_ledger.leer_filas([f], avisos) == {
+        "x1": {"boot_id": "x1", "etiqueta": "CORTE_ABRUPTO"},
+        "x2": {"boot_id": "x2", "etiqueta": "CIERRE_ORDENADO"},
+    }
+    assert avisos
+
+
+def test_escribe_falla_cerrado_si_el_ledger_existente_esta_corrupto(monkeypatch, tmp_path):
+    _main_aislado(monkeypatch, tmp_path)
+    salida = tmp_path / "reboots.jsonl"
+    salida.write_bytes(b'{"boot_id":"x1"}\nnot-json\n')
+    antes = salida.read_bytes()
+    assert rv.main(["--ultimos", "1", "--escribe"]) == 2
+    assert salida.read_bytes() == antes
+
+
 def test_la_fila_trae_el_modulo_nvidia_del_registro_en_vivo_y_declara_NOT_COLLECTED_sin_el(monkeypatch, tmp_path):
     _main_aislado(monkeypatch, tmp_path)
     monkeypatch.setattr(rv, "_publica_hallazgos", lambda filas: None)

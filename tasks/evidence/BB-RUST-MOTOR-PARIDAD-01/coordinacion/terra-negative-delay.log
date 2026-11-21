@@ -1,0 +1,7 @@
+base=9b094d50983d05389f08f9c307181505dfbcf58b head=a69911dcaf575cf5833c911eb364d14e364b935d
+f3653507e061a18bb6956b03f438a99092770b427858cceb8b5aa668c85b8cfe  $HOME/orca/workspaces/blackbox/bb-rust-motor-auditoria-terra/tasks/evidence/BB-RUST-MOTOR-PARIDAD-01/ejecucion/ejecutar.sh
+b8517e13a60d9998584ecc48240d1f94f8ab51aadbc9ea9f1bb2c03e32ee495b  $HOME/orca/workspaces/blackbox/bb-rust-motor-auditoria-terra/tasks/evidence/BB-RUST-MOTOR-PARIDAD-01/ejecucion/medir.py
+work=$HOME/scratch/blackbox/2026-11-21-motor-8Y6RAi
+command: bwrap --unshare-user --unshare-pid --unshare-net --unshare-ipc --ro-bind /usr /usr --symlink usr/lib /lib --symlink usr/bin /bin --proc /proc --dev /dev --tmpfs /tmp --ro-bind $HOME/orca/workspaces/blackbox/bb-rust-motor-auditoria-terra /repo --bind $HOME/scratch/blackbox/2026-11-21-motor-8Y6RAi /work --chdir /work /usr/bin/python3 -B -I /repo/tasks/evidence/BB-RUST-MOTOR-PARIDAD-01/ejecucion/medir.py negative-delay
+PASS control demora 1.369634 > 1.2
+rc=0

@@ -1,0 +1,7 @@
+set -eu
+D=$HOME/scratch/blackbox/2026-11-21-bb-captura-final
+E=tasks/evidence/BB-RUST-CAPTURA-OBSERVACION-01/ejecucion
+PYTHONDONTWRITEBYTECODE=1 python3 -B -I "$E/baseline_python.py" --fixture tests/fixtures/captura_observacion --ring "$D/capture/python-final.bin" --samples 256 > "$E/final-python-report.json"
+BB_CAPTURE_SCRATCH="$D/capture" "$D/target/debug/captura-observacion" --fixture tests/fixtures/captura_observacion --ring "$D/capture/rust-final.bin" --samples 256 --ts-base 1000000000 --step-seconds 0.25 > "$E/final-rust-report.json"
+python3 -B -I "$E/compare_rings.py" --python-ring "$D/capture/python-final.bin" --rust-ring "$D/capture/rust-final.bin" --python-report "$E/final-python-report.json" --rust-report "$E/final-rust-report.json" > "$E/final-comparison.json"
+jq '{status,records_compared,python_losses,rust_losses,python_illegible_slots,rust_illegible_slots,sequence_discrepancy_count,field_mismatch_count,could_not_run,python_p95_latency_ms,rust_p95_latency_ms}' "$E/final-comparison.json"

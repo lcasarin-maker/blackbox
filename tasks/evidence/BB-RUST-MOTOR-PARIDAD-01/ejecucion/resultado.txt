@@ -1,0 +1,65 @@
+base=9b094d50983d05389f08f9c307181505dfbcf58b head=9b094d50983d05389f08f9c307181505dfbcf58b
+f3653507e061a18bb6956b03f438a99092770b427858cceb8b5aa668c85b8cfe  $HOME/orca/workspaces/blackbox/bb-rust-motor-medicion-terra/tasks/evidence/BB-RUST-MOTOR-PARIDAD-01/ejecucion/ejecutar.sh
+b8517e13a60d9998584ecc48240d1f94f8ab51aadbc9ea9f1bb2c03e32ee495b  $HOME/orca/workspaces/blackbox/bb-rust-motor-medicion-terra/tasks/evidence/BB-RUST-MOTOR-PARIDAD-01/ejecucion/medir.py
+work=$HOME/scratch/blackbox/2026-11-21-motor-zDLcBl
+command: bwrap --unshare-user --unshare-pid --unshare-net --unshare-ipc --ro-bind /usr /usr --symlink usr/lib /lib --symlink usr/bin /bin --proc /proc --dev /dev --tmpfs /tmp --ro-bind $HOME/orca/workspaces/blackbox/bb-rust-motor-medicion-terra /repo --bind $HOME/scratch/blackbox/2026-11-21-motor-zDLcBl /work --chdir /work /usr/bin/python3 -B -I /repo/tasks/evidence/BB-RUST-MOTOR-PARIDAD-01/ejecucion/medir.py
+ISOLATION_CHECK
+PASS repo solo lectura y destino escribible
+namespaces pid:[4026534297] net:[4026534298] ipc:[4026534296]
+PASS sockets host ausentes
+PASS git administrativo inaccesible
+PASS latido
+PASS normal sin reinicio
+normal: n=20 p95_s=0.068481 max_s=0.072953 cpu_p95_s=0.057545 cpu_max_s=0.063360
+PASS carga 0 respuestas
+PASS carga 0 deduplicacion
+PASS carga 1 respuestas
+PASS carga 1 deduplicacion
+PASS carga 2 respuestas
+PASS carga 2 deduplicacion
+PASS carga 3 respuestas
+PASS carga 3 deduplicacion
+PASS carga 4 respuestas
+PASS carga 4 deduplicacion
+PASS carga 5 respuestas
+PASS carga 5 deduplicacion
+PASS carga 6 respuestas
+PASS carga 6 deduplicacion
+PASS carga 7 respuestas
+PASS carga 7 deduplicacion
+PASS carga 8 respuestas
+PASS carga 8 deduplicacion
+PASS carga 9 respuestas
+PASS carga 9 deduplicacion
+PASS carga 10 respuestas
+PASS carga 10 deduplicacion
+PASS carga 11 respuestas
+PASS carga 11 deduplicacion
+PASS carga 12 respuestas
+PASS carga 12 deduplicacion
+PASS carga 13 respuestas
+PASS carga 13 deduplicacion
+PASS carga 14 respuestas
+PASS carga 14 deduplicacion
+PASS carga 15 respuestas
+PASS carga 15 deduplicacion
+PASS carga 16 respuestas
+PASS carga 16 deduplicacion
+PASS carga 17 respuestas
+PASS carga 17 deduplicacion
+PASS carga 18 respuestas
+PASS carga 18 deduplicacion
+PASS carga 19 respuestas
+PASS carga 19 deduplicacion
+carga_100: n=20 p95_s=1.824724 max_s=1.838667 cpu_p95_s=0.253392 cpu_max_s=0.255086
+carga: 20 vueltas, 100 solicitudes procesadas por vuelta, una accion restart testigo por vuelta
+PASS rechazo y plazo
+PASS ventana vigente
+PASS cierre y compensacion
+PASS ventana suprime reinicio y gasto
+PASS sin ventana reinicia y gasta
+PASS ventana vencida compensa
+PASS presupuesto tres y cuarto bloqueado
+PASS alertas secas
+DECISION p95_normal=0.068481 p95_carga=1.824724 criterio_s=1.2 disparador=True
+rc=0

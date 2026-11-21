@@ -1,0 +1,3 @@
+D=$HOME/scratch/blackbox/2026-11-21-bb-usable-paridad
+E="$PWD/tasks/evidence/BB-RUST-USABLE-PARIDAD-01/ejecucion"
+CARGO_NET_OFFLINE=true CARGO_TARGET_DIR="$D/target" TMPDIR="$D/tmp" BB_USABLE_EVIDENCE="$E" BB_USABLE_TMP="$D/tmp" cargo test --locked --test usable_paridad

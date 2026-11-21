@@ -1,0 +1,23 @@
+Contrato operativo de Blackbox con los sucesores verificados en solo lectura.
+La ficha sigue abierta hasta aterrizar el lector externo:
+
+```sh
+SCRATCH_DIR="${SCRATCH_DIR:?ruta privada en scratch}"
+BLACKBOX_LEDGER_PATH="${BLACKBOX_LEDGER_PATH:?ruta privada del ledger}"
+export BLACKBOX_LEDGER_PATH
+python3 -c "import json,os,sys; p=os.environ['BLACKBOX_LEDGER_PATH']; u={}; [u.__setitem__(f['boot_id'], f) for f in map(json.loads, open(p)) ]; sys.exit(0 if u['7cd0848b8fc742e982970cc9697c34e9']['boot_id_siguiente'] == '2f73178e2f3c4e4084ba38a6012c56ab' and u['fc60e471d9c149648b0d1ea922fc9e57']['boot_id_siguiente'] == 'e0666a39e3194129be9bcb663dc0891e' else 1)"
+rc=$?
+printf 'close_check_after_contract_update_rc=%s\n' "$rc" | tee "$SCRATCH_DIR/reboots-close-check.pass.txt"
+```
+
+Salida literal:
+
+```text
+close_check_after_contract_update_rc=0
+```
+
+La suite final fue ejecutada aparte con `systemd-run --user --scope --quiet -p MemoryMax=4G`:
+
+```text
+274 passed in 135.83s (0:02:15)
+```

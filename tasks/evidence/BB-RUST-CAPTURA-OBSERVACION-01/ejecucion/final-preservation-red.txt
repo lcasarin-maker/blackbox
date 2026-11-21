@@ -1,0 +1,35 @@
+RED sobre el baseline 72b0bd507486105ccb2473e0502d3f5856fe3659, con el test de regresión añadido en el checkout de trabajo:
+$ BB_CAPTURE_SCRATCH=$HOME/scratch/blackbox/2026-11-21-bb-captura-final/capture CARGO_TARGET_DIR=$HOME/scratch/blackbox/2026-11-21-bb-captura-final/target TMPDIR=$HOME/scratch/blackbox/2026-11-21-bb-captura-final/tmp CARGO_NET_OFFLINE=true CARGO_INCREMENTAL=0 cargo test --locked --test captura_observacion python_baseline_refuses_existing_ring_or_previous_without_changing_sentinels -- --exact
+   Compiling zmij v1.0.23
+   Compiling serde_core v1.0.229
+   Compiling serde_json v1.0.149
+   Compiling libc v0.2.191
+   Compiling memchr v2.8.3
+   Compiling itoa v1.0.19
+   Compiling blackbox-captura v0.1.0 ($HOME/orca/workspaces/blackbox/bb-rust-captura-preserva-luna)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.83s
+     Running tests/captura_observacion.rs ($HOME/scratch/blackbox/2026-11-21-bb-captura-final/target/debug/deps/captura_observacion-7b25e0580fd40434)
+
+running 1 test
+test python_baseline_refuses_existing_ring_or_previous_without_changing_sentinels ... FAILED
+
+failures:
+
+---- python_baseline_refuses_existing_ring_or_previous_without_changing_sentinels stdout ----
+
+thread 'python_baseline_refuses_existing_ring_or_previous_without_changing_sentinels' panicked at tests/captura_observacion.rs:232:5:
+assertion `left == right` failed
+  left: Some(0)
+ right: Some(2)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    python_baseline_refuses_existing_ring_or_previous_without_changing_sentinels
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 18 filtered out; finished in 0.07s
+
+error: test failed, to rerun pass `--test captura_observacion`
+exit_code=101
+
+El control detectó la sustitución: el baseline devolvió rc=0 donde el contrato exige rc=2.

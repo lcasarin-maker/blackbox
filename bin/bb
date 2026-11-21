@@ -2323,8 +2323,19 @@ status_lo_que_corre() {
 
   # La fila de reboots.jsonl cuyo boot_id_siguiente es ESTE arranque: esa es
   # la que bb-reboot-verdict escribe a los 20 s o a los 3 min de arrancar.
-  if grep -Eq "\"boot_id_siguiente\": ?\"${_bid//-/}\"" "$DATA/reboots.jsonl" 2>/dev/null; then ok=0; else ok=1; fi
-  chk "veredicto del reinicio anterior (bb-reboot-verdict; una fila por arranque)" "$ok" "reboots.jsonl sin fila para este arranque: systemctl --user status bb-reboot-verdict.timer"
+  local _ledger_rc _ledger_por _ledger_error
+  _ledger_error=$(python3 "$(dirname "$(readlink -f "$0")")/../tools/reboot_ledger.py" \
+      tiene-sucesor "$DATA/reboots.jsonl" "$_bid" 2>&1 >/dev/null)
+  _ledger_rc=$?
+  if [ "$_ledger_rc" -eq 0 ]; then
+    ok=0; _ledger_por=""
+  elif [ "$_ledger_rc" -ne 1 ]; then
+    ok=1; _ledger_por="${_ledger_error//$'\n'/ }"
+    [ -n "$_ledger_por" ] || _ledger_por="COULD_NOT_READ: reboot ledger reader rc=$_ledger_rc"
+  else
+    ok=1; _ledger_por="reboots.jsonl sin fila para este arranque: systemctl --user status bb-reboot-verdict.timer"
+  fi
+  chk "veredicto del reinicio anterior (bb-reboot-verdict; una fila por arranque)" "$ok" "$_ledger_por"
 
   # Los dos demonios no escriben latido -- aviso_termico solo LEE el estado y
   # portero solo escribe cuando actua --, asi que se mira la unit (limite

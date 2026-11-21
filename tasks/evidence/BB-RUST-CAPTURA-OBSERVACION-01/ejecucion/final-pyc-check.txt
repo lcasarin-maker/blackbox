@@ -1,0 +1,4 @@
+$ printf 'checkout_pyc_count='; find . -type f -name '*.pyc' | wc -l; printf 'tools_pyc_count='; find tools -maxdepth 2 -type f -name '*.pyc' | wc -l; printf 'ignored_pyc_status='; git status --short --ignored tools/__pycache__
+checkout_pyc_count=0
+tools_pyc_count=0
+ignored_pyc_status=

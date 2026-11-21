@@ -1,0 +1,132 @@
+work=$HOME/scratch/blackbox/2026-11-21-motor-uclC7N
+command: bwrap --unshare-user --unshare-pid --unshare-net --unshare-ipc --ro-bind /usr /usr --symlink usr/lib /lib --symlink usr/bin /bin --proc /proc --dev /dev --tmpfs /tmp --ro-bind $HOME/orca/workspaces/blackbox/bb-rust-motor-medicion-terra /repo --bind $HOME/scratch/blackbox/2026-11-21-motor-uclC7N /work --chdir /work /usr/bin/python3 -B -I /repo/tasks/evidence/BB-RUST-MOTOR-PARIDAD-01/ejecucion/medir.py diagnostic
+diagnostic command: /usr/bin/strace -f -c -w -e trace=fsync,fdatasync,rename,renameat,renameat2 /repo/bin/bb-vigilante-motor
+subject stdout: 
+strace stderr: /usr/bin/strace: Process 7 attached
+/usr/bin/strace: Process 8 attached
+/usr/bin/strace: Process 9 attached
+/usr/bin/strace: Process 10 attached
+/usr/bin/strace: Process 11 attached
+/usr/bin/strace: Process 12 attached
+/usr/bin/strace: Process 13 attached
+/usr/bin/strace: Process 14 attached
+/usr/bin/strace: Process 15 attached
+/usr/bin/strace: Process 16 attached
+/usr/bin/strace: Process 17 attached
+/usr/bin/strace: Process 18 attached
+/usr/bin/strace: Process 19 attached
+/usr/bin/strace: Process 20 attached
+/usr/bin/strace: Process 21 attached
+/usr/bin/strace: Process 22 attached
+/usr/bin/strace: Process 23 attached
+/usr/bin/strace: Process 24 attached
+/usr/bin/strace: Process 25 attached
+/usr/bin/strace: Process 26 attached
+/usr/bin/strace: Process 27 attached
+/usr/bin/strace: Process 28 attached
+/usr/bin/strace: Process 29 attached
+/usr/bin/strace: Process 30 attached
+/usr/bin/strace: Process 31 attached
+/usr/bin/strace: Process 32 attached
+/usr/bin/strace: Process 33 attached
+/usr/bin/strace: Process 34 attached
+/usr/bin/strace: Process 35 attached
+/usr/bin/strace: Process 36 attached
+/usr/bin/strace: Process 37 attached
+/usr/bin/strace: Process 38 attached
+/usr/bin/strace: Process 39 attached
+/usr/bin/strace: Process 40 attached
+/usr/bin/strace: Process 41 attached
+/usr/bin/strace: Process 42 attached
+/usr/bin/strace: Process 43 attached
+/usr/bin/strace: Process 44 attached
+/usr/bin/strace: Process 45 attached
+/usr/bin/strace: Process 46 attached
+/usr/bin/strace: Process 47 attached
+/usr/bin/strace: Process 48 attached
+/usr/bin/strace: Process 49 attached
+/usr/bin/strace: Process 50 attached
+/usr/bin/strace: Process 51 attached
+/usr/bin/strace: Process 52 attached
+/usr/bin/strace: Process 53 attached
+/usr/bin/strace: Process 54 attached
+/usr/bin/strace: Process 55 attached
+/usr/bin/strace: Process 56 attached
+/usr/bin/strace: Process 57 attached
+/usr/bin/strace: Process 58 attached
+/usr/bin/strace: Process 59 attached
+/usr/bin/strace: Process 60 attached
+/usr/bin/strace: Process 61 attached
+/usr/bin/strace: Process 62 attached
+/usr/bin/strace: Process 63 attached
+/usr/bin/strace: Process 64 attached
+/usr/bin/strace: Process 65 attached
+/usr/bin/strace: Process 66 attached
+/usr/bin/strace: Process 67 attached
+/usr/bin/strace: Process 68 attached
+/usr/bin/strace: Process 69 attached
+/usr/bin/strace: Process 70 attached
+/usr/bin/strace: Process 71 attached
+/usr/bin/strace: Process 72 attached
+/usr/bin/strace: Process 73 attached
+/usr/bin/strace: Process 74 attached
+/usr/bin/strace: Process 75 attached
+/usr/bin/strace: Process 76 attached
+/usr/bin/strace: Process 77 attached
+/usr/bin/strace: Process 78 attached
+/usr/bin/strace: Process 79 attached
+/usr/bin/strace: Process 80 attached
+/usr/bin/strace: Process 81 attached
+/usr/bin/strace: Process 82 attached
+/usr/bin/strace: Process 83 attached
+/usr/bin/strace: Process 84 attached
+/usr/bin/strace: Process 85 attached
+/usr/bin/strace: Process 86 attached
+/usr/bin/strace: Process 87 attached
+/usr/bin/strace: Process 88 attached
+/usr/bin/strace: Process 89 attached
+/usr/bin/strace: Process 90 attached
+/usr/bin/strace: Process 91 attached
+/usr/bin/strace: Process 92 attached
+/usr/bin/strace: Process 93 attached
+/usr/bin/strace: Process 94 attached
+/usr/bin/strace: Process 95 attached
+/usr/bin/strace: Process 96 attached
+/usr/bin/strace: Process 97 attached
+/usr/bin/strace: Process 98 attached
+/usr/bin/strace: Process 99 attached
+/usr/bin/strace: Process 100 attached
+/usr/bin/strace: Process 101 attached
+/usr/bin/strace: Process 102 attached
+/usr/bin/strace: Process 103 attached
+/usr/bin/strace: Process 104 attached
+/usr/bin/strace: Process 105 attached
+/usr/bin/strace: Process 106 attached
+/usr/bin/strace: Process 107 attached
+/usr/bin/strace: Process 108 attached
+/usr/bin/strace: Process 109 attached
+/usr/bin/strace: Process 110 attached
+/usr/bin/strace: Process 111 attached
+/usr/bin/strace: Process 112 attached
+/usr/bin/strace: Process 113 attached
+/usr/bin/strace: Process 114 attached
+/usr/bin/strace: Process 115 attached
+/usr/bin/strace: Process 116 attached
+/usr/bin/strace: Process 117 attached
+/usr/bin/strace: Process 118 attached
+/usr/bin/strace: Process 119 attached
+/usr/bin/strace: Process 120 attached
+/usr/bin/strace: Process 121 attached
+/repo/bin/bb-vigilante-motor: line 118: awk: command not found
+/usr/bin/strace: Process 122 attached
+/usr/bin/strace: Process 123 attached
+/usr/bin/strace: Process 124 attached
+% time     seconds  usecs/call     calls    errors syscall
+------ ----------- ----------- --------- --------- ----------------
+ 98.65    1.300661        3219       404           fsync
+  1.35    0.017747          58       302           renameat
+------ ----------- ----------- --------- --------- ----------------
+100.00    1.318408        1867       706           total
+
+PASS diagnostico procesa 100
+rc=0

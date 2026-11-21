@@ -1,0 +1,20 @@
+[package]
+name = "blackbox-captura"
+version = "0.1.0"
+edition = "2024"
+
+[[bin]]
+name = "captura-observacion"
+path = "rust/captura/main.rs"
+
+[dependencies]
+libc = "=0.2.191"
+serde_json = "=1.0.149"
+
+[[test]]
+name = "captura_observacion"
+path = "tests/captura_observacion.rs"
+
+[[test]]
+name = "usable_paridad"
+path = "tests/usable_paridad.rs"

@@ -43,6 +43,7 @@ from pathlib import Path
 from typing import Any
 
 from tools import atom_gpu_telemetry as agt
+from tools import reboot_ledger
 
 ANTICIPO_MIN = 60.0
 DT_MAX_S = 30.0  # una muestra no cuenta mas de esto: un hueco de telemetria no es tiempo caliente medido
@@ -70,8 +71,7 @@ class Boot:
     vivos: list[tuple[float, str]] = field(default_factory=list)  # `temp_sostenida` que emitio el servicio vivo
 
 
-def norm_id(boot_id: str) -> str:
-    return boot_id.replace("-", "").lower()
+norm_id = reboot_ledger.normaliza_id
 
 
 def _epoch(ts: str) -> float:
@@ -109,23 +109,12 @@ def leer_telemetria(ruta: Path, avisos: list[str]) -> dict[str, Boot]:
 
 
 def leer_veredictos(rutas: list[Path], avisos: list[str]) -> dict[str, tuple[str, str | None]]:
-    """boot_id normalizado -> (etiqueta, causa o None). Si dos archivos traen el mismo boot, gana el ultimo pasado."""
+    """boot_id normalizado -> (etiqueta, causa o None), tras rectificaciones validas."""
+    filas = reboot_ledger.leer_filas(rutas, avisos, campos_requeridos=("etiqueta",))
     out: dict[str, tuple[str, str | None]] = {}
-    for ruta in rutas:
-        if not ruta.exists():
-            avisos.append(f"veredictos no existe: {ruta}")
-            continue
-        for n, linea in enumerate(ruta.read_text(encoding="utf-8").splitlines(), 1):
-            if not linea.strip():
-                continue
-            try:
-                d = json.loads(linea)
-                if d.get("anula"):  # fila de correccion: deja sin efecto la anterior de ese boot
-                    out.pop(norm_id(d["boot_id"]), None)
-                    continue
-                out[norm_id(d["boot_id"])] = (str(d["etiqueta"]), None if d.get("causa") is None else str(d["causa"]))
-            except (json.JSONDecodeError, KeyError) as e:
-                avisos.append(f"{ruta.name}:{n} ilegible ({e!r})")
+    for boot_id, fila in filas.items():
+        etiqueta = str(fila["etiqueta"])
+        out[boot_id] = (etiqueta, None if fila.get("causa") is None else str(fila["causa"]))
     return out
 
 

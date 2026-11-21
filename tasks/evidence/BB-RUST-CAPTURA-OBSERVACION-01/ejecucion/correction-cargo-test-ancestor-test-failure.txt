@@ -1,0 +1,40 @@
+   Compiling blackbox-captura v0.1.0 ($HOME/orca/workspaces/blackbox/bb-rust-captura-correccion-luna)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.34s
+     Running tests/captura_observacion.rs ($HOME/scratch/blackbox/2026-11-21-captura-correccion-luna/cargo-target/debug/deps/captura_observacion-87af87d38bec4635)
+
+running 18 tests
+test missing_peak_rss_is_an_instrument_failure_not_zero ... ok
+test real_read_only_descriptor_write_failure_preserves_partial_record ... ok
+test missing_fixture_is_rejected_without_falling_back_to_live_proc ... ok
+test existing_destination_is_preserved_and_refused ... ok
+test derived_timestamp_overflow_is_rejected_before_evidence_creation ... ok
+test output_open_failure_returns_partial_sample_and_declares_could_not_run ... ok
+test marked_fixture_rejects_external_marker_symlink ... ok
+test malformed_nonfinite_and_unbounded_arguments_are_rejected_before_opening_output ... ok
+test scratch_override_escape_is_rejected_before_ring_creation ... ok
+test fifo_fixture_source_is_rejected_without_waiting_for_a_writer ... ok
+test oversized_source_is_declared_while_other_sources_survive ... ok
+test stale_source_is_declared_in_observe_mode_while_other_fields_survive ... ok
+test unreadable_psi_is_reported_and_other_fields_survive ... ok
+test thermal_root_symlink_is_rejected_before_enumeration ... ok
+test nonfinite_psi_is_declared_and_other_sources_survive ... ok
+test marked_fixture_rejects_external_psi_symlink ... FAILED
+test rejected_thermal_zone_is_reported_alongside_valid_zone ... ok
+test ring_matches_authentic_python_reader_and_retains_every_sequence ... ok
+
+failures:
+
+---- marked_fixture_rejects_external_psi_symlink stdout ----
+
+thread 'marked_fixture_rejects_external_psi_symlink' panicked at tests/captura_observacion.rs:111:57:
+called `Result::unwrap()` on an `Err` value: Os { code: 39, kind: DirectoryNotEmpty, message: "Directory not empty" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    marked_fixture_rejects_external_psi_symlink
+
+test result: FAILED. 17 passed; 1 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.24s
+
+error: test failed, to rerun pass `--test captura_observacion`
+rc=101

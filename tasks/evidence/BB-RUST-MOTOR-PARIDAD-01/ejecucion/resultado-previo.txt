@@ -1,0 +1,62 @@
+work=$HOME/scratch/blackbox/2026-11-21-motor-2v6z9y
+command: bwrap --unshare-user --unshare-pid --unshare-net --unshare-ipc --ro-bind /usr /usr --symlink usr/lib /lib --symlink usr/bin /bin --proc /proc --dev /dev --tmpfs /tmp --ro-bind $HOME/orca/workspaces/blackbox/bb-rust-motor-medicion-terra /repo --bind $HOME/scratch/blackbox/2026-11-21-motor-2v6z9y /work --chdir /work /usr/bin/python3 -B -I /repo/tasks/evidence/BB-RUST-MOTOR-PARIDAD-01/ejecucion/medir.py
+ISOLATION_CHECK
+PASS repo solo lectura y destino escribible
+namespaces pid:[4026534517] net:[4026534518] ipc:[4026534516]
+PASS sockets host ausentes
+PASS git administrativo inaccesible
+PASS latido
+PASS normal sin reinicio
+normal: n=20 p95_s=0.073813 max_s=0.075009 cpu_p95_s=0.062823 cpu_max_s=0.065448
+PASS carga 0 respuestas
+PASS carga 0 deduplicacion
+PASS carga 1 respuestas
+PASS carga 1 deduplicacion
+PASS carga 2 respuestas
+PASS carga 2 deduplicacion
+PASS carga 3 respuestas
+PASS carga 3 deduplicacion
+PASS carga 4 respuestas
+PASS carga 4 deduplicacion
+PASS carga 5 respuestas
+PASS carga 5 deduplicacion
+PASS carga 6 respuestas
+PASS carga 6 deduplicacion
+PASS carga 7 respuestas
+PASS carga 7 deduplicacion
+PASS carga 8 respuestas
+PASS carga 8 deduplicacion
+PASS carga 9 respuestas
+PASS carga 9 deduplicacion
+PASS carga 10 respuestas
+PASS carga 10 deduplicacion
+PASS carga 11 respuestas
+PASS carga 11 deduplicacion
+PASS carga 12 respuestas
+PASS carga 12 deduplicacion
+PASS carga 13 respuestas
+PASS carga 13 deduplicacion
+PASS carga 14 respuestas
+PASS carga 14 deduplicacion
+PASS carga 15 respuestas
+PASS carga 15 deduplicacion
+PASS carga 16 respuestas
+PASS carga 16 deduplicacion
+PASS carga 17 respuestas
+PASS carga 17 deduplicacion
+PASS carga 18 respuestas
+PASS carga 18 deduplicacion
+PASS carga 19 respuestas
+PASS carga 19 deduplicacion
+carga_100: n=20 p95_s=1.686052 max_s=1.930879 cpu_p95_s=0.278958 cpu_max_s=0.287289
+carga: 20 vueltas, 100 solicitudes procesadas por vuelta, una accion restart testigo por vuelta
+PASS rechazo y plazo
+PASS ventana vigente
+PASS cierre y compensacion
+PASS ventana suprime reinicio y gasto
+PASS sin ventana reinicia y gasta
+PASS ventana vencida compensa
+PASS presupuesto tres y cuarto bloqueado
+PASS alertas secas
+DECISION p95_normal=0.073813 p95_carga=1.686052 criterio_s=1.2 disparador=True
+rc=0
