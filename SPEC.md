@@ -156,7 +156,15 @@ escrita para dejar la telemetria del otro lado ("importa utilidades del consumid
 fichero de ese dia: importaba 8 lineas (`_argv_tokens`), hoy copiadas en `tools/atom_gpu_telemetry.py`. Un
 generalizador sin medir puso la frontera al reves.
 
+## Marca de diagnóstico para consumidores
+
+`bb marca-diagnostico activar SEGUNDOS` publica una marca con duración entera positiva; `bb marca-diagnostico desactivar` la retira (también si ya falta). La ruta es `$BLACKBOX_DATA/marca-diagnostico.json`, o `~/.local/share/blackbox/marca-diagnostico.json` si la variable está vacía o no está definida. Una ruta relativa parte del directorio desde el que se invocó bb. Se rechazan componentes `..` y enlaces en la ruta, tanto al escribir o retirar como al leer; una ruta inválida no altera el destino. El directorio de datos válido queda con modo 0700. El archivo debe ser regular, de hasta 4096 bytes y contener JSON estricto sin claves duplicadas. El archivo JSON contiene `esquema: "bb-marca-diagnostico/1"` y `vence`, instante Unix UTC en segundos. La publicación es atómica. Cada activación reemplaza la anterior; el reloj de pared de productor y consumidor debe coincidir.
+
+El consumidor cooperativo lee antes de llamar: si el esquema es válido y la hora actual es menor que `vence`, suspende la llamada; si el archivo falta o ya venció, puede llamar. Si no puede leerlo o es inválido, debe detenerse y señalar el error, sin llamar. La marca no interrumpe llamadas en curso ni obliga a consumidores externos a obedecerla; el directorio de datos de bb es privado y el consumidor necesita acceso de lectura. Ejemplo offline: `tests/test_marca_diagnostico.py` usa un testigo en memoria, sin servicio real.
+
 ## Inventario de funciones
+
+| `tools/marca_diagnostico.py` | Marca temporal de diagnóstico y contrato de lectura cooperativa descritos arriba. | `tests/test_marca_diagnostico.py` |
 
 Lo que este repo EJECUTA. Una fila por pieza; si no está aquí, no existe para
 efectos de esta spec, y `tools/inventario.py --check` lo bloquea en el commit.

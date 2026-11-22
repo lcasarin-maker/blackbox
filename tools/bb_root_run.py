@@ -26,7 +26,13 @@ Reglas, cada una con su control negativo en tests/test_bb_root_run.py:
 - salida (stdout+stderr) a `out_dir/<nombre>-<ts UTC>.txt` 0644 y eco; rc propagado.
 - cada invocacion deja lineas JSON en `out_dir/auditoria.jsonl` (rechazo, o
   inicio + fin) con nombre, sha256, rc, ts y el uid llamante (SUDO_UID).
-- todo rechazo sale con rc 3 y un mensaje que dice por que.
+- los rechazos generales salen con rc 3; un nombre valido ausente del manifiesto sale
+  con el rc reservado 193. En Linux los estados de salida derivados de senal son
+  128+N; Python informa señales válidas hasta 64 en este host, así que su rango es
+  129..192. El runner remapea solo un retorno de script 193 a rc 1. En esa colision
+  registra ambos valores (`rc` retornado y `rc_script` original) y muestra ambos en
+  stderr. En las demás ejecuciones conserva la forma de stderr y auditoría, y propaga
+  exactamente el rc del script.
 """
 
 from __future__ import annotations
@@ -54,6 +60,7 @@ OUT_DIR = "/var/lib/bb-root-run"
 TMP_PARENT = "/run"  # root:root 0755: el usuario no puede renombrar lo que se crea dentro
 
 RECHAZO = 3
+RC_NOMBRE_DESCONOCIDO = 193
 RC_TIMEOUT = 124
 TIMEOUT_DEFECTO = 120
 TIMEOUT_TECHO = 600
@@ -68,7 +75,11 @@ PATH_FIJO = "/usr/sbin:/usr/bin:/sbin:/bin"
 
 
 class Rechazo(Exception):
-    """Algo no cumple las reglas: no se ejecuta nada y el rc es 3."""
+    """Los rechazos generales indican que algo no cumple las reglas (rc 3)."""
+
+
+class NombreDesconocido(Rechazo):
+    """El nombre es valido pero no esta aprobado; usa RC_NOMBRE_DESCONOCIDO."""
 
 
 @dataclass(frozen=True)
@@ -152,8 +163,10 @@ def leer_manifiesto(path: str, trusted_uid: int) -> dict[str, object]:
 
 def entrada(manifest: Mapping[str, object], name: str) -> Entrada:
     e = manifest.get(name)
+    if name not in manifest:
+        raise NombreDesconocido(f"nombre desconocido: {name!r} no esta en el manifiesto")
     if not isinstance(e, dict):
-        raise Rechazo(f"nombre desconocido: {name!r} no esta en el manifiesto")
+        raise Rechazo(f"{name}: entrada del manifiesto no es un objeto")
     file, sha, timeout = e.get("file"), e.get("sha256"), e.get("timeout", TIMEOUT_DEFECTO)
     if not isinstance(file, str) or FICHERO.fullmatch(file) is None:
         raise Rechazo(f"{name}: 'file' debe ser un nombre de fichero simple, sin '/'")
@@ -217,6 +230,11 @@ def _correr(argv: list[str], timeout: int, env: dict[str, str]) -> tuple[int, by
             proc.wait()
     rc = proc.returncode
     return (128 - rc if rc < 0 else rc), out
+
+
+def rc_publico_script(rc_script: int) -> int:
+    """Reserva RC_NOMBRE_DESCONOCIDO; la colision aprobada se informa como fallo generico."""
+    return 1 if rc_script == RC_NOMBRE_DESCONOCIDO else rc_script
 
 
 def _matar_grupo(proc: subprocess.Popen[bytes]) -> None:
@@ -290,17 +308,24 @@ def run(name: str | None, manifest_path: str = MANIFEST, scripts_dir: str | None
         comprobar_shebang(data)
         env = entorno(environ)
         auditar(out_dir, registro | {"evento": "inicio"})
-        rc, out = ejecutar(data, ent.file, ent.timeout, env, opts)
+        rc_script, out = ejecutar(data, ent.file, ent.timeout, env, opts)
+        rc = rc_publico_script(rc_script)
     except Rechazo as e:
-        auditar(out_dir, registro | {"evento": "rechazo", "rc": RECHAZO, "motivo": str(e)})
+        rc = RC_NOMBRE_DESCONOCIDO if isinstance(e, NombreDesconocido) else RECHAZO
+        auditar(out_dir, registro | {"evento": "rechazo", "rc": rc, "motivo": str(e)})
         print(f"[bb-root-run] RECHAZADO: {e}", file=sys.stderr)
-        return RECHAZO
+        return rc
     fichero = os.path.join(out_dir, f"{name}-{ahora.strftime('%Y%m%dT%H%M%S.%fZ')}.txt")
     _crear_0644(fichero, out, os.O_EXCL)
     salida.write(out)
     salida.flush()
-    auditar(out_dir, registro | {"evento": "fin", "rc": rc, "salida": fichero})
-    print(f"[bb-root-run] rc={rc} salida={fichero}", file=sys.stderr)
+    fin: dict[str, object] = {"evento": "fin", "rc": rc, "salida": fichero}
+    detalle_colision = ""
+    if rc_script == RC_NOMBRE_DESCONOCIDO:
+        fin["rc_script"] = rc_script
+        detalle_colision = f" rc_script={rc_script}"
+    auditar(out_dir, registro | fin)
+    print(f"[bb-root-run] rc={rc}{detalle_colision} salida={fichero}", file=sys.stderr)
     return rc
 
 

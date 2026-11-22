@@ -52,6 +52,7 @@ PROC="${BB_PROC:-/proc}"
 # sustituible SOLO para poder montar el caso negativo de su fila en `status`.
 ARRANQUE_JSONL="${BB_ARRANQUE_JSONL:-/var/lib/blackbox/pstore/arranque.jsonl}"
 
+if [[ "${1:-}" != marca-diagnostico ]]; then
 mkdir -p "$SAMPLES" "$SNAPS"
 # $DATA guarda command-lines completas de procesos ajenos (bb who/scan/sample)
 # -- no depender del umask heredado para su permiso. chmod en cada arranque,
@@ -60,6 +61,7 @@ mkdir -p "$SAMPLES" "$SNAPS"
 # arregla un `mkdir -p` idempotente. 700 en el directorio TOPE ya bloquea el
 # acceso a samples/ y snapshots/ debajo, aunque esos conserven su propio modo.
 chmod 700 "$DATA" 2>/dev/null || true
+fi
 
 # ---------------------------------------------------------------- utilidades
 
@@ -3560,6 +3562,7 @@ bb -- caja negra de la maquina
   bb sigterm ["hace X"]  QUIEN mando SIGTERM/SIGKILL a quien (DEBT-SIGTERM-SIN-CAUSA-RAIZ)
   bb cap <GB> <cmd...>   lanza algo con techo de memoria propio (el kernel lo aplica)
   bb techo --pid N [--max-gib G] [--sin-swap]  techo de memoria del cgroup de un proceso (JSON; rc 0 acotado, 1 no, 2 no se pudo leer)
+  bb marca-diagnostico activar SEGUNDOS | desactivar  controla la marca temporal
   bb portero estado      que arboles pesados ve el portero y que decidiria (solo lectura)
   bb portero run --clase suite -- <cmd...>  pide turno en la cola FIFO y lanza con el tope de su clase
   bb install             instala los timers de usuario (muestreo cada minuto, drift diario)
@@ -3589,6 +3592,7 @@ case "${1:-}" in
   origen)   shift; cmd_origen "$@" ;;
   sigterm)  shift; cmd_sigterm "$@" ;;
   cap)      shift; cmd_cap "$@" ;;
+  marca-diagnostico) shift; [[ "$DATA" = /* ]] || DATA="$PWD/$DATA"; (export BLACKBOX_DATA="$DATA"; cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.marca_diagnostico "$@") ;;
   portero)  shift; python3 "$(dirname "$(readlink -f "$0")")/../tools/portero.py" "$@" ;;
   limita)   shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.limita_cuda "$@") ;;
   dmem-tope) shift; (cd "$(dirname "$(readlink -f "$0")")/.." && exec python3 -m tools.dmem_tope "$@") ;;

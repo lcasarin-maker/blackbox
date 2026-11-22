@@ -1,0 +1,20 @@
+Base: 0324bfbdcdd6e0b624077af10b8314aa4d9918b0
+RED: python3 -m pytest tests/test_marca_diagnostico.py -q --basetemp=[RUTA_LOCAL_PRIVADA]
+Salida completa y rc: red-correccion.txt (6 failed, 8 passed, rc=1). La prueba de FIFO agotó el timeout de 3 segundos. La prueba de rutas creó dos marcas sintéticas en el checkout; se retiraron inmediatamente.
+RED independiente de rutas comunicado por coordinación: [RUTA_LOCAL_PRIVADA]; ambos comandos rc=0, destino correcto ausente y copia en checkout presente.
+
+Control negativo: copia aislada en scratch con `return ahora < dato['vence']` sustituido por `return ahora > dato['vence']`.
+PYTHONPATH="$PWD" python3 -m pytest tests/test_marca_diagnostico.py::test_consumidor_no_llama_activa_y_llama_ausente_o_caducada -q --basetemp=[RUTA_LOCAL_PRIVADA]
+Salida completa y rc: mutante-frontera.txt (1 failed, rc=1; llamada indebida con marca activa).
+
+Close_check, con TMPDIR=[RUTA_LOCAL_PRIVADA]
+$ python3 -m pytest tests/test_marca_diagnostico.py -q
+..............                                                           [100%]
+14 passed in 0.55s
+rc=0
+
+$ sha256sum bin/bb SPEC.md tools/marca_diagnostico.py tests/test_marca_diagnostico.py
+55b14d409c152ae0e5df65ef1e6394cb8ed1c70bf0d739e79f46f1dbf1922ae1  bin/bb
+f0aaff2a1bcac43cc796dfafdce1b6b5caa8062337e99db9e5f12401efee3a45  SPEC.md
+31672ebeca10476a11505d2719b3c55e03c92d5727eb995234c71b6d48dc2c63  tools/marca_diagnostico.py
+a08de7ba5f547489ce3f5d9f99f8a805de995d4d8035edc346d88eaf4210f074  tests/test_marca_diagnostico.py

@@ -1,0 +1,59 @@
+.......FF.FFFF                                                           [100%]
+=================================== FAILURES ===================================
+_ test_marca_invalida_no_autoriza_llamada[{"esquema":"bb-marca-diagnostico/1","vence":999,"vence":0}] _
+tests/test_marca_diagnostico.py:58: in test_marca_invalida_no_autoriza_llamada
+    with pytest.raises(ValueError, match='marca'):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE <class 'ValueError'>
+_ test_marca_invalida_no_autoriza_llamada[{"esquema":"bb-marca-diagnostico/1","vence":9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999}] _
+tests/test_marca_diagnostico.py:59: in test_marca_invalida_no_autoriza_llamada
+    consumidor(ruta, 100, lambda: llamadas.append(1))
+tests/test_marca_diagnostico.py:14: in consumidor
+    if not marca.activa(ruta, ahora):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+tools/marca_diagnostico.py:24: in activa
+    or not math.isfinite(dato['vence'])):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   OverflowError: int too large to convert to float
+___________________ test_enlace_colgante_no_autoriza_llamada ___________________
+tests/test_marca_diagnostico.py:67: in test_enlace_colgante_no_autoriza_llamada
+    with pytest.raises(ValueError, match='marca'):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE <class 'ValueError'>
+___________________ test_fifo_no_bloquea_ni_autoriza_llamada ___________________
+tests/test_marca_diagnostico.py:76: in test_fifo_no_bloquea_ni_autoriza_llamada
+    resultado = subprocess.run([sys.executable, '-c', codigo, str(ruta)], cwd=ROOT, capture_output=True, text=True, timeout=3)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/subprocess.py:550: in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/subprocess.py:1209: in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+/opt/miniforge3/lib/python3.12/subprocess.py:2116: in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+/opt/miniforge3/lib/python3.12/subprocess.py:1253: in _check_timeout
+    raise TimeoutExpired(
+E   subprocess.TimeoutExpired: Command '['/opt/miniforge3/bin/python3', '-c', "from pathlib import Path; from tools.marca_diagnostico import activa; activa(Path(__import__('sys').argv[1]), 100); print('LLAMADA')", '[RUTA_LOCAL_PRIVADA]']' timed out after 3 seconds
+_______ test_cli_ruta_desde_cwd_original_o_home[-.local/share/blackbox] ________
+tests/test_marca_diagnostico.py:90: in test_cli_ruta_desde_cwd_original_o_home
+    assert (base / destino / 'marca-diagnostico.json').is_file()
+E   AssertionError: assert False
+E    +  where False = is_file()
+E    +    where is_file = ((PosixPath('[RUTA_LOCAL_PRIVADA]') / '.local/share/blackbox') / 'marca-diagnostico.json').is_file
+_______________ test_cli_ruta_desde_cwd_original_o_home[rel-rel] _______________
+tests/test_marca_diagnostico.py:90: in test_cli_ruta_desde_cwd_original_o_home
+    assert (base / destino / 'marca-diagnostico.json').is_file()
+E   AssertionError: assert False
+E    +  where False = is_file()
+E    +    where is_file = ((PosixPath('[RUTA_LOCAL_PRIVADA]') / 'rel') / 'marca-diagnostico.json').is_file
+=========================== short test summary info ============================
+FAILED tests/test_marca_diagnostico.py::test_marca_invalida_no_autoriza_llamada[{"esquema":"bb-marca-diagnostico/1","vence":999,"vence":0}]
+FAILED tests/test_marca_diagnostico.py::test_marca_invalida_no_autoriza_llamada[{"esquema":"bb-marca-diagnostico/1","vence":9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999}]
+FAILED tests/test_marca_diagnostico.py::test_enlace_colgante_no_autoriza_llamada
+FAILED tests/test_marca_diagnostico.py::test_fifo_no_bloquea_ni_autoriza_llamada
+FAILED tests/test_marca_diagnostico.py::test_cli_ruta_desde_cwd_original_o_home[-.local/share/blackbox]
+FAILED tests/test_marca_diagnostico.py::test_cli_ruta_desde_cwd_original_o_home[rel-rel]
+6 failed, 8 passed in 3.55s
+
+rc=1

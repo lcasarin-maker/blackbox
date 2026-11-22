@@ -86,6 +86,7 @@ import json
 import os
 import signal
 import socket
+import stat
 import subprocess
 import sys
 import threading
@@ -701,6 +702,159 @@ def origen_al_declarar_colapso(sostenido: int) -> None:
         log(f"[bb-usable] origen del COLAPSO no registrado: {type(exc).__name__}: {exc}")
 
 
+_hilo_mapa: list[threading.Thread] = []
+_mapa_declarado_en_racha = False
+_mapa_lock = threading.Lock()
+_mapas_pendientes: list[dict[str, Any]] = []
+MAPA_MAX_PENDIENTES = 4
+MAPA_PLAZO_S = 1.0
+
+
+def _subdirectorios(parent: Path, patron: str = "*") -> list[Path] | None:
+    """Lista directorios hijos con stat explícito; permisos denegados son ilegibles."""
+    try:
+        entradas = list(parent.iterdir())
+    except OSError:
+        return None
+    directorios = []
+    for entrada in entradas:
+        if not fnmatch.fnmatchcase(entrada.name, patron):
+            continue
+        try:
+            if stat.S_ISDIR(entrada.stat().st_mode):
+                directorios.append(entrada)
+        except OSError:
+            return None
+    return directorios
+
+
+def _apps_slice() -> list[Path] | None:
+    """Enumera cgroups explícitamente; un error de permisos nunca equivale a rama ausente."""
+    try:
+        usuarios = _subdirectorios(CGROUP_ROOT / "user.slice", "user-*.slice")
+    except OSError:
+        return None
+    if usuarios is None:
+        return None
+    apps: list[Path] = []
+    for usuario in usuarios:
+        try:
+            servicios = _subdirectorios(usuario, "user@*.service")
+        except OSError:
+            return None
+        if servicios is None:
+            return None
+        for servicio in servicios:
+            app = servicio / "app.slice"
+            try:
+                modo = app.stat().st_mode
+            except FileNotFoundError:
+                continue
+            except OSError:
+                return None
+            if stat.S_ISDIR(modo):
+                apps.append(app)
+    return apps
+
+
+def _publicar_mapa(fila: dict[str, Any]) -> None:
+    """Un intento O_APPEND; un error nunca se reintenta porque pudo escribir antes de fallar."""
+    try:
+        _anexar(_datos() / "escalon" / f"{fila['ts'][:10]}.jsonl", fila)
+    except Exception as exc:
+        log(f"[bb-usable] mapa de memoria del COLAPSO NOT_COLLECTED: publicación sin confirmar "
+            f"({type(exc).__name__}: {exc})")
+
+
+def mapa_al_declarar_colapso(sostenido: int) -> None:
+    """Captura independiente con plazo total; fallos no detienen el lazo."""
+    global _mapa_declarado_en_racha
+    if sostenido < PSI_ACT_SONDAS or _mapa_declarado_en_racha:
+        return
+    _mapa_declarado_en_racha = True
+    instante = time.localtime()
+    ts = time.strftime("%Y-%m-%dT%H:%M:%S%z", instante)
+    limite = time.monotonic() + MAPA_PLAZO_S
+    fila_actual = {"ts": ts, "evento": "COLAPSO", "mapa_memoria":
+                   {"estado": "NOT_COLLECTED", "motivo": "captura pendiente"}}
+    cancelado = threading.Event()
+    publicacion_iniciada = threading.Event()
+
+    en_cola = False
+    saturada = False
+    with _mapa_lock:
+        if _hilo_mapa and _hilo_mapa[-1].is_alive():
+            if len(_mapas_pendientes) >= MAPA_MAX_PENDIENTES:
+                saturada = True
+            else:
+                fila_actual["mapa_memoria"] = {"estado": "NOT_COLLECTED",
+                                                "motivo": "captura contemporánea no disponible por worker anterior"}
+                _mapas_pendientes.append(fila_actual)
+                en_cola = True
+    if en_cola:
+        log("[bb-usable] mapa de memoria del COLAPSO NOT_COLLECTED: recibo diferido, "
+            "captura contemporánea no disponible por worker anterior")
+        return
+    if saturada:
+        log("[bb-usable] mapa de memoria del COLAPSO NOT_COLLECTED: cola llena; recibo no persistido")
+        return
+
+    def capturar() -> None:
+        nonlocal fila_actual
+        try:
+            if _MAPA is None:
+                fila_actual["mapa_memoria"] = {"estado": "NOT_COLLECTED",
+                                                "motivo": f"modulo de mapa no cargado: {_MAPA_ERROR}"}
+            else:
+                rutas = _apps_slice()
+                unidades = None if rutas is None else []
+                if unidades is not None:
+                    for ruta in rutas:
+                        hijas = _MAPA.unidades_de(ruta)
+                        if hijas is None:
+                            unidades = None
+                            break
+                        unidades.extend(hijas)
+                fila_actual["mapa_memoria"] = _MAPA.captura(unidades, _MAPA.lee_clases())
+        except Exception as exc:
+            fila_actual["mapa_memoria"] = {"estado": "NOT_COLLECTED", "motivo": f"{type(exc).__name__}: {exc}"}
+        if cancelado.is_set() or time.monotonic() > limite:
+            fila_actual["mapa_memoria"] = {"estado": "NOT_COLLECTED", "motivo": "captura no disponible dentro del plazo"}
+        publicacion_iniciada.set()
+        _publicar_mapa(fila_actual)
+        while True:
+            with _mapa_lock:
+                if _mapas_pendientes:
+                    pendiente = _mapas_pendientes.pop(0)
+                else:
+                    _hilo_mapa.clear()
+                    return
+            _publicar_mapa(pendiente)
+
+    hilo = threading.Thread(target=capturar, daemon=True)
+    error_inicio = None
+    with _mapa_lock:
+        _hilo_mapa[:] = [hilo]
+        try:
+            hilo.start()
+        except Exception as exc:
+            _hilo_mapa.clear()
+            error_inicio = f"{type(exc).__name__}: {exc}"
+    if error_inicio:
+        log(f"[bb-usable] mapa de memoria del COLAPSO NOT_COLLECTED: no inició worker ({error_inicio})")
+        return
+    hilo.join(MAPA_PLAZO_S)
+    if hilo.is_alive():
+        if not publicacion_iniciada.is_set():
+            cancelado.set()
+        estado = ("publicación en curso o sin confirmar" if publicacion_iniciada.is_set()
+                  else "captura vencida; recibo NOT_COLLECTED pendiente de confirmar")
+        log(f"[bb-usable] mapa de memoria del COLAPSO NOT_COLLECTED: plazo de 1s agotado; {estado}")
+    elif fila_actual["mapa_memoria"].get("estado") == "NOT_COLLECTED":
+        log(f"[bb-usable] mapa de memoria del COLAPSO NOT_COLLECTED: "
+            f"{fila_actual['mapa_memoria'].get('motivo', 'sin detalle')}")
+
+
 # ----------------------------------------------------------------------------------------------------------
 # ATASCO CONFINADO A UNA SLICE -- anadido el 2026-10-16 (voto de Luis; DEBT-COLAPSO-CONFINADO-A-APP-SLICE-
 # REINICIA-LA-MAQUINA-ENTERA-01). El reinicio de las 10:54 siguio a 17 minutos de PSI full 45-57 que las muestras
@@ -911,6 +1065,7 @@ def reaccion_colapso(psi: float, took: float, sostenido: int, confinadas: int) -
         log(f"[bb-usable] ATASCO CONFINADO a app.slice: PSI memory full avg10={psi:.1f} sostenido "
             f"{sostenido * PROBE_INTERVAL:.0f}s, docker.slice y system.slice sin presion -- se acaricia "
             f"el watchdog ({confinadas}/{CONFINADO_MAX_SONDAS} sondas del tope duro)")
+        # Conserva la captura histórica de origen; esta rama no declara COLAPSO y no captura mapa.
         origen_al_declarar_colapso(sostenido)
         return True, confinadas
     if accion == "habria_acariciado":
@@ -925,6 +1080,7 @@ def reaccion_colapso(psi: float, took: float, sostenido: int, confinadas: int) -
         f">= {PSI_ACT_SOSTENIDO_S:.0f}s (sonda {took*1000:.0f} ms, "
         f"que es justo por lo que la sonda sola no lo ve) -- "
         f"NO se acaricia el watchdog, que reinicie")
+    mapa_al_declarar_colapso(sostenido)
     origen_al_declarar_colapso(sostenido)
     return False, confinadas
 
@@ -947,6 +1103,7 @@ def reaccion_psi_alta(psi: float, took: float, sostenido: int, bajas: int,
 def reaccion_psi_baja(psi: float, sostenido: int, bajas: int,
                       confinadas: int) -> tuple[bool, int, int, int]:
     """PSI por debajo del umbral. Devuelve (acaricia, sostenido, bajas, confinadas)."""
+    global _mapa_declarado_en_racha
     bajas += 1
     # Una sola sonda baja NO absuelve un colapso. El criterio de este
     # demonio es la DURACION, y una duracion que cualquier muestra
@@ -954,6 +1111,7 @@ def reaccion_psi_baja(psi: float, sostenido: int, bajas: int,
     if bajas >= BAJAS_PARA_CORTAR:
         log_recovery(psi, bajas, sostenido)
         sostenido = 0
+        _mapa_declarado_en_racha = False
         bajas = 0
         confinadas = 0
     elif sostenido:

@@ -2,7 +2,7 @@
 id: IDEA-RESPETAR-MARCA-DE-DIAGNOSTICO-EN-PRUEBAS-DEL-PRODUCTO
 kind: task
 title: "Definir la marca de diagnóstico de la máquina que las pruebas de los proyectos consumidores respetan para no llamar al servidor de modelos"
-status: open
+status: done
 severity: P3
 origin: asserted
 satd_family: MISSING_CAPABILITY

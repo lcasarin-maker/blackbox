@@ -1,0 +1,23 @@
+Base: 226654b1ae025fbd8602f9a7739d163593826051
+
+Antes, close_check literal:
+$ python3 -m pytest tests/test_marca_diagnostico.py -q
+ERROR: file or directory not found: tests/test_marca_diagnostico.py
+
+no tests ran in 0.00s
+rc=4
+
+RED semántico antes de implementar:
+$ python3 -m pytest tests/test_marca_diagnostico.py::test_cli_y_validacion -q
+F                                                                        [100%]
+E   AssertionError: assert 2 == 0
+1 failed in 0.10s
+rc=1 (bb rechazó el subcomando aún inexistente)
+
+Después, close_check literal:
+$ python3 -m pytest tests/test_marca_diagnostico.py -q
+.......                                                                  [100%]
+7 passed in 0.32s
+rc=0
+
+El caso consumidor ejecuta el testigo con marca ausente, vencida y desactivada, y no lo ejecuta con marca activa. Paths y reloj son sintéticos; el testigo es una lista en memoria.

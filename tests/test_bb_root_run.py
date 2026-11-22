@@ -12,6 +12,7 @@ import hashlib
 import io
 import json
 import os
+import signal
 import stat
 import subprocess
 import time
@@ -76,7 +77,7 @@ def b(tmp_path: Path) -> Banco:
 
 # --- camino feliz: es el positivo contra el que se leen todos los rechazos -------------
 
-def test_script_aprobado_corre_deja_salida_0644_y_auditoria(b: Banco):
+def test_script_aprobado_corre_deja_salida_0644_y_auditoria(b: Banco, capsys: pytest.CaptureFixture[str]):
     b.aprobar("saluda", OK)
     assert b.run("saluda") == 0
     assert b.salida.getvalue() == b"hola-desde-root\n"
@@ -86,8 +87,10 @@ def test_script_aprobado_corre_deja_salida_0644_y_auditoria(b: Banco):
     assert stat.S_IMODE((b.out / "auditoria.jsonl").stat().st_mode) == 0o644
     inicio, fin = b.auditoria()
     assert inicio["evento"] == "inicio" and fin["evento"] == "fin"
-    assert fin["rc"] == 0 and fin["name"] == "saluda" and fin["caller_uid"] == str(UID)
+    assert fin["rc"] == 0 and "rc_script" not in fin
+    assert fin["name"] == "saluda" and fin["caller_uid"] == str(UID)
     assert fin["sha256"] == b.entradas["saluda"]["sha256"] and fin["salida"] == str(f)
+    assert "[bb-root-run] rc=0 salida=" in capsys.readouterr().err
 
 
 def test_rc_del_script_se_propaga_y_la_senal_sale_como_128_mas_n(b: Banco):
@@ -95,7 +98,9 @@ def test_rc_del_script_se_propaga_y_la_senal_sale_como_128_mas_n(b: Banco):
     assert b.run("siete") == 7
     b.aprobar("senal", "#!/bin/bash\nkill -TERM $$\n")
     assert b.run("senal") == 128 + 15
-    assert [r["rc"] for r in b.auditoria() if r["evento"] == "fin"] == [7, 143]
+    finales = [r for r in b.auditoria() if r["evento"] == "fin"]
+    assert [r["rc"] for r in finales] == [7, 143]
+    assert all("rc_script" not in r for r in finales)
 
 
 def test_out_dir_se_crea_0755_aunque_la_umask_sea_077(b: Banco):
@@ -111,12 +116,47 @@ def test_out_dir_se_crea_0755_aunque_la_umask_sea_077(b: Banco):
 
 # --- nombre ------------------------------------------------------------------------
 
-def test_nombre_desconocido_se_rechaza_con_rc_3_y_queda_auditado(b: Banco):
+def test_nombre_desconocido_se_rechaza_con_codigo_propio_y_queda_auditado(b: Banco):
     b.aprobar("saluda", OK)
-    assert b.run("otro") == rr.RECHAZO
+    assert b.run("otro") == rr.RC_NOMBRE_DESCONOCIDO
     [r] = b.auditoria()
-    assert r["evento"] == "rechazo" and r["rc"] == 3 and "desconocido" in str(r["motivo"])
+    assert r["evento"] == "rechazo" and r["rc"] == rr.RC_NOMBRE_DESCONOCIDO
+    assert "desconocido" in str(r["motivo"])
     assert b.salidas() == [] and b.salida.getvalue() == b""
+
+
+def test_comando_desconocido_codigo_propio(b: Banco, capsys: pytest.CaptureFixture[str]):
+    """Close check canónico: reservado exclusivo, rc de script colisionado y rechazo sintáctico."""
+    assert rr.RC_NOMBRE_DESCONOCIDO == 193
+    b.aprobar("rc-reservado", "#!/bin/bash\nexit 193\n")
+    assert b.run("rc-reservado") == 1
+    colision = b.auditoria()[-1]
+    assert colision["evento"] == "fin" and colision["rc"] == 1 and colision["rc_script"] == 193
+    assert "[bb-root-run] rc=1 rc_script=193 salida=" in capsys.readouterr().err
+
+    b.aprobar("saluda", OK)
+    assert b.run("otro") == 193
+    rechazo = b.auditoria()[-1]
+    assert rechazo["evento"] == "rechazo" and rechazo["rc"] == 193
+    assert "nombre desconocido" in str(rechazo["motivo"])
+    assert len(b.salidas()) == 1 and b.salida.getvalue() == b""
+    # Control negativo: una entrada malformada conserva el rechazo general.
+    assert b.run("../x") == rr.RECHAZO
+    assert b.auditoria()[-1]["rc"] == rr.RECHAZO
+
+
+def test_script_rc4_sigue_propagado_y_auditado(b: Banco, capsys: pytest.CaptureFixture[str]):
+    b.aprobar("rc-cuatro", "#!/bin/bash\nexit 4\n")
+    assert b.run("rc-cuatro") == 4
+    r = b.auditoria()[-1]
+    assert r["evento"] == "fin" and r["rc"] == 4 and "rc_script" not in r
+    assert "[bb-root-run] rc=4 salida=" in capsys.readouterr().err
+
+
+def test_rc_desconocido_no_es_un_rechazo_general_timeout_ni_codigo_de_senal():
+    estados_por_senal = {128 + int(s) for s in signal.valid_signals() if int(s) > 0}
+    assert rr.RC_NOMBRE_DESCONOCIDO not in {rr.RECHAZO, 4, rr.RC_TIMEOUT}
+    assert rr.RC_NOMBRE_DESCONOCIDO not in estados_por_senal
 
 
 @pytest.mark.parametrize("malo", ["../x", "a/b", "/etc/passwd", "A", "-x", "x_y", "a b",

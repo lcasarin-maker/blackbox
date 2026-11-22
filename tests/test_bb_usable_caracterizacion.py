@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import importlib.machinery as machinery
 import importlib.util as util
+import itertools
 import json
 import os
 from pathlib import Path
@@ -27,6 +28,7 @@ GOLDEN = Path(__file__).parent / "fixtures" / "bb_usable_caracterizacion.json"
 ALTO, BAJO, PLAZO = 50.0, 0.5, 301.0
 # Paso: (psi, segundos de la sonda, accion del criterio confinado si se le consulta)
 Paso = tuple[float | None, float, str]
+_corrida = itertools.count()
 
 
 def _p(psi: float | None, took: float = 0.001, accion: str = "retiene") -> Paso:
@@ -61,9 +63,24 @@ class _Fin(Exception):
     pass
 
 
-def correr(monkeypatch, pasos: list[Paso]) -> list[list[Any]]:
+def correr(monkeypatch, pasos: list[Paso], tmp_path: Path) -> list[list[Any]]:
     """Corre el `main()` real sobre `pasos` y devuelve la lista ordenada de efectos."""
+    tmp_path = tmp_path / f"run-{next(_corrida)}"
+    tmp_path.mkdir()
     bbu = _cargar()
+    datos = tmp_path / "datos"
+    cgroup = tmp_path / "cgroup"
+    proc = tmp_path / "proc"
+    app = cgroup / "user.slice/user-77.slice/user@77.service/app.slice"
+    unidad = app / "synthetic.scope"
+    unidad.mkdir(parents=True)
+    proc.mkdir()
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    monkeypatch.setenv("BLACKBOX_DATA", str(datos))
+    monkeypatch.setenv("TMPDIR", str(tmp_path / "tmp"))
+    monkeypatch.setattr(bbu, "CGROUP_ROOT", cgroup)
+    monkeypatch.setattr(bbu, "PROC_ROOT", proc)
+    monkeypatch.setattr(bbu._MAPA, "lee_clases", lambda: ())
     eventos: list[list[Any]] = []
     i = -1  # paso en curso; -1 = antes del bucle
 
@@ -102,8 +119,8 @@ def _caricias(eventos: list[list[Any]]) -> int:
 
 
 @pytest.mark.parametrize("nombre", sorted(ESCENARIOS))
-def test_main_reproduce_la_secuencia_grabada(nombre, monkeypatch):
-    eventos = correr(monkeypatch, ESCENARIOS[nombre])
+def test_main_reproduce_la_secuencia_grabada(nombre, monkeypatch, tmp_path):
+    eventos = correr(monkeypatch, ESCENARIOS[nombre], tmp_path)
     if os.environ.get("BB_USABLE_CARACTERIZA_GRABAR") == "1":
         datos = json.loads(GOLDEN.read_text(encoding="utf-8")) if GOLDEN.exists() else {}
         datos[nombre] = eventos
@@ -114,38 +131,38 @@ def test_main_reproduce_la_secuencia_grabada(nombre, monkeypatch):
 
 # Lo que dice la secuencia grabada, en claro: si alguien la regraba con un comportamiento distinto, esto cae.
 
-def test_semantica_bajo_el_umbral_acaricia_cada_sonda(monkeypatch):
-    assert _caricias(correr(monkeypatch, ESCENARIOS["bajo_el_umbral"])) == 3
+def test_semantica_bajo_el_umbral_acaricia_cada_sonda(monkeypatch, tmp_path):
+    assert _caricias(correr(monkeypatch, ESCENARIOS["bajo_el_umbral"], tmp_path)) == 3
 
 
-def test_semantica_colapso_deja_de_acariciar(monkeypatch):
-    ev = correr(monkeypatch, ESCENARIOS["racha_hasta_colapso"])
+def test_semantica_colapso_deja_de_acariciar(monkeypatch, tmp_path):
+    ev = correr(monkeypatch, ESCENARIOS["racha_hasta_colapso"], tmp_path)
     assert _caricias(ev) == 9
     assert ["origen", 10] in ev and ["origen", 11] in ev
     assert sum(1 for e in ev if e[0] == "log" and "COLAPSO:" in e[1]) == 2
 
 
-def test_semantica_ilegible(monkeypatch):
-    assert _caricias(correr(monkeypatch, ESCENARIOS["ilegible_sin_racha"])) == 2
-    ev = correr(monkeypatch, ESCENARIOS["ilegible_en_mitad_de_racha"])
+def test_semantica_ilegible(monkeypatch, tmp_path):
+    assert _caricias(correr(monkeypatch, ESCENARIOS["ilegible_sin_racha"], tmp_path)) == 2
+    ev = correr(monkeypatch, ESCENARIOS["ilegible_en_mitad_de_racha"], tmp_path)
     assert _caricias(ev) == 5
     assert any(e[0] == "log" and "racha 4/10" in e[1] for e in ev), "la lectura perdida no absuelve"
-    ev = correr(monkeypatch, ESCENARIOS["ilegible_con_colapso_declarado"])
+    ev = correr(monkeypatch, ESCENARIOS["ilegible_con_colapso_declarado"], tmp_path)
     assert _caricias(ev) == 9
 
 
-def test_semantica_fuera_de_plazo_no_acaricia(monkeypatch):
-    assert _caricias(correr(monkeypatch, ESCENARIOS["sonda_fuera_de_plazo"])) == 1
+def test_semantica_fuera_de_plazo_no_acaricia(monkeypatch, tmp_path):
+    assert _caricias(correr(monkeypatch, ESCENARIOS["sonda_fuera_de_plazo"], tmp_path)) == 1
 
 
-def test_semantica_confinado(monkeypatch):
-    assert _caricias(correr(monkeypatch, ESCENARIOS["confinado_acaricia"])) == 12
-    assert _caricias(correr(monkeypatch, ESCENARIOS["confinado_habria_acariciado"])) == 9
+def test_semantica_confinado(monkeypatch, tmp_path):
+    assert _caricias(correr(monkeypatch, ESCENARIOS["confinado_acaricia"], tmp_path)) == 12
+    assert _caricias(correr(monkeypatch, ESCENARIOS["confinado_habria_acariciado"], tmp_path)) == 9
 
 
-def test_semantica_bajas(monkeypatch):
+def test_semantica_bajas(monkeypatch, tmp_path):
     # 9 de la racha + la segunda y tercera baja (la racha se corto) + la nueva racha 1/10
-    assert _caricias(correr(monkeypatch, ESCENARIOS["recuperacion_tras_bajas"])) == 12
-    assert _caricias(correr(monkeypatch, ESCENARIOS["una_baja_no_absuelve_colapso"])) == 9
-    ev = correr(monkeypatch, ESCENARIOS["una_baja_no_absuelve_racha"])
+    assert _caricias(correr(monkeypatch, ESCENARIOS["recuperacion_tras_bajas"], tmp_path)) == 12
+    assert _caricias(correr(monkeypatch, ESCENARIOS["una_baja_no_absuelve_colapso"], tmp_path)) == 9
+    ev = correr(monkeypatch, ESCENARIOS["una_baja_no_absuelve_racha"], tmp_path)
     assert any(e[0] == "log" and "racha 5/10" in e[1] for e in ev)

@@ -1,0 +1,28 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+__________ test_consumidor_no_llama_activa_y_llama_ausente_o_caducada __________
+
+tmp_path = PosixPath('[RUTA_LOCAL_PRIVADA]')
+
+    def test_consumidor_no_llama_activa_y_llama_ausente_o_caducada(tmp_path):
+        from tools import marca_diagnostico as marca
+        ruta = tmp_path / 'marca.json'
+        llamadas = []
+        testigo = lambda: llamadas.append('llamada')
+        consumidor(ruta, 100, testigo)
+        assert llamadas == ['llamada']
+        llamadas.clear()
+        marca.activar(ruta, 10, 100)
+        consumidor(ruta, 109, testigo)
+>       assert llamadas == []
+E       AssertionError: assert ['llamada'] == []
+E
+E         Left contains one more item: 'llamada'
+E         Use -v to get more diff
+
+tests/test_marca_diagnostico.py:28: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_marca_diagnostico.py::test_consumidor_no_llama_activa_y_llama_ausente_o_caducada
+1 failed in 0.06s
+
+rc=1
