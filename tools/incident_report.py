@@ -39,6 +39,7 @@ from typing import Any
 
 from tools import hallazgo
 from tools import reboot_verdict as rv
+from tools.capture_io import strict_json_loads
 
 RAIZ = Path(__file__).resolve().parents[1]
 FIRMAS = RAIZ / "rules/firmas_gb10.json"
@@ -746,19 +747,33 @@ def _lee_bitacora_cola(
     with ruta.open(encoding="utf-8") as fh:
         for linea in fh:
             lineas += 1
-            if '"event": "job_done"' in linea:
-                evento = "job_done"
-            elif marca in linea and '"event": "job_start"' in linea:
-                evento = "job_start"
-            elif marca in linea and '"event": "job_orphaned"' in linea:
-                evento = "job_orphaned"
-            else:
-                continue
             try:
-                d = json.loads(linea)
-            except json.JSONDecodeError:
-                continue  # ultima fila truncada
+                d = strict_json_loads(linea)
+            except json.JSONDecodeError as exc:
+                if not linea.endswith("\n") and exc.msg == "Expecting value" and exc.pos == len(linea):
+                    continue  # ultima fila truncada
+                raise ValueError("fila JSON invalida") from None
+            if not isinstance(d, dict):
+                raise ValueError("fila de bitacora no es objeto")
+            evento = d.get("event")
+            if evento not in ("job_start", "job_done", "job_orphaned"):
+                continue
             jf = d.get("job_file")
+            if not isinstance(jf, str) or not jf:
+                raise ValueError("job_file ausente o invalido")
+            boot_key = {"job_start": "boot_id", "job_orphaned": "boot_id_al_arrancar"}.get(evento)
+            if boot_key:
+                boot = d.get(boot_key)
+                if not isinstance(boot, str) or not boot:
+                    raise ValueError("boot_id ausente o invalido")
+                if boot != marca:
+                    continue
+            elif "boot_id" in d:
+                boot = d["boot_id"]
+                if not isinstance(boot, str) or not boot:
+                    raise ValueError("boot_id invalido")
+                if boot != marca:
+                    continue
             if evento == "job_start":
                 iniciados += 1
                 abiertos[jf] = d
@@ -783,7 +798,7 @@ def carga_externa(boot_id: str, ruta: Path | None = None) -> dict[str, Any]:
     marca = _boot_con_guiones(boot_id)
     try:
         abiertos, huerfanos, iniciados, terminados, lineas = _lee_bitacora_cola(ruta, marca)
-    except (OSError, UnicodeError):
+    except (OSError, UnicodeError, ValueError):
         return {"estado": COLLECTION_FAILED, "fuente": str(ruta)}
     base = {
         "fuente": str(ruta),

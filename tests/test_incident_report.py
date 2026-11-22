@@ -698,6 +698,47 @@ def _done(jf):
     return {"ts": "2026-10-11T11:40:00", "event": "job_done", "job_file": jf, "exit_code": 0}
 
 
+def test_carga_externa_json_compacto_identidad_y_solo_lectura(tmp_path):
+    path = tmp_path / "cola.jsonl"
+    rows = [_start("abierto.json"), _start("cerrado.json"), _done("cerrado.json"),
+            {**_start("otro.json", boot="otro"), "nota": BOOT_G}]
+    before = ("\n".join(json.dumps(row, separators=(",", ":")) for row in rows) + "\n").encode()
+    path.write_bytes(before)
+    result = ir.carga_externa(BOOT, path)
+    assert result["jobs_iniciados_en_el_boot"] == 2
+    assert result["jobs_terminados_en_el_boot"] == 1
+    assert [row["job_file"] for row in result["jobs_en_ejecucion_al_cortar"]] == ["abierto.json"]
+    assert path.read_bytes() == before
+
+
+def test_carga_externa_json_invalido_no_inventa_resultados(tmp_path):
+    path = tmp_path / "cola.jsonl"
+    for content in (b'{"event":"job_start","boot_id":"x"}\n', b'{"event":\n{}\n', b'[]\n',
+                    b'{"event":"job_start","event":"job_done","job_file":"x"}',
+                    b'{"event":?}', b'{"event":"job_start",}'):
+        path.write_bytes(content)
+        assert ir.carga_externa(BOOT, path)["estado"] == ir.COLLECTION_FAILED
+        assert path.read_bytes() == content
+    content = (json.dumps(_start("a.json")) + '\n{"event":').encode()
+    path.write_bytes(content)
+    assert ir.carga_externa(BOOT, path)["jobs_iniciados_en_el_boot"] == 1
+    assert path.read_bytes() == content
+
+
+@pytest.mark.parametrize("exit_code", [0, 7])
+def test_carga_externa_done_de_otro_boot_no_cierra(exit_code, tmp_path):
+    done = {**_done("a.json"), "boot_id": "otro", "exit_code": exit_code}
+    path = _cola_log(tmp_path, [_start("a.json"), done])
+    before = path.read_bytes()
+    result = ir.carga_externa(BOOT, path)
+    assert result["jobs_terminados_en_el_boot"] == 0
+    assert [job["job_file"] for job in result["jobs_en_ejecucion_al_cortar"]] == ["a.json"]
+    assert path.read_bytes() == before
+    done["boot_id"] = 7
+    path = _cola_log(tmp_path, [_start("a.json"), done])
+    assert ir.carga_externa(BOOT, path)["estado"] == ir.COLLECTION_FAILED
+
+
 def test_carga_externa_lista_solo_los_jobs_del_boot_sin_job_done(tmp_path):
     f = _cola_log(
         tmp_path,
