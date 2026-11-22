@@ -158,6 +158,10 @@ def _restart_event(record: dict[str, Any], state: dict[str, Any], errors: list[s
     else:
         state["worker"] = new_worker
         state["pid"] = None
+        state["provider"] = None
+        state["provider_worker"] = None
+        state["latency"] = None
+        state["latency_worker"] = None
         state["restart_seen"] = True
 
 

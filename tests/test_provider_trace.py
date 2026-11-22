@@ -251,3 +251,65 @@ def test_worker_pid_change_without_restart_is_unknown() -> None:
     result = provider_trace.analyze_lines(lines)
     assert result["status"] == "unknown"
     assert any("pid changed without restart" in item for item in result["unknowns"])
+
+
+def test_restart_requires_fresh_provider_and_latency_for_current_instance(tmp_path: Path) -> None:
+    prefix = [
+        '{"event":"request","request_id":"r","requested_provider":"gpu"}',
+        '{"event":"worker","request_id":"r","worker_id":"a","pid":1}',
+        '{"event":"provider","request_id":"r","worker_id":"a","provider":"gpu"}',
+        '{"event":"latency","request_id":"r","worker_id":"a","milliseconds":1}',
+        '{"event":"restart","request_id":"r","old_worker_id":"a","new_worker_id":"b"}',
+        '{"event":"worker","request_id":"r","worker_id":"b","pid":2}',
+        '{"event":"restart","request_id":"r","old_worker_id":"b","new_worker_id":"a"}',
+        '{"event":"worker","request_id":"r","worker_id":"a","pid":3}',
+    ]
+    trace = tmp_path / "trace.jsonl"
+
+    def analyze(lines: list[str]) -> dict[str, object]:
+        trace.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return provider_trace.analyze_file(trace)
+
+    assert analyze(prefix)["status"] == "unknown"
+
+    for fresh in (
+        [],
+        ['{"event":"provider","request_id":"r","worker_id":"a","provider":"gpu"}'],
+        ['{"event":"latency","request_id":"r","worker_id":"a","milliseconds":3}'],
+    ):
+        result = analyze(prefix + fresh)
+        assert result["status"] == "unknown"
+        assert result["could_not_run_count"] == 0
+
+    fresh_gpu = prefix + [
+        '{"event":"provider","request_id":"r","worker_id":"a","provider":"gpu"}',
+        '{"event":"latency","request_id":"r","worker_id":"a","milliseconds":3}',
+    ]
+    assert analyze(fresh_gpu)["status"] == "pass"
+
+    fresh_cpu = prefix + [
+        '{"event":"provider","request_id":"r","worker_id":"a","provider":"cpu"}',
+        '{"event":"latency","request_id":"r","worker_id":"a","milliseconds":3}',
+    ]
+    blocked = analyze(fresh_cpu)
+    assert blocked["status"] == "block"
+    assert blocked["could_not_run_count"] == 0
+
+
+def test_historical_cpu_survives_restart_and_fresh_gpu_observations(tmp_path: Path) -> None:
+    lines = [
+        '{"event":"request","request_id":"r","requested_provider":"gpu"}',
+        '{"event":"worker","request_id":"r","worker_id":"a","pid":1}',
+        '{"event":"provider","request_id":"r","worker_id":"a","provider":"cpu"}',
+        '{"event":"latency","request_id":"r","worker_id":"a","milliseconds":1}',
+        '{"event":"restart","request_id":"r","old_worker_id":"a","new_worker_id":"b"}',
+        '{"event":"worker","request_id":"r","worker_id":"b","pid":2}',
+        '{"event":"provider","request_id":"r","worker_id":"b","provider":"gpu"}',
+        '{"event":"latency","request_id":"r","worker_id":"b","milliseconds":2}',
+    ]
+    trace = tmp_path / "trace.jsonl"
+    trace.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    result = provider_trace.analyze_file(trace)
+    assert result["status"] == "block"
+    assert result["findings"] == ["request r: GPU request was served by CPU on worker a"]
+    assert result["could_not_run_count"] == 0
