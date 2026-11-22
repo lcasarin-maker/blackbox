@@ -1019,19 +1019,29 @@ def _desk_cases() -> dict[str, dict[str, Any]]:
 
 
 def test_desktop_predicate_each_edge() -> None:
-    assert fhs._check_desktop(_desk_cases())[0] == "pass"
+    document = {"captures": [{
+        "name": "incident",
+        "argv": ["journalctl", "-b"],
+        "exit_code": 0,
+        "stdout": "Failed to start GNOME Display Manager",
+    }]}
+    assert fhs._check_desktop(document, _desk_cases())[0] == "pass"
 
     def variant(mutate: Any) -> tuple[str, str]:
         cases = _desk_cases()
         mutate(cases)
-        return fhs._check_desktop(cases)
+        return fhs._check_desktop(document, cases)
 
     assert "SSH probe missing" in variant(lambda c: c["incident"].pop("ssh_exit_code"))[1]
     assert "reachability is not established" in variant(lambda c: c["incident"].update(ssh_exit_code=255))[1]
-    status, reason = variant(lambda c: c["incident"].update(session_failure_signatures=[]))
-    assert status == "fail" and "no GNOME failure signature" in reason
-    assert variant(lambda c: c["incident"].update(session_failure_signatures=[],
-                                                   session_classification="headless"))[0] == "pass"
+
+    cases = _desk_cases()
+    status, reason = fhs._check_desktop({"captures": []}, cases)
+    assert status == "unknown" and "desktop failure signature is missing" in reason
+    cases["incident"].update(session_failure_signatures=[], session_classification="headless")
+    assert fhs._check_desktop({"captures": []}, cases)[0] == "unknown"
+    assert fhs._check_desktop(document, cases)[0] == "pass"
+
     assert "control is incomplete" in variant(lambda c: c["control"].update(display_connected=False))[1]
     assert "independent successful SSH" in variant(lambda c: c["control"].update(ssh_exit_code=1))[1]
     assert variant(lambda c: c["recovery"].update(display_connected=False))[0] == "fail"
