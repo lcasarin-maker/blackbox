@@ -72,21 +72,39 @@ if [ -z "$arranque" ]; then
     exit 2
 fi
 
-vivo=$(date -d "$arranque" +%s 2>/dev/null)
-if [ -z "$vivo" ]; then
+if ! vivo=$(date -d "$arranque" +%s 2>/dev/null); then
+    echo "COULD_NOT_RUN: no se pudo convertir la fecha de arranque '$arranque'" >&2
+    exit 2
+fi
+if [[ ! "$vivo" =~ ^-?[0-9]+$ ]]; then
     echo "COULD_NOT_RUN: no se pudo parsear '$arranque'" >&2
     exit 2
 fi
-mod=$(stat -c %Y "$codigo")
+if ! mod=$(stat -c %Y -- "$codigo" 2>/dev/null); then
+    echo "COULD_NOT_RUN: no se pudo leer el mtime de $codigo" >&2
+    exit 2
+fi
+if [[ ! "$mod" =~ ^-?[0-9]+$ ]]; then
+    echo "COULD_NOT_RUN: el mtime de $codigo no es un entero valido" >&2
+    exit 2
+fi
 
-if [ "$vivo" -gt "$mod" ]; then
+if [ "$vivo" -gt "$mod" ] 2>/dev/null; then
     echo "$unit arranco $arranque, despues de la ultima modificacion de $codigo"
     exit 0
 fi
-echo "$unit arranco $arranque y $codigo se modifico despues"
-if [ "${#alcance[@]}" -gt 0 ]; then
-    echo "el proceso vivo corre codigo VIEJO. Lo arregla: systemctl --user restart $unit"
-else
-    echo "el proceso vivo corre codigo VIEJO. Lo arregla: sudo systemctl restart $unit"
+if [ "$vivo" -lt "$mod" ] 2>/dev/null; then
+    echo "$unit arranco $arranque y $codigo se modifico despues"
+    if [ "${#alcance[@]}" -gt 0 ]; then
+        echo "el proceso vivo corre codigo VIEJO. Lo arregla: systemctl --user restart $unit"
+    else
+        echo "el proceso vivo corre codigo VIEJO. Lo arregla: sudo systemctl restart $unit"
+    fi
+    exit 1
 fi
-exit 1
+if [ "$vivo" -eq "$mod" ] 2>/dev/null; then
+    echo "COULD_NOT_RUN: el arranque de $unit y la modificacion de $codigo coinciden dentro de la resolucion de un segundo" >&2
+    exit 2
+fi
+echo "COULD_NOT_RUN: no se pudo comparar el arranque y el mtime dentro del rango entero disponible" >&2
+exit 2

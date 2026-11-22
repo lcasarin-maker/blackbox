@@ -76,3 +76,36 @@ Desde ahi los ocho nodos de `tests/test_gateway_handoff.py` cuentan dentro
 de la suite de master; su cierre depende de
 `FEATURE-GATEWAY-VLLM-Y-RIESGOS-DE-MAQUINA-DESDE-CONSUMIDOR-01` (alcance D3),
 no de esta ficha.
+
+## Microfase `control_racha` (2026-11-21)
+
+Corregida la lectura de muestras PSI del control. Una fila reconocida como
+muestra requiere objeto `psi`, `ts` válido y `psi.mem_full` numérico, finito y
+en `[0, 100]`; cero es un valor observado. Sólo se omiten marcadores exactos
+de `bin/bb`: inicio con `ts` válido, `burst_inicio: true` y `motivo` no vacío;
+fin con `ts` válido y `burst_fin: true`. Las filas híbridas se rechazan. Una
+última línea JSON incompleta sin terminador se tolera si quedan muestras
+válidas; una línea completa malformada produce `COULD_NOT_RUN`. La
+decodificación estricta rechaza claves duplicadas usando
+`tools.capture_io.strict_json_loads`. `--corte` no finito/no positivo y
+cualquier `--bajas` no positiva también producen `COULD_NOT_RUN` (rc=2).
+
+La validación se ejecutó sólo con selección sintética; no se corrieron los
+tests que leen el corpus vivo ni la suite completa. La evidencia anonimizada y
+los controles CLI están en
+`tasks/evidence/DEBT-SUITE-PREVIA-ROJA-2026-11-13-01/README.md`. Esta ficha
+permanece `open`; la deuda general y su `close_check` no se dan por cerrados.
+
+## Microfase `demonio_al_dia` (2026-11-21)
+
+El CLI compara ahora timestamps sólo tras comprobar que `date` terminó con rc=0
+y produjo un entero. `stat` fallido, vacío o no entero devuelve `COULD_NOT_RUN`
+(rc=2). El proceso vivo se declara viejo (rc=1) sólo si la comparación
+`arranque < mtime` termina con éxito; igualdad a resolución de un segundo y
+comparaciones fuera de rango devuelven `COULD_NOT_RUN`. Se conserva la consulta
+`systemctl --user` y la comprobación de PID/estado.
+
+La verificación fue únicamente CLI sintético en bwrap con `/proc` temporal y
+shims. No se ejecutó `tests/test_demonio_al_dia.py` ni la suite completa; el
+`close_check` canónico de suite permanece abierto/CNR. Evidencia anonimizada en
+`tasks/evidence/DEBT-SUITE-PREVIA-ROJA-2026-11-13-01/README.md`.
