@@ -215,5 +215,6 @@ El hook completo del commit pasó sus seis controles: ruff, gitleaks,
 integridad, PII del rango de commit, sintaxis bash e inventario; todos con
 `could_not_run=0`. Después se escaneó el árbol versionado del `HEAD` con
 `simplecode policy --repo . pii -- --all-tracked`: `revisados=3995`
-`hallazgos=0` `could_not_run=0`. El recibo final se actualizará tras el último
-commit documental para que el escaneo corresponda exactamente a su `HEAD`.
+`hallazgos=0` `could_not_run=0`. El recibo literal del escaneo del `HEAD`
+final, incluido su SHA, queda en scratch privado para no alterar el árbol tras
+la comprobación.
