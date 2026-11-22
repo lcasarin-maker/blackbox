@@ -7,6 +7,16 @@ from pathlib import Path
 import sys
 from typing import Any
 
+if __package__ in (None, ""):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from tools.capture_io import read_regular_bytes, strict_json_loads
+else:
+    from .capture_io import read_regular_bytes, strict_json_loads
+
+# Seis APIs con hasta cinco filas por API; el mayor run-profile versionado mide 49,391 bytes.
+# 512 KiB deja margen para metadatos y acota el archivo que consume la CLI.
+MAX_EVIDENCE_BYTES = 512 * 1024
+
 APIS = {
     "none": "none", "cpu_touch": "cpu_touch", "cuda_malloc": "cuda_malloc",
     "cuda_malloc_repeat": "cuda_malloc", "cuda_malloc_managed": "cuda_malloc_managed",
@@ -21,7 +31,7 @@ def _integer(value: Any, label: str) -> int:
 
 
 def _observations(run: dict) -> list[dict]:
-    rows = [json.loads(line) for line in run["stdout"].splitlines()]
+    rows = [strict_json_loads(line) for line in run["stdout"].splitlines()]
     if not rows or any(not isinstance(row, dict) for row in rows):
         raise ValueError("worker observations must be nonempty JSON objects")
     phases = [row["phase"] for row in rows]
@@ -123,7 +133,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("evidence", type=Path)
     args = parser.parse_args(argv)
     try:
-        result = verify(json.loads(args.evidence.read_text(encoding="utf-8")))
+        raw = read_regular_bytes(args.evidence, MAX_EVIDENCE_BYTES)
+        if len(raw) > MAX_EVIDENCE_BYTES:
+            raise ValueError(f"evidence exceeds {MAX_EVIDENCE_BYTES} byte limit")
+        result = verify(strict_json_loads(raw.decode("utf-8")))
     except (OSError, UnicodeError, ValueError) as exc:
         result = _result("unknown", [], [str(exc)], ["evidence could not be read"])
     print(json.dumps(result, sort_keys=True))
