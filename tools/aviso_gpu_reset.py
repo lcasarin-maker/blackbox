@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -23,6 +24,102 @@ from typing import Any
 from tools import aviso_termico, reboot_verdict
 
 RUTA = reboot_verdict.DATOS / "aviso_gpu_reset.jsonl"
+
+
+def corroborar_gsp(*, boot_id: str | None, evidencia_boot_id: str | None,
+                   lineas: list[str] | None, intervalo_sospecha: tuple[float, float] | None,
+                   ahora_monotonic: float, journal_legible: bool,
+                   incertidumbre_s: float | None) -> dict[str, Any]:
+    """Usa hechos y tiempo de la misma línea reconocida por el parser."""
+    reloj_valido = (isinstance(ahora_monotonic, (int, float))
+                    and math.isfinite(ahora_monotonic))
+    incertidumbre_valida = (isinstance(incertidumbre_s, (int, float))
+                            and math.isfinite(incertidumbre_s) and incertidumbre_s >= 0)
+    intervalo_valido = (isinstance(intervalo_sospecha, tuple) and len(intervalo_sospecha) == 2
+                        and all(isinstance(x, (int, float)) and math.isfinite(x)
+                                for x in intervalo_sospecha)
+                        and intervalo_sospecha[0] <= intervalo_sospecha[1])
+    if (not boot_id or evidencia_boot_id != boot_id or not reloj_valido
+            or not journal_legible or not intervalo_valido or not incertidumbre_valida
+            or lineas is None):
+        return {"estado": "desconocido", "incertidumbre_s": incertidumbre_s}
+    hechos_parser = None
+    tiempo = None
+    for linea in lineas:
+        if not isinstance(linea, str):
+            continue
+        # El parser canónico valida firma y monotónico en la misma línea. Parsear
+        # una línea a la vez evita que un timeout antiguo oculte uno en ventana.
+        candidato = reboot_verdict.gpu_del_boot([linea])
+        instante = candidato["gsp_timeout_monotonic_s"]
+        if (candidato["gsp_timeout"] and instante is not None
+                and math.isfinite(instante)
+                and intervalo_sospecha[0] <= instante <= intervalo_sospecha[1]
+                and instante <= ahora_monotonic):
+            hechos_parser, tiempo = candidato, instante
+            break
+    if hechos_parser is None:
+        return {"estado": "desconocido", "incertidumbre_s": incertidumbre_s}
+    return {"estado": "confirmado", "incertidumbre_s": incertidumbre_s,
+            "evidencia_monotonic": tiempo, "hechos_parser": hechos_parser}
+
+
+def aviso_calidad(evento: dict[str, Any], *, receptor=None, clave: str | None = None,
+                  estado: set[str] | None = None) -> bool:
+    """Canal de calidad solo con receptor y clave explícitos; éxito = ACK del receptor.
+
+    `estado` deduplica en memoria dentro del llamador. Un fallo no consume la
+    clave y permite reintentar; una caída del proceso pierde dedup, por lo que
+    no ofrece exactamente-una-vez ni persistencia productiva.
+    """
+    if receptor is None or not clave or estado is None or clave in estado:
+        return False
+    if receptor(evento) is not True:
+        return False
+    estado.add(clave)
+    return True
+
+
+def aviso_calidad_corrobora(evento: dict[str, Any], *,
+                            boot_id: str | None, evidencia_boot_id: str | None,
+                            lineas: list[str] | None, intervalo_sospecha: tuple[float, float] | None,
+                            observaciones_calidad: list[dict[str, Any]], ahora_monotonic: float,
+                            journal_legible: bool, incertidumbre_s: float | None,
+                            receptor=None, clave: str | None = None,
+                            estado: set[str] | None = None) -> bool:
+    """Ruta explícita de aviso sintético; main() productivo no la invoca."""
+    evidencia = corroborar_gsp(
+        boot_id=boot_id, evidencia_boot_id=evidencia_boot_id, lineas=lineas,
+        intervalo_sospecha=intervalo_sospecha,
+        ahora_monotonic=ahora_monotonic, journal_legible=journal_legible,
+        incertidumbre_s=incertidumbre_s)
+    if evidencia["estado"] != "confirmado":
+        return False
+    ultima_observacion = (observaciones_calidad[-1]
+                          if isinstance(observaciones_calidad, list) and observaciones_calidad
+                          and isinstance(observaciones_calidad[-1], dict) else {})
+    calidad_sustenta = (isinstance(observaciones_calidad, list) and len(observaciones_calidad) >= 2
+                        and isinstance(evento, dict)
+                        and evento.get("tipo") == "gpu_calidad"
+                        and evento.get("boot_id") == boot_id
+                        and all(evento.get(k) == ultima_observacion.get(k)
+                                for k in ("boot_id", "monotonic_s", "estado", "comparacion", "edad_contenido_s"))
+                        and all(isinstance(o, dict) and o.get("boot_id") == boot_id
+                                and o.get("estado") == "reciente"
+                                and o.get("comparacion") == "igual"
+                                and isinstance(o.get("monotonic_s"), (int, float))
+                                and math.isfinite(o["monotonic_s"])
+                                and intervalo_sospecha[0] <= o["monotonic_s"] <= intervalo_sospecha[1]
+                                and o["monotonic_s"] <= ahora_monotonic
+                                and isinstance(o.get("edad_contenido_s"), (int, float))
+                                and math.isfinite(o["edad_contenido_s"])
+                                for o in observaciones_calidad)
+                        and observaciones_calidad[-1]["monotonic_s"] > observaciones_calidad[0]["monotonic_s"]
+                        and observaciones_calidad[-1]["edad_contenido_s"] > observaciones_calidad[0]["edad_contenido_s"]
+                        and evento.get("monotonic_s") == observaciones_calidad[-1]["monotonic_s"])
+    if not calidad_sustenta:
+        return False
+    return aviso_calidad(evento, receptor=receptor, clave=clave, estado=estado)
 
 
 def hechos(lineas: list[str]) -> dict[str, Any]:
