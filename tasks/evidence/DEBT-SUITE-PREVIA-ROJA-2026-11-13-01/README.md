@@ -202,3 +202,18 @@ servicios.
 La ficha conserva `status: open` y el `close_check` canónico de suite completa,
 que continúa abierto/CNR. No se corrieron corpus vivo, tests de demonio real,
 suite completa ni cargas pesadas.
+
+El comparador de identidad también tuvo control negativo: agregar una línea a
+una copia scratch del shell hizo que `cmp -s` retornara 1.
+
+```text
+cmp -s tools/demonio_al_dia.sh <scratch>/comparator/candidate.sh
+cmp_mutated_rc=1 (expected 1)
+```
+
+El hook completo del commit pasó sus seis controles: ruff, gitleaks,
+integridad, PII del rango de commit, sintaxis bash e inventario; todos con
+`could_not_run=0`. Después se escaneó el árbol versionado del `HEAD` con
+`simplecode policy --repo . pii -- --all-tracked`: `revisados=3995`
+`hallazgos=0` `could_not_run=0`. El recibo final se actualizará tras el último
+commit documental para que el escaneo corresponda exactamente a su `HEAD`.
