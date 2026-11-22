@@ -87,6 +87,16 @@ El valor de `--enchufe-tipo` depende del enchufe: `shelly1` para un Shelly de pr
 `shelly2` para un Shelly Plus, Pro o de generación 3, y `tasmota` para un enchufe con Tasmota. Puedes añadir el enchufe más
 tarde: vuelve a correr `install` con estas opciones y el testigo conserva lo que ya estaba configurado.
 
+#### Shelly con Digest SHA-256
+
+La autenticación sólo se activa al añadir `"enchufe_auth_file": "<ruta>"` al archivo local `testigo.json`. El archivo
+referenciado contiene JSON con `usuario` y `contrasena`; no guardes la clave dentro de `testigo.json` ni en el repositorio.
+En POSIX el lector exige que el archivo no dé permisos a grupo u otros (por ejemplo, modo `600`). En Windows guarda el
+archivo dentro de tu perfil de usuario, en una carpeta cuyos permisos NTFS limiten el acceso a tu cuenta; el script stdlib
+no inspecciona ACL de Windows. El medidor de energía usa el campo local `auth_file` con la misma referencia. Sin esa clave,
+los lectores mantienen el modo sin autenticación existente. Una clave ausente, inválida o rechazada registra una lectura
+fallida y nunca inventa voltaje o potencia.
+
 ## Paso 4. Comprueba que funciona
 
 Espera un minuto y corre el comando de tu sistema:
