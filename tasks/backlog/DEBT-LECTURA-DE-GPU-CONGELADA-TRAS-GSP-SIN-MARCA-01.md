@@ -38,3 +38,26 @@ La afirmacion «la potencia de GPU (5 a 9,7 W) descarta la GPU como causa» de l
 ## Limite
 
 No se probo si `nvidia-smi` devuelve cache o si el stream `-lms` se bloquea; solo se midio que la salida es identica. Distinguirlo requiere correr `nvidia-smi` aparte durante un fallo real.
+
+## Retoma offline — 2026-11-21 (ficha abierta)
+
+El diagnóstico y la conciliación de esta retoma refutan el candidato de 8 s: la corrida corregida leyó 11 archivos, marcó los 5 arranques etiquetados GSP y también 1 de 6 controles sanos. No se fija umbral ni se interpreta igualdad de contenido como congelamiento físico.
+
+El candidato de código añade `gpu_calidad` a ambas entradas, con edad monotónica de la última entrega, edad desde el primer contenido comparable de la racha, número de entregas y estado explícito. La edad de entrega se reinicia con una entrega idéntica válida. Un error o ausencia conserva el ancla anterior; una respuesta transportada con métrica requerida ausente renueva entrega y declara `no_comparable`. El tiempo civil `ts` sigue intacto. Las anclas viven solo en memoria de una instancia y se invalidan ante retroceso o reloj no finito. La consulta rechaza NaN/inf en sus cuatro métricas requeridas; stdout vacío lleva diagnóstico de ausencia distinto a varias filas ambiguas.
+
+El stream consulta también `index`; se conserva `gpu` como los cinco valores métricos heredados. Filas acumuladas con un solo índice consumen la última fila; varios índices en un tick se declaran `ambiguo`. Se retiene y recompone un fragmento entre ticks. Cuatro métricas numéricas finitas son requeridas; `memory.used` puede ser `[N/A]` sin invalidar la comparación. La telemetría de consulta obtiene índice explícito, rechaza múltiples filas, comprueba `rc` y limita la llamada con timeout. Sus valores privados de identidad/transporte se quitan antes de serializar; el tracker no entra en el estado persistido.
+
+La corroboración GSP recibe evidencia inyectada y exige firma reconocida por `gpu_del_boot`, tiempo de esa misma línea dentro del intervalo explícito, journal legible, mismo boot, hora no futura e incertidumbre finita. Cada línea se consulta con el parser canónico para que una firma antigua fuera de ventana no tape otra válida dentro. El aviso de calidad es una función aislada: necesita observaciones de los productores del mismo boot y ventana, iguales, recientes y con edad de contenido creciente, más receptor, clave y estado explícitos. Deduplica después de ACK; un fallo permite reintento; caída entre envío y registro puede duplicar y no promete exactamente una vez. `main()` productivo no llama esta función y el efecto del aviso de reset existente conserva su ruta.
+
+El stream procesa todas las filas completas de un tick. El caso A→B→A deja `gpu` con la fila legacy final A y registra el cambio intermedio para reiniciar la edad de contenido y la racha. El índice es la única identidad disponible en el CSV; se agrupan filas con el mismo índice y se rechazan ticks con varios índices.
+
+### Límites y trabajo pendiente separado
+
+- **Código offline:** candidato preparado en las dos entradas versionadas; la copia suelta del sampler no se toca. No se ejecutaron servicios, consultas de GPU, `nvidia-smi`, journal, builds, despliegues ni avisos reales. La corrida histórica amplia `94 passed` se excluye: el nodo `test_linea_con_datos_vivos` lee `/proc` real. El registro de la incidencia y los comandos están en scratch privado, sin datos capturados.
+- **Calibración:** pendiente. Se requieren capturas con etiqueta, cobertura, falsos positivos y acuerdo de identidad entre fuentes. 8 s queda rechazado y no se traduce a regla del código.
+- **Operación:** pendiente comprobar ruta efectiva de `BB_MUESTREO_SCRIPT`, despliegue versionado y consumidores strictos; no se leyó configuración instalada ni se modificaron unidades.
+- **Foro:** pendiente decidir y redactar la corrección externa; esta retoma no publica nada.
+
+### Cierre funcional propuesto
+
+Sustituir el `close_check` grep solo después de aceptar este contrato. El runner debe ejecutar únicamente los nodos sintéticos nombrados en `tasks/evidence/DEBT-LECTURA-DE-GPU-CONGELADA-TRAS-GSP-SIN-MARCA-01/README.md`, guardar JUnit en `$TMPDIR`, y emitir `PASS` solo con pruebas ejecutadas y cero fallos; `FAIL` si hubo pruebas ejecutadas con fallo; `COULD_NOT_RUN` si pytest no inicia, la colección no produce casos o falta el recibo JUnit. El test de comentario `gpu_edad` demuestra por qué el grep actual no acredita comportamiento. La ficha permanece abierta hasta calibración, revisión read-only, ruta operativa y decisión del foro.

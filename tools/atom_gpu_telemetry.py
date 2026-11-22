@@ -49,6 +49,7 @@ Diseño:
 import collections
 import argparse
 import ipaddress
+import importlib.util
 import math
 import json
 import os
@@ -64,6 +65,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+
 
 # (sin sys.path: al venir del consumidor traia un solo acoplamiento, _argv_tokens,
 #  y esta abajo copiado -- 8 lineas. Ver DGX-585.)
@@ -91,6 +93,11 @@ def _argv_tokens(pid: str) -> list[str]:
     return [t for t in raw.decode("utf-8", "replace").split("\0") if t]
 
 REPO = Path(__file__).resolve().parent.parent
+
+_CALIDAD_SPEC = importlib.util.spec_from_file_location("_muestreo_gpu_calidad", Path(__file__).with_name("muestreo_1s.py"))
+_CALIDAD_MODULE = importlib.util.module_from_spec(_CALIDAD_SPEC)
+_CALIDAD_SPEC.loader.exec_module(_CALIDAD_MODULE)
+CalidadGPU = _CALIDAD_MODULE.CalidadGPU
 # Los datos NO viven en el repo: van al directorio de datos de blackbox, que es
 # de donde el consumidor los lee ahora ("que el consumidor consuma lo que bb
 # produce", Luis 2026-09-24). Se respeta BLACKBOX_DATA, igual que el resto de esta caja.
@@ -383,6 +390,10 @@ def _correr_resultado(*args: str) -> subprocess.CompletedProcess:
                           check=False)
 
 
+def _ejecutar_gpu(args, **kwargs):
+    return subprocess.run(args, **kwargs)
+
+
 def _correr(*args: str) -> str:
     return _correr_resultado(*args).stdout
 
@@ -392,7 +403,8 @@ def _a_float(texto) -> float | None:
     (`memory.used` es el caso conocido del GB10), y un `temp` de sysfs puede
     venir vacío si la zona desapareció entre el glob y la lectura."""
     try:
-        return float(texto)
+        valor = float(texto)
+        return valor if math.isfinite(valor) else None
     except (TypeError, ValueError):
         return None
 
@@ -451,7 +463,7 @@ def leer_zonas() -> list[dict]:
     return zonas
 
 
-def leer_gpu() -> dict:
+def leer_gpu(ejecutar=None) -> dict:
     """`memory.used`/`memory.total` NO se piden a propósito: en el GB10 la
     memoria es unificada y esos campos devuelven `[N/A]`, así que pedirlos
     sería registrar un hueco con forma de dato. La memoria de GPU que sí
@@ -465,18 +477,31 @@ def leer_gpu() -> dict:
     campos_vacios = {"gpu_temp_c": None, "gpu_util_pct": None, "gpu_power_w": None,
                      "sm_clk_mhz": None, "pstate": None, "throttle": None}
     try:
-        salida = _correr("nvidia-smi",
-                         "--query-gpu=temperature.gpu,utilization.gpu,power.draw,"
-                         "clocks.current.sm,pstate,clocks_throttle_reasons.active",
-                         "--format=csv,noheader,nounits")
+        args = ["nvidia-smi", "--query-gpu=index,temperature.gpu,utilization.gpu,power.draw,"
+                "clocks.current.sm,pstate,clocks_throttle_reasons.active",
+                "--format=csv,noheader,nounits"]
+        ejecutar = ejecutar or _ejecutar_gpu
+        resultado = ejecutar(args, capture_output=True, text=True, check=False, timeout=10)
+        if resultado.returncode != 0:
+            return {**campos_vacios, "gpu_ausente": f"nvidia-smi rc={resultado.returncode}"}
+        salida = resultado.stdout
+    except subprocess.TimeoutExpired:
+        return {**campos_vacios, "gpu_ausente": "nvidia-smi timeout"}
     except OSError as exc:
         return {**campos_vacios, "gpu_ausente": f"nvidia-smi no ejecutable: {exc}"}
 
     linea = next((ln for ln in salida.splitlines() if ln.strip()), "")
-    valores = [c.strip() for c in linea.split(",")]
-    if len(valores) != 6:
+    fila = [c.strip() for c in linea.split(",")]
+    lineas = [ln for ln in salida.splitlines() if ln.strip()]
+    if not lineas:
+        return {**campos_vacios, "gpu_ausente": "nvidia-smi no devolvió filas"}
+    if len(lineas) > 1:
         return {**campos_vacios,
-                "gpu_ausente": f"nvidia-smi no devolvió 6 columnas: {linea!r}"}
+                "gpu_ausente": f"nvidia-smi devolvió {len(lineas)} filas; identidad ambigua"}
+    if len(fila) != 7 or not fila[0].isdigit():
+        return {**campos_vacios,
+                "gpu_ausente": f"nvidia-smi no devolvió índice y 6 columnas: {linea!r}"}
+    gpu_id, valores = fila[0], fila[1:]
 
     lectura: dict[str, float | str | None] = {
         "gpu_temp_c": _a_float(valores[0]),
@@ -494,6 +519,8 @@ def leer_gpu() -> dict:
                  if lectura[k] is None]
     if faltantes:
         lectura["gpu_ausente"] = f"campos no numéricos: {', '.join(faltantes)}"
+    lectura["_gpu_entrega_valida"] = True
+    lectura["_gpu_id"] = gpu_id
     return lectura
 
 
@@ -1702,13 +1729,27 @@ def mitigar(eventos: list[dict], estado: dict, **opciones) -> list[dict]:
 
 
 def muestrear(umbrales: dict, estado: dict, *, escribir: bool = True,
-              actuar: bool = True, persistir_estado=None) -> list[dict]:
+              actuar: bool = True, persistir_estado=None,
+              gpu_calidad_tracker=None) -> list[dict]:
     """Una iteración: la muestra siempre, más las alarmas que hayan cambiado
     de estado, más la mitigación si corresponde. Devuelve todo lo emitido
     para que los tests lo inspeccionen."""
     zonas = leer_zonas()
-    muestra = {"ts": _ahora(), "evento": "muestra", "boot_id": _boot_id(),
-               **leer_gpu(),
+    ts = _ahora()
+    boot_id = _boot_id()
+    gpu = leer_gpu()
+    tracker = gpu_calidad_tracker or CalidadGPU(time.monotonic)
+    transporte_valido = bool(gpu.pop("_gpu_entrega_valida", False))
+    gpu_id = gpu.pop("_gpu_id", None)
+    metricas_requeridas = ("gpu_temp_c", "gpu_util_pct", "gpu_power_w", "sm_clk_mhz")
+    comparable = (not gpu.get("gpu_ausente")
+                  and all(isinstance(gpu.get(k), (int, float))
+                          and math.isfinite(gpu[k]) for k in metricas_requeridas))
+    entrega_estado = "reciente" if comparable else ("no_comparable" if transporte_valido else "error")
+    gpu_calidad = tracker.observar((gpu_id, gpu) if comparable else None, estado=entrega_estado,
+                                   entrega=transporte_valido and not comparable)
+    muestra = {"ts": ts, "evento": "muestra", "boot_id": boot_id,
+               **gpu, "gpu_calidad": gpu_calidad,
                **leer_memoria_sistema(), **leer_psi_memoria(),
                **leer_vllm_metrics(), "zonas": zonas}
     # Los procesos de GPU cuestan una invocación extra de nvidia-smi: 1 de
@@ -1806,9 +1847,11 @@ def _run_sampler(args) -> int:
 
     try:
         desde_revision = 0
+        gpu_calidad_tracker = CalidadGPU(time.monotonic)
         while True:
             eventos = muestrear(umbrales, estado, escribir=escribir,
                                 actuar=not args.dry_run,
+                                gpu_calidad_tracker=gpu_calidad_tracker,
                                 persistir_estado=(
                                     (lambda dato: _guardar_estado_mitigacion(
                                         dato, ruta_estado_mitigacion))

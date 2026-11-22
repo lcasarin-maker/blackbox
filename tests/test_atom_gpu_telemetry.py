@@ -14,7 +14,7 @@ import pytest
 from tools import atom_gpu_telemetry as agt
 
 TRIP_MILIC = 104800  # 104.8 °C, medido en vivo en la ATOM el 2026-08-31
-SALIDA_NVIDIA_SMI = "77, 93, 41.45, 2502, P0, 0x0000000000000000\n"
+SALIDA_NVIDIA_SMI = "0, 77, 93, 41.45, 2502, P0, 0x0000000000000000\n"
 
 
 def _crear_zona(base, indice: int, temp_c: float, *, con_trip: bool = True) -> None:
@@ -47,7 +47,7 @@ def thermal(tmp_path, monkeypatch):
 
 @pytest.fixture
 def gpu_ok(monkeypatch):
-    monkeypatch.setattr(agt, "_correr_resultado", lambda *args:
+    monkeypatch.setattr(agt, "_ejecutar_gpu", lambda args, **kwargs:
                         agt.subprocess.CompletedProcess(
                             args, 0, SALIDA_NVIDIA_SMI if any(
                                 arg.startswith("--query-gpu=") for arg in args) else "", ""))
@@ -58,12 +58,12 @@ def gpu_ok(monkeypatch):
 # `SALIDA_NVIDIA_SMI` declara 41.45 W y desde DGX-408 eso es `ocioso`, así que
 # ya no puede disparar la mitigación -- un GPU bajo carga es un sujeto distinto
 # y necesita su propia salida de `nvidia-smi`.
-SALIDA_NVIDIA_SMI_CARGADO = "83, 96, 87.05, 2502, P0, 0x0000000000000000\n"
+SALIDA_NVIDIA_SMI_CARGADO = "0, 83, 96, 87.05, 2502, P0, 0x0000000000000000\n"
 
 
 @pytest.fixture
 def gpu_cargado(monkeypatch):
-    monkeypatch.setattr(agt, "_correr_resultado", lambda *args:
+    monkeypatch.setattr(agt, "_ejecutar_gpu", lambda args, **kwargs:
                         agt.subprocess.CompletedProcess(
                             args, 0, SALIDA_NVIDIA_SMI_CARGADO if any(
                                 arg.startswith("--query-gpu=") for arg in args) else "", ""))
@@ -286,7 +286,7 @@ def test_nvidia_smi_ausente_no_tumba_el_sampler(thermal, monkeypatch):
     def _falta(*args):
         raise FileNotFoundError(2, "No such file or directory", "nvidia-smi")
 
-    monkeypatch.setattr(agt, "_correr", _falta)
+    monkeypatch.setattr(agt, "_ejecutar_gpu", lambda args, **kwargs: _falta(*args))
     eventos = agt.muestrear(agt.leer_umbrales(), _estado(), escribir=True)
 
     muestra = eventos[0]
@@ -298,15 +298,25 @@ def test_nvidia_smi_ausente_no_tumba_el_sampler(thermal, monkeypatch):
 
 
 def test_nvidia_smi_falla_y_devuelve_vacio_declara_la_ausencia(thermal, monkeypatch):
-    monkeypatch.setattr(agt, "_correr", lambda *args: "")
-    muestra = agt.muestrear(agt.leer_umbrales(), _estado(), escribir=True)[0]
-    assert "no devolvió 6 columnas" in muestra["gpu_ausente"]
+    monkeypatch.setattr(agt, "_ejecutar_gpu", lambda args, **kwargs: agt.subprocess.CompletedProcess(args, 0, "", ""))
+    for nombre in ("leer_memoria_sistema", "leer_psi_memoria", "leer_vllm_metrics", "leer_procesos_gpu"):
+        monkeypatch.setattr(agt, nombre, lambda: {})
+    monkeypatch.setattr(agt, "_boot_id", lambda: "boot-sintetico")
+    monkeypatch.setattr(agt, "vigilar_journal", lambda _e: ([], None))
+    monkeypatch.setattr(agt, "_alarmas", lambda *_a: [])
+    monkeypatch.setattr(agt, "_alarmas_sostenidas", lambda *_a: [])
+    monkeypatch.setattr(agt, "mitigar", lambda *_a, **_k: [])
+    monkeypatch.setattr(agt, "PROCESOS_GPU_CADA", 100)
+    muestra = agt.muestrear(agt.leer_umbrales(), {**_estado(), "ciclo_procs_gpu": 1},
+                            escribir=False)[0]
+    assert muestra["gpu_ausente"] == "nvidia-smi no devolvió filas"
+    assert muestra["gpu_calidad"]["estado"] == "error"
 
 
 def test_campo_na_del_gb10_se_declara_no_se_finge(thermal, monkeypatch):
     """En el GB10 la memoria es unificada y `nvidia-smi` devuelve `[N/A]`; un
     `[N/A]` en cualquier columna se registra como hueco, nunca como 0."""
-    monkeypatch.setattr(agt, "_correr", lambda *args: "77, [N/A], 41.45, 2502, P0, 0x0000000000000000\n")
+    monkeypatch.setattr(agt, "_ejecutar_gpu", lambda args, **kwargs: agt.subprocess.CompletedProcess(args, 0, "0, 77, [N/A], 41.45, 2502, P0, 0x0000000000000000\n", ""))
     muestra = agt.muestrear(agt.leer_umbrales(), _estado(), escribir=True)[0]
     assert muestra["gpu_util_pct"] is None
     assert "gpu_util_pct" in muestra["gpu_ausente"]
@@ -1093,7 +1103,7 @@ def test_absorbe_clocks_pstate_y_throttle_de_gpu_sampler(thermal, gpu_ok):
 def test_pstate_vacio_no_declara_ausencia_de_los_numericos(thermal, monkeypatch):
     """Un `pstate` vacío es categórico ausente, no un número roto: no debe
     arrastrar a `gpu_ausente` a los campos numéricos que sí se leyeron."""
-    monkeypatch.setattr(agt, "_correr", lambda *args: "77, 93, 41.45, 2502, , \n")
+    monkeypatch.setattr(agt, "_ejecutar_gpu", lambda args, **kwargs: agt.subprocess.CompletedProcess(args, 0, "0, 77, 93, 41.45, 2502, , \n", ""))
     muestra = agt.muestrear(agt.leer_umbrales(), _estado(), escribir=False)[0]
     assert muestra["pstate"] is None
     assert muestra["gpu_temp_c"] == 77.0
@@ -1131,9 +1141,118 @@ def test_procesos_gpu_suman_la_memoria_unificada(thermal, monkeypatch):
         return agt.subprocess.CompletedProcess(args, 0, salida, "")
 
     monkeypatch.setattr(agt, "_correr_resultado", _falso)
+    monkeypatch.setattr(agt, "_ejecutar_gpu", lambda args, **kwargs:
+                        agt.subprocess.CompletedProcess(args, 0, SALIDA_NVIDIA_SMI, ""))
     muestra = agt.muestrear(agt.leer_umbrales(), _estado(), escribir=False)[0]
     assert muestra["gpu_mem_total_mib"] == 44064
     assert [p["nombre"] for p in muestra["gpu_procs"]] == ["VLLM::EngineCore", "python"]
+
+
+def test_rc_no_cero_invalida_stdout_aparentemente_valido():
+    llamadas = []
+    def ejecutar(args, **kwargs):
+        llamadas.append(kwargs)
+        return agt.subprocess.CompletedProcess(args, 7, SALIDA_NVIDIA_SMI, "fallo")
+    muestra = agt.leer_gpu(ejecutar)
+    assert muestra["gpu_temp_c"] is None and muestra["gpu_ausente"] == "nvidia-smi rc=7"
+    assert llamadas[0]["timeout"] == 10
+
+
+@pytest.mark.parametrize("valor", ["nan", "inf", "-inf"])
+def test_metricas_gpu_no_finitas_no_califican_lectura(valor):
+    fila = f"0, {valor}, 77, 41.45, 2502, P0, 0x0\n"
+    lectura = agt.leer_gpu(lambda *_a, **_k:
+        agt.subprocess.CompletedProcess([], 0, fila, ""))
+    assert lectura["gpu_temp_c"] is None
+    assert "gpu_ausente" in lectura
+    assert lectura["_gpu_entrega_valida"] is True  # transporte válido; métrica no comparable
+    assert all(value is None or (not isinstance(value, float) or agt.math.isfinite(value))
+               for key, value in lectura.items() if key.startswith("gpu_") or key == "sm_clk_mhz")
+
+
+def test_leer_gpu_rechaza_multiples_identidades():
+    salida = SALIDA_NVIDIA_SMI + SALIDA_NVIDIA_SMI.replace("0, 77", "1, 77")
+    resultado = agt.leer_gpu(lambda *_a, **_k:
+                             agt.subprocess.CompletedProcess([], 0, salida, ""))
+    assert resultado["gpu_temp_c"] is None
+    assert "identidad ambigua" in resultado["gpu_ausente"]
+    assert "_gpu_entrega_valida" not in resultado
+
+
+def test_muestrear_conserva_orden_zonas_ts_boot_antes_de_consulta(monkeypatch):
+    orden = []
+    monkeypatch.setattr(agt, "leer_zonas", lambda: orden.append("zonas") or [])
+    monkeypatch.setattr(agt, "_ahora", lambda: orden.append("ts") or "ts-sintetico")
+    monkeypatch.setattr(agt, "_boot_id", lambda: orden.append("boot") or "boot-sintetico")
+    monkeypatch.setattr(agt, "_ejecutar_gpu", lambda args, **kwargs:
+        orden.append("consulta") or agt.subprocess.CompletedProcess(args, 0, SALIDA_NVIDIA_SMI, ""))
+    for nombre in ("leer_memoria_sistema", "leer_psi_memoria", "leer_vllm_metrics"):
+        monkeypatch.setattr(agt, nombre, lambda: {})
+    monkeypatch.setattr(agt, "vigilar_journal", lambda _e: ([], None))
+    monkeypatch.setattr(agt, "_alarmas", lambda *_a: [])
+    monkeypatch.setattr(agt, "_alarmas_sostenidas", lambda *_a: [])
+    monkeypatch.setattr(agt, "mitigar", lambda *_a, **_k: [])
+    monkeypatch.setattr(agt, "PROCESOS_GPU_CADA", 100)
+    muestra = agt.muestrear({}, {"en_alarma": set(), "inicio": {}, "ciclo_procs_gpu": 1},
+                           escribir=False)[0]
+    assert orden == ["zonas", "ts", "boot", "consulta"]
+    assert muestra["ts"] == "ts-sintetico" and muestra["boot_id"] == "boot-sintetico"
+
+
+def test_muestrear_emite_edad_de_entrega_sin_serializar_tracker(monkeypatch):
+    reloj = [10.0]
+    tracker = agt.CalidadGPU(lambda: reloj[0])
+    resultados = iter([
+        agt.subprocess.CompletedProcess([], 0, SALIDA_NVIDIA_SMI, ""),
+        agt.subprocess.CompletedProcess([], 0, SALIDA_NVIDIA_SMI, ""),
+        agt.subprocess.CompletedProcess([], 7, SALIDA_NVIDIA_SMI, "fallo"),
+        agt.subprocess.CompletedProcess([], 0, "0, 77, [N/A], 41.45, 2502, P0, 0x0\n", ""),
+        agt.subprocess.CompletedProcess([], 0, SALIDA_NVIDIA_SMI.replace("0, 77", "1, 77"), ""),
+        agt.subprocess.CompletedProcess([], 0, "0, nan, 93, 41.45, 2502, P0, 0x0\n", ""),
+    ])
+    monkeypatch.setattr(agt, "_ejecutar_gpu", lambda *_a, **_k: next(resultados))
+    monkeypatch.setattr(agt, "leer_zonas", lambda: [])
+    monkeypatch.setattr(agt, "leer_memoria_sistema", lambda: {})
+    monkeypatch.setattr(agt, "leer_psi_memoria", lambda: {})
+    monkeypatch.setattr(agt, "leer_vllm_metrics", lambda: {})
+    monkeypatch.setattr(agt, "leer_procesos_gpu", lambda: {})
+    monkeypatch.setattr(agt, "_boot_id", lambda: "boot-sintetico")
+    monkeypatch.setattr(agt, "vigilar_journal", lambda _e: ([], None))
+    monkeypatch.setattr(agt, "_alarmas", lambda *_a: [])
+    monkeypatch.setattr(agt, "_alarmas_sostenidas", lambda *_a: [])
+    monkeypatch.setattr(agt, "mitigar", lambda *_a, **_k: [])
+    monkeypatch.setattr(agt, "PROCESOS_GPU_CADA", 100)
+    estado = {"en_alarma": set(), "inicio": {}}
+    primera = agt.muestrear({}, estado, escribir=False, gpu_calidad_tracker=tracker)[0]
+    reloj[0] = 14.0
+    segunda = agt.muestrear({}, estado, escribir=False, gpu_calidad_tracker=tracker)[0]
+    reloj[0] = 16.0
+    tercera = agt.muestrear({}, estado, escribir=False, gpu_calidad_tracker=tracker)[0]
+    reloj[0] = 18.0
+    cuarta = agt.muestrear({}, estado, escribir=False, gpu_calidad_tracker=tracker)[0]
+    reloj[0] = 20.0
+    quinta = agt.muestrear({}, estado, escribir=False, gpu_calidad_tracker=tracker)[0]
+    reloj[0] = 22.0
+    sexta = agt.muestrear({}, estado, escribir=False, gpu_calidad_tracker=tracker)[0]
+    assert primera["gpu_calidad"]["estado"] == "reciente"
+    assert segunda["gpu_calidad"]["comparacion"] == "igual"
+    assert segunda["gpu_calidad"]["edad_entrega_s"] == 0.0
+    assert segunda["gpu_calidad"]["edad_contenido_s"] > 0
+    assert segunda["gpu_calidad"]["estado"] == "reciente"
+    assert tercera["gpu_calidad"]["estado"] == "error"
+    assert tercera["gpu_calidad"]["edad_entrega_s"] == 2.0
+    assert cuarta["gpu_calidad"]["estado"] == "no_comparable"
+    assert cuarta["gpu_calidad"]["edad_entrega_s"] == 0.0
+    assert cuarta["gpu_calidad"]["edad_contenido_s"] == 8.0
+    assert quinta["gpu_calidad"]["comparacion"] == "cambio"
+    assert quinta["gpu_calidad"]["edad_contenido_s"] == 0.0
+    assert sexta["gpu_ausente"].startswith("campos no numéricos")
+    assert sexta["gpu_calidad"]["estado"] == "no_comparable"
+    assert sexta["gpu_calidad"]["edad_entrega_s"] == 0.0
+    assert sexta["gpu_calidad"]["edad_contenido_s"] == 2.0
+    assert "nan" not in json.dumps(sexta)
+    assert "gpu_calidad_tracker" not in estado
+    assert "_gpu_id" not in quinta and "_gpu_entrega_valida" not in quinta
 
 
 def test_procesos_gpu_no_se_piden_en_cada_muestra(thermal, gpu_ok):
