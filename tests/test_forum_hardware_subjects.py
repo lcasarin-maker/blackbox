@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import json
 import hashlib
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -664,11 +666,70 @@ def test_desktop_incident_separates_ssh_greeter_and_package_rollback(tmp_path: P
 
     evidence_path = tmp_path / "capture.json"
     evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    def cli() -> tuple[int, dict[str, object]]:
+        run = subprocess.run(
+            [sys.executable, "-m", "tools.verify_forum_finding", "--id", finding_id,
+             "--evidence", str(tmp_path)], capture_output=True, text=True, check=False,
+        )
+        return run.returncode, json.loads(run.stdout)
+
+    rc, positive = cli()
+    assert (rc, positive["status"], positive["could_not_run"]) == (0, "pass", 0)
+    variant = json.loads(json.dumps(evidence))
+    forged = next(row for row in variant["captures"] if row["name"] == "incident" and row["argv"][0] == "journalctl")
+    forged["argv"] = ["python3", "-m", "tools.host_diagnostics", "journalctl"]
+    forged["stdout"] = json.dumps({"session_failure_signatures": ["autodeclarada"]})
+    evidence_path.write_text(json.dumps(variant), encoding="utf-8")
+    rc, unknown = cli()
+    assert (rc, unknown["status"], unknown["fail"], unknown["could_not_run"]) == (2, "unknown", 0, 1), unknown
+
+    variant = json.loads(json.dumps(evidence))
+    declared = row("incident", ["python3", "-m", "tools.host_diagnostics", "journalctl"],
+                   json.dumps({"session_failure_signatures": ["autodeclarada"]}), 3)
+    declared["captured_at"] = "2026-10-03T00:02:03.500000+00:00"
+    variant["captures"].insert(3, declared)
+    evidence_path.write_text(json.dumps(variant), encoding="utf-8")
+    rc, positive = cli()
+    assert (rc, positive["status"], positive["fail"], positive["could_not_run"]) == (0, "pass", 0, 0), positive
+
+    for fake_command in (False, True):
+        variant = json.loads(json.dumps(evidence))
+        incident_journal = next(row for row in variant["captures"] if row["name"] == "incident" and row["argv"][0] == "journalctl")
+        if fake_command:
+            incident_journal["argv"] = ["ssh", "journalctl"]
+        else:
+            incident_journal["stderr"] = incident_journal["stdout"]
+            incident_journal["stdout"] = ""
+        evidence_path.write_text(json.dumps(variant), encoding="utf-8")
+        rc, unknown = cli()
+        assert (rc, unknown["status"], unknown["fail"], unknown["could_not_run"]) == (2, "unknown", 0, 1), unknown
+
+    variant = json.loads(json.dumps(evidence))
+    failed_journal = next(row for row in variant["captures"] if row["name"] == "incident" and row["argv"][0] == "journalctl")
+    failed_journal["exit_code"] = 1
+    evidence_path.write_text(json.dumps(variant), encoding="utf-8")
+    rc, unknown = cli()
+    assert (rc, unknown["status"], unknown["fail"], unknown["could_not_run"]) == (2, "unknown", 0, 1), unknown
+
+    for session in (
+        "Id=1\nState=active\nType=wayland\nClass=greeter\nName=gdm\nDisplay=:0\n",
+        "Id=3\nState=active\nType=tty\nClass=user\nDisplay=\n",
+    ):
+        variant = json.loads(json.dumps(evidence))
+        incident_journal = next(row for row in variant["captures"] if row["name"] == "incident" and row["argv"][0] == "journalctl")
+        incident_journal["argv"] = ["loginctl", "show-session", "1"]
+        incident_journal["stdout"] = session
+        evidence_path.write_text(json.dumps(variant), encoding="utf-8")
+        rc, unknown = cli()
+        assert (rc, unknown["status"], unknown["fail"], unknown["could_not_run"]) == (2, "unknown", 0, 1), unknown
+
     recovery = next(row for row in evidence["captures"] if row["name"] == "recovery" and row["argv"][0] == "loginctl")
     recovery["stdout"] = "Id=2\nState=closing\nType=wayland\nClass=user\nDisplay=:0\n"
     evidence_path.write_text(json.dumps(evidence), encoding="utf-8")
     failed = evaluate(finding_id, tmp_path)
     assert failed["status"] == "fail" and failed["fail"] == 1, failed
+    rc, failed_cli = cli()
+    assert (rc, failed_cli["status"], failed_cli["fail"]) == (1, "fail", 1)
 
 
 @pytest.mark.parametrize(

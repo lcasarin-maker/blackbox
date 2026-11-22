@@ -86,11 +86,12 @@ def _case(document: dict[str, Any], name: str, command_re: str) -> tuple[dict[st
     matches = [row for row in document["captures"] if row["name"] == name]
     if not matches:
         return None, f"raw case {name} missing"
-    return _aggregate_case(name, matches, command_re)
+    desktop_incident = document.get("id") == "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01" and name == "incident"
+    return _aggregate_case(name, matches, command_re, ignore_desktop_signature=desktop_incident)
 
 
 def _aggregate_case(name: str, matches: list[dict[str, Any]],
-                    command_re: str) -> tuple[dict[str, Any] | None, str | None]:
+                    command_re: str, *, ignore_desktop_signature: bool = False) -> tuple[dict[str, Any] | None, str | None]:
     measurements: list[dict[str, Any]] = []
     raw_outputs: list[str] = []
     for row in matches:
@@ -98,6 +99,8 @@ def _aggregate_case(name: str, matches: list[dict[str, Any]],
         if error:
             return None, error
         assert data is not None
+        if ignore_desktop_signature:
+            data.pop("session_failure_signatures", None)
         measurements.append(data)
         raw_outputs.append(row["stdout"])
     merged, counters, traffic, ssh_successes, error = _merge_measurements(name, measurements)
@@ -485,7 +488,7 @@ def _parse_xrandr(argv: list[str], output: str) -> dict[str, Any]:
 
 
 def _parse_desktop_journal(argv: list[str], output: str) -> dict[str, Any]:
-    if "journalctl" not in argv:
+    if not argv or Path(argv[0]).name != "journalctl":
         return {}
     signatures = (
         r"Failed to start GNOME Display Manager", r"gnome-session.*(failed|exited|crash)",
@@ -1183,17 +1186,20 @@ def _check_realtek(cases: dict[str, dict[str, Any]]) -> tuple[str, str]:
     return "pass", reason + "; alternate NIC, SSH continuity and rollback passed"
 
 
-def _check_desktop(cases: dict[str, dict[str, Any]]) -> tuple[str, str]:
+def _check_desktop(document: dict[str, Any], cases: dict[str, dict[str, Any]]) -> tuple[str, str]:
     incident, control = cases["incident"], cases["control"]
-    category = _classify_desktop_state(incident)
     incident_ssh = _number(incident, "ssh_exit_code")
     if incident_ssh is None:
         return "unknown", "SSH probe missing during the reported display/session incident"
     if incident_ssh != 0:
         return "unknown", "host reachability is not established independently of the display"
-    signatures = incident.get("session_failure_signatures")
-    if not signatures and category not in {"headless", "greeter_login_loop"}:
-        return "fail", "incident state has no GNOME failure signature or distinct headless classification"
+    if not any(
+        row["name"] == "incident" and row["exit_code"] == 0
+        and row["argv"] and Path(row["argv"][0]).name == "journalctl"
+        and _parse_desktop_journal(row["argv"], row["stdout"]).get("session_failure_signatures")
+        for row in document["captures"]
+    ):
+        return "unknown", "explicit post-update desktop failure signature is missing"
     if control.get("session_classification") != "active_session" or control.get("display_connected") is not True:
         return "unknown", "known-good graphical session/display control is incomplete"
     if _number(control, "ssh_exit_code") != 0:
@@ -1452,7 +1458,7 @@ CHECKS = {
     "FORUM-00-CX7-HOTPLUG-FAN-PROTECTION": _check_cx7,
     "FEATURE-FORUM-SBSA-WATCHDOG-STATE-01": lambda _doc, cases: _check_watchdog(cases),
     "FORUM-REALTEK-DRIVER-BINDING-01": lambda _doc, cases: _check_realtek(cases),
-    "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01": lambda _doc, cases: _check_desktop(cases),
+    "FEATURE-FORUM-DESKTOP-SESSION-POSTUPDATE-01": _check_desktop,
     "FORUM-00-REALTEK-EEE-DIRECT-LINK": lambda _doc, cases: _check_eee(cases),
     "FORUM-00-GB10-THERMAL-RESIDENCY-ADMISSION": _check_thermal,
     "FORUM-02-USB-UVC-EP0": lambda _doc, cases: _check_uvc(cases),
