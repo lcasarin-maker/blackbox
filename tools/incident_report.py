@@ -748,10 +748,14 @@ def _lee_bitacora_cola(
         for linea in fh:
             lineas += 1
             try:
-                d = strict_json_loads(linea)
+                d = strict_json_loads(linea.removesuffix("\n"))
             except json.JSONDecodeError as exc:
-                if not linea.endswith("\n") and exc.msg == "Expecting value" and exc.pos == len(linea):
-                    continue  # ultima fila truncada
+                sin_valor_al_final = (
+                    not linea.endswith("\n")
+                    and exc.msg == "Expecting value" and exc.pos == len(linea)
+                )
+                if sin_valor_al_final or (exc.msg.startswith("Unterminated string") and not fh.readline()):
+                    break  # ultima fila truncada
                 raise ValueError("fila JSON invalida") from None
             if not isinstance(d, dict):
                 raise ValueError("fila de bitacora no es objeto")
