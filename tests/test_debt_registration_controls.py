@@ -941,7 +941,7 @@ def test_bug_provider_trace_latency_overflow_01(tmp_path: Path, capsys: pytest.C
 
 def test_debt_noqa_bb_usable_249(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     executable = Path(__file__).resolve().parent.parent / "bin" / "bb-usable"
-    lint = subprocess.run(["python3", "-m", "ruff", "check", "--select", "E731", "--ignore-noqa", str(executable)],
+    lint = subprocess.run(["ruff", "check", "--no-cache", "--select", "E731", "--ignore-noqa", str(executable)],
                           capture_output=True, text=True, check=False)
     assert lint.returncode == 0, lint.stdout + lint.stderr
     module = bb_usable_tests._cargar()
