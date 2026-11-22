@@ -748,12 +748,11 @@ def _lee_bitacora_cola(
         for linea in fh:
             lineas += 1
             try:
-                d = json.loads(linea)
-            except json.JSONDecodeError:
-                if not linea.endswith("\n"):
+                d = strict_json_loads(linea)
+            except json.JSONDecodeError as exc:
+                if not linea.endswith("\n") and exc.msg == "Expecting value" and exc.pos == len(linea):
                     continue  # ultima fila truncada
                 raise ValueError("fila JSON invalida") from None
-            d = strict_json_loads(linea)
             if not isinstance(d, dict):
                 raise ValueError("fila de bitacora no es objeto")
             evento = d.get("event")
@@ -767,6 +766,12 @@ def _lee_bitacora_cola(
                 boot = d.get(boot_key)
                 if not isinstance(boot, str) or not boot:
                     raise ValueError("boot_id ausente o invalido")
+                if boot != marca:
+                    continue
+            elif "boot_id" in d:
+                boot = d["boot_id"]
+                if not isinstance(boot, str) or not boot:
+                    raise ValueError("boot_id invalido")
                 if boot != marca:
                     continue
             if evento == "job_start":
