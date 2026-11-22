@@ -45,8 +45,15 @@ JOURNALCTL=fake_journal
 
 def test_status_prints_unknown_count_even_zero():
     source = BB.read_text(encoding="utf-8")
-    status = source[source.index('cmd_status() {'):source.index('cmd_status() {') + 18000]
-    assert 'printf "could_not_run: %d\\n%s" "$CNR" "$CNR_LIST"' in status
+    status = source[source.index('cmd_status() {'):source.index('cmd_install() {')]
+    summary = 'printf "could_not_run: %d\\n%s" "$CNR" "$CNR_LIST"'
+
+    def check(text):
+        assert summary in text
+
+    check(status)
+    with pytest.raises(AssertionError):
+        check(status.replace(summary, '', 1))
 
 
 @pytest.mark.parametrize('failure', ['declaration', 'start', 'journal', 'journal_hint'])

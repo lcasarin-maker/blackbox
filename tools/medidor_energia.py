@@ -31,7 +31,6 @@ import argparse
 import json
 import os
 import sys
-import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Sequence
@@ -51,9 +50,12 @@ def _datos() -> Path:
     return Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blackbox")) / "externo"
 
 
-def _abre(url: str) -> bytes:
-    with urllib.request.urlopen(url, timeout=2) as r:
-        return bytes(r.read())
+def _abre(url: str, auth_file: str | None = None) -> bytes:
+    # La copia de recuperación usa las series locales sin cargar el lector de red.
+    from tools.testigo.bb_testigo import abre_http, carga_credenciales
+
+    usuario, contrasena = (None, None) if not auth_file else carga_credenciales(auth_file)
+    return abre_http(url, usuario, contrasena)
 
 
 def _num(d: Any, *claves: str) -> float | None:
@@ -72,7 +74,8 @@ def lee(cfg: dict[str, Any], abre: Abre = _abre) -> dict[str, Any]:
     else:
         return {"ok": False, "error": f"NOT_COLLECTED: tipo '{tipo}' sin lector"}
     try:
-        j = json.loads(abre(url + ruta))
+        auth_file = cfg.get("auth_file")
+        j = json.loads(_abre(url + ruta, auth_file) if abre is _abre and auth_file else abre(url + ruta))
     except (OSError, ValueError) as e:
         return {"ok": False, "error": f"{type(e).__name__}"}
     v, w, a = (_num(j, *c) for c in campos)

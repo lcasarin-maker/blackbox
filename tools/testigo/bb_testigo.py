@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+import hashlib
 import errno
 import json
 import math
@@ -35,12 +36,14 @@ import re
 import shlex
 import shutil
 import signal
+import stat
 import socket
 import subprocess
 import sys
 import threading
 import time
 import urllib.request
+from urllib.parse import urlsplit
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
@@ -64,6 +67,7 @@ DEFECTOS: Dict[str, Any] = {
     "udp_puerto": 6666,
     "enchufe_tipo": "",
     "enchufe_url": "",
+    "enchufe_auth_file": "",
     "enchufe_s": 1.0,
     "latido_s": 10.0,
     "rota_mb": 50.0,
@@ -142,6 +146,8 @@ def valida_config(crudo: Mapping[str, Any]) -> Dict[str, Any]:
         raise ValueError(f"enchufe_tipo: uno de {', '.join(TIPOS_ENCHUFE)} (o vacio si no hay enchufe)")
     if c["enchufe_tipo"] and not (isinstance(c["enchufe_url"], str) and re.fullmatch(r"https?://[^\s/]+/?", c["enchufe_url"])):
         raise ValueError("enchufe_url: debe ser http://<ip-del-enchufe>")
+    if not isinstance(c["enchufe_auth_file"], str):
+        raise ValueError("enchufe_auth_file: debe ser una ruta de archivo")
     return c
 
 
@@ -276,11 +282,68 @@ def sondea_icmp(host: str, sistema: str, timeout_s: float, correr: Correr = subp
     return {**base, "ok": ok, "estado": "eco" if ok else "sin_eco"}
 
 
-def _abre(url: str) -> bytes:
-    # Sin proxy: un HTTP_PROXY del usuario mandaria la lectura de un enchufe de la LAN a internet.
-    abridor = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+class _DigestSHA256(urllib.request.HTTPDigestAuthHandler):
+    def get_algorithm_impls(self, algorithm: str):
+        if algorithm.upper() == "SHA-256":
+            h = lambda value: hashlib.sha256(value.encode("ascii")).hexdigest()
+            return h, lambda secret, data: h(f"{secret}:{data}")
+        return super().get_algorithm_impls(algorithm)
+
+
+class _SinRedirecciones(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def carga_credenciales(ruta: str) -> Tuple[str, str]:
+    """Carga JSON {usuario, contrasena} desde un archivo regular privado y de hasta 4 KiB."""
+    flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0)
+    if os.name != "nt":
+        flags |= os.O_NONBLOCK | getattr(os, "O_NOFOLLOW", 0)
+    fd = os.open(ruta, flags)
+    try:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode):
+            raise ValueError("archivo de credenciales debe ser regular")
+        if os.name != "nt" and st.st_mode & 0o077:
+            raise PermissionError("archivo de credenciales accesible por grupo u otros")
+        if st.st_size > 4096:
+            raise ValueError("archivo de credenciales supera 4096 bytes")
+        partes = []
+        restante = 4097
+        while restante:
+            parte = os.read(fd, restante)
+            if not parte:
+                break
+            partes.append(parte)
+            restante -= len(parte)
+        contenido = b"".join(partes)
+        if len(contenido) > 4096:
+            raise ValueError("archivo de credenciales supera 4096 bytes")
+    finally:
+        os.close(fd)
+    datos = json.loads(contenido.decode("utf-8"))
+    if not isinstance(datos, dict) or not all(isinstance(datos.get(k), str) and datos[k] for k in ("usuario", "contrasena")):
+        raise ValueError("archivo de credenciales debe contener usuario y contrasena")
+    return datos["usuario"], datos["contrasena"]
+
+
+def abre_http(url: str, usuario: Optional[str] = None, contrasena: Optional[str] = None) -> bytes:
+    """Lee HTTP sin proxies ni redirecciones; Digest SHA-256 opcional."""
+    handlers = [urllib.request.ProxyHandler({}), _SinRedirecciones()]
+    if usuario is not None and contrasena is not None:
+        auth = _DigestSHA256(urllib.request.HTTPPasswordMgrWithDefaultRealm())
+        origin = f"{urlsplit(url).scheme}://{urlsplit(url).netloc}/"
+        auth.add_password(None, origin, usuario, contrasena)
+        handlers.append(auth)
+    abridor = urllib.request.build_opener(*handlers)
     with abridor.open(url, timeout=2) as r:
         return bytes(r.read())
+
+
+def _abre(url: str) -> bytes:
+    # Sin proxy: un HTTP_PROXY del usuario mandaria la lectura de un enchufe de la LAN a internet.
+    return abre_http(url)
 
 
 def _num(d: Any, *claves: Any) -> Optional[float]:
@@ -296,7 +359,7 @@ def _primero(*valores: Optional[float]) -> Optional[float]:
     return next((v for v in valores if v is not None), None)
 
 
-def lee_enchufe(tipo: str, url: str, abre: Abre = _abre) -> Dict[str, Any]:
+def lee_enchufe(tipo: str, url: str, abre: Abre = _abre, auth_file: str = "") -> Dict[str, Any]:
     """Una lectura: ok, voltaje_v, potencia_w, corriente_a. Sin potencia no hay fila `ok`; un campo ausente es None, nunca 0.
 
     A diferencia de medidor_energia.lee, el voltaje es opcional: los Shelly Gen1 Plug y 1PM no lo miden (solo `meters[].power`);
@@ -305,7 +368,9 @@ def lee_enchufe(tipo: str, url: str, abre: Abre = _abre) -> Dict[str, Any]:
     if tipo not in RUTAS_ENCHUFE:
         return {"ok": False, "error": f"NOT_COLLECTED: tipo '{tipo}' sin lector"}
     try:
-        j = json.loads(abre(url.rstrip("/") + RUTAS_ENCHUFE[tipo]))
+        target = url.rstrip("/") + RUTAS_ENCHUFE[tipo]
+        usuario, contrasena = carga_credenciales(auth_file) if auth_file else (None, None)
+        j = json.loads(abre_http(target, usuario, contrasena) if abre is _abre and usuario is not None else abre(target))
     except (OSError, ValueError) as e:  # Wi-Fi del enchufe, enchufe sin corriente o respuesta ilegible: no es voltaje perdido
         return {"ok": False, "error": type(e).__name__}
     if tipo == "shelly1":
@@ -406,7 +471,8 @@ class Testigo:
 
     def _enchufe(self) -> None:
         t = time.time()
-        f = lee_enchufe(self.cfg["enchufe_tipo"], self.cfg["enchufe_url"], self.abre)
+        f = lee_enchufe(self.cfg["enchufe_tipo"], self.cfg["enchufe_url"], self.abre,
+                        self.cfg["enchufe_auth_file"])
         self.diarios["energia"].escribe({"ts": _iso(t), "epoch": t, "tipo": self.cfg["enchufe_tipo"], **f})
         self.cuentas["enchufe"] += 1
 
