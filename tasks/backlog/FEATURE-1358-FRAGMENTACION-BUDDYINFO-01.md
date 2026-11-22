@@ -21,6 +21,10 @@ Brecha propia: una búsqueda en el repo de `buddyinfo`, `compact_memory` y `Afte
 
 Reutilizar el muestreador existente de Blackbox. Añadir lectura de solo lectura de `/proc/buddyinfo` (suma de órdenes 8+ y 10+ de la zona Normal) y de `/proc/pagetypeinfo` (pageblocks por tipo de movilidad) a cada muestra. Medir antes y después de cargar un modelo en esta máquina. No ejecutar `compact_memory` ni cambiar `vm.min_free_kbytes` ni `vm.watermark_scale_factor`: el hilo advierte que subir los dos últimos colgó equipos con carga.
 
+## Avance offline 2026-11-21
+
+Parser y esquema aditivo preparados con entradas sintéticas. La conexión desde `bb sample` queda opt-in mediante `BB_FRAGMENTACION_OPT_IN=1`: upstream marca `pagetypeinfo` 0400 y advierte del coste de leerlo continuamente; no hay medición de coste en el host y no se concede fallback privilegiado. En el muestreo ordinario ambas fuentes quedan `NOT_COLLECTED`. El reporte selecciona fragmentación solo con `boot_id` normalizado exacto y timestamp dentro del boot, preservando el selector histórico de las demás muestras. No hay captura antes/después de carga en hardware; criterio y `close_check` permanecen sin cambios y la ficha sigue abierta.
+
 Campos del convenio de incidente de #1358: cuando falte la lectura, `NOT_COLLECTED`; cero solo si se observó cero. Añadir al mismo convenio los campos propuestos por RFDH (UEFI "After Power Loss", `kernel.panic_on_rcu_stall`) como `NOT_COLLECTED` por defecto.
 
 ## Criterio de cierre

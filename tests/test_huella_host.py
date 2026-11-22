@@ -33,6 +33,262 @@ def _cae(args: list[str], **kw: Any) -> Any:
     raise subprocess.TimeoutExpired(args, 10)
 
 
+def _correr_sesion(salidas: dict[str, tuple[int, str]], fallas: dict[str, type[BaseException]] | None = None) -> Any:
+    def f(args: list[str], **kw: Any) -> Any:
+        clave = " ".join(args)
+        if clave not in salidas:
+            if clave in (fallas or {}):
+                raise (fallas or {})[clave](args[0])
+            if args[0] in {"loginctl", "systemctl"}:
+                raise AssertionError(f"argv inesperado: {args!r}")
+            raise FileNotFoundError(args[0])
+        rc, out = salidas[clave]
+        return types.SimpleNamespace(returncode=rc, stdout=out, stderr="")
+    return f
+
+
+def _huella_sesion(tmp_path: Path, runner: Any, monkeypatch: pytest.MonkeyPatch) -> Any:
+    monkeypatch.setattr(h.platform, "release", lambda: "6.17.0-synthetic")
+    return h.recoge(tmp_path, runner).get("sesion_grafica")
+
+
+def _fila_sesion(session_id: str, uid: str = "1000", user: str = "synthetic",
+                 seat: str = "seat0", tty: str = "tty2") -> str:
+    return f"{session_id} {uid} {user} {seat} {tty} active no Fri-Nov-21\n"
+
+
+def _fila_sesion_corta(session_id: str) -> str:
+    return f"{session_id} 1000 synthetic seat0 tty2\n"
+
+
+def _cmd_default() -> str:
+    return "systemctl get-default"
+
+
+def _cmd_gdm() -> str:
+    return "systemctl is-active gdm.service"
+
+
+def _cmd_sessions() -> str:
+    return "loginctl list-sessions --no-pager --no-legend"
+
+
+def _cmd_show(session_id: str) -> str:
+    return (f"loginctl show-session {session_id} --all -p Active -p Remote -p Type "
+            "-p Class -p Seat -p Display")
+
+
+def _propiedades_sesion(*, active: str = "yes", remote: str = "no", kind: str = "wayland",
+                        session_class: str = "user", seat: str = "seat0", display: str = ":0") -> str:
+    return (f"Active={active}\nRemote={remote}\nType={kind}\nClass={session_class}\n"
+            f"Seat={seat}\nDisplay={display}\n")
+
+
+def test_recoge_sesion_headless_declarada_por_target(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    runner = _correr_sesion({
+        _cmd_default(): (0, "multi-user.target\n"),
+        _cmd_gdm(): (3, "inactive\n"),
+        _cmd_sessions(): (0, ""),
+    })
+    r = _huella_sesion(tmp_path, runner, monkeypatch)
+    assert r == {"estado": "headless_declarado", "target": "multi-user.target",
+                 "gdm": "inactive", "sesiones_graficas_locales": 0, "greeters": 0}
+
+
+def test_recoge_sesion_gdm_activo_sin_usuario_grafico_local(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    runner = _correr_sesion({
+        _cmd_default(): (0, "graphical.target\n"),
+        _cmd_gdm(): (0, "active\n"),
+        _cmd_sessions(): (0, _fila_sesion("21", user="gdm")),
+        _cmd_show("21"): (0, _propiedades_sesion(session_class="greeter")),
+    })
+    r = _huella_sesion(tmp_path, runner, monkeypatch)
+    assert isinstance(r, dict), r
+    assert r["estado"] == "gdm_activo_sin_sesion_grafica_local"
+    assert r["sesiones_graficas_locales"] == 0 and r["greeters"] == 1
+    assert "synthetic" not in json.dumps(r)
+
+
+@pytest.mark.parametrize("kind", ["x11", "wayland"])
+def test_recoge_sesion_grafica_local_observada_excluye_ssh(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kind: str) -> None:
+    runner = _correr_sesion({
+        _cmd_default(): (0, "graphical.target\n"),
+        _cmd_gdm(): (0, "active\n"),
+        _cmd_sessions(): (0, _fila_sesion("31", user="remoteuser", seat="-", tty="-") +
+                          _fila_sesion("c21", user="privateuser")),
+        _cmd_show("31"): (0, _propiedades_sesion(remote="yes", seat="", display=":10")),
+        _cmd_show("c21"): (0, _propiedades_sesion(kind=kind, display="")),
+    })
+    r = _huella_sesion(tmp_path, runner, monkeypatch)
+    assert isinstance(r, dict), r
+    assert r["estado"] == "sesion_grafica_local_observada"
+    assert r["sesiones_graficas_locales"] == 1 and r["greeters"] == 0
+    assert "privateuser" not in json.dumps(r) and "remoteuser" not in json.dumps(r)
+    assert "c21" not in json.dumps(r)
+
+
+def test_recoge_acepta_fila_tabular_de_cinco_columnas(tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    runner = _correr_sesion({
+        _cmd_default(): (0, "graphical.target\n"),
+        _cmd_gdm(): (0, "active\n"),
+        _cmd_sessions(): (0, _fila_sesion_corta("c21")),
+        _cmd_show("c21"): (0, _propiedades_sesion(display="")),
+    })
+    r = _huella_sesion(tmp_path, runner, monkeypatch)
+    assert isinstance(r, dict), r
+    assert r["estado"] == "sesion_grafica_local_observada"
+
+
+def test_recoge_rechaza_fila_incompleta_antes_de_consultar_detalle(tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    calls: list[str] = []
+
+    def runner(args: list[str], **kw: Any) -> Any:
+        calls.append(" ".join(args))
+        if args[:2] == ["systemctl", "get-default"]:
+            return types.SimpleNamespace(returncode=0, stdout="graphical.target\n", stderr="")
+        if args[:2] == ["systemctl", "is-active"]:
+            return types.SimpleNamespace(returncode=0, stdout="active\n", stderr="")
+        if args[:2] == ["loginctl", "list-sessions"]:
+            return types.SimpleNamespace(returncode=0, stdout="1 x\n", stderr="")
+        if args[:2] == ["loginctl", "show-session"]:
+            return types.SimpleNamespace(returncode=0, stdout=_propiedades_sesion(), stderr="")
+        raise AssertionError(f"argv inesperado: {args!r}")
+
+    r = h.sonda_sesion_grafica(tmp_path, runner)
+    assert h.es_nc(r), r
+    assert not any(call.startswith("loginctl show-session") for call in calls), calls
+
+
+@pytest.mark.parametrize("prefijo", [14.0, 51.0, 56.0])
+def test_recoge_sesion_grafica_respeta_presupuesto_completo(tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch, prefijo: float) -> None:
+    reloj = [0.0]
+    llamadas_graficas: list[list[str]] = []
+    timeouts_graficas: list[float] = []
+    monkeypatch.setattr(h.time, "monotonic", lambda: reloj[0])
+    monkeypatch.setattr(h.platform, "release", lambda: "synthetic")
+
+    def runner(args: list[str], **kw: Any) -> Any:
+        joined = " ".join(args)
+        if args[0] in {"systemctl", "loginctl"}:
+            llamadas_graficas.append(args)
+            timeouts_graficas.append(kw.get("timeout", 4.0))
+            data = {
+                _cmd_default(): (0, "graphical.target\n"),
+                _cmd_gdm(): (0, "active\n"),
+                _cmd_sessions(): (0, _fila_sesion_corta("c21")),
+                _cmd_show("c21"): (0, _propiedades_sesion(display="")),
+            }
+            rc, out = data[joined]
+            elapsed = min(1.0, kw.get("timeout", 4.0))
+            reloj[0] += elapsed
+            return subprocess.CompletedProcess(args, rc, out, "")
+        if reloj[0] == 0.0:
+            reloj[0] += prefijo
+        return subprocess.CompletedProcess(args, 1, "", "")
+
+    result = h.recoge(tmp_path, runner)
+    if prefijo >= 52.0:
+        assert h.es_nc(result["sesion_grafica"]), result["sesion_grafica"]
+        assert llamadas_graficas == [], llamadas_graficas
+        assert reloj[0] == prefijo
+    elif prefijo >= 48.0:
+        assert h.es_nc(result["sesion_grafica"]), result["sesion_grafica"]
+        assert len(llamadas_graficas) == 1, llamadas_graficas
+        assert timeouts_graficas == [1.0], timeouts_graficas
+    else:
+        assert result["sesion_grafica"]["estado"] == "sesion_grafica_local_observada"
+        assert llamadas_graficas
+    if prefijo < 52.0:
+        assert reloj[0] <= 52.0
+    else:
+        assert reloj[0] == prefijo
+
+
+def test_recoge_sesion_greeter_y_tty_no_prueban_escritorio_local(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    runner = _correr_sesion({
+        _cmd_default(): (0, "graphical.target\n"),
+        _cmd_gdm(): (0, "active\n"),
+        _cmd_sessions(): (0, _fila_sesion("41", user="gdm") +
+                           _fila_sesion("42", user="tty", tty="tty1")),
+        _cmd_show("41"): (0, _propiedades_sesion(session_class="greeter")),
+        _cmd_show("42"): (0, _propiedades_sesion(kind="tty", display="")),
+    })
+    r = _huella_sesion(tmp_path, runner, monkeypatch)
+    assert isinstance(r, dict), r
+    assert r["estado"] == "gdm_activo_sin_sesion_grafica_local"
+    assert r["sesiones_graficas_locales"] == 0 and r["greeters"] == 1
+
+
+@pytest.mark.parametrize("salidas,fallas", [
+    ({_cmd_default(): (0, "multi-user.target\n"), _cmd_gdm(): (3, "inactive\n"),
+      _cmd_sessions(): (0, "fila ambigua\n")}, None),
+    ({_cmd_default(): (0, "multi-user.target\n"), _cmd_gdm(): (3, "inactive\n"),
+      _cmd_sessions(): (0, "--all 1000 synthetic seat0 tty2 active no Fri-Nov-21\n")}, None),
+    ({_cmd_default(): (0, "graphical.target\n"), _cmd_gdm(): (0, "active\n"),
+      _cmd_sessions(): (0, _fila_sesion("51")),
+      _cmd_show("51"): (0, "Active=yes\nActive=no\nRemote=no\nType=wayland\nClass=user\nSeat=seat0\nDisplay=:0\n")}, None),
+    ({_cmd_default(): (0, "multi-user.target\n"), _cmd_gdm(): (3, "inactive\n")},
+     {_cmd_sessions(): PermissionError}),
+    ({_cmd_default(): (0, "multi-user.target\n"), _cmd_gdm(): (3, "inactive\n"),
+      _cmd_sessions(): (0, _fila_sesion("52"))}, {_cmd_show("52"): PermissionError}),
+    ({_cmd_gdm(): (0, "active\n"), _cmd_sessions(): (0, "")},
+     {_cmd_default(): PermissionError}),
+    ({_cmd_default(): (0, "multi-user.target\n"), _cmd_gdm(): (4, "unknown\n"),
+      _cmd_sessions(): (0, "")}, None),
+    ({_cmd_default(): (0, "rescue.target\n"), _cmd_gdm(): (3, "inactive\n"),
+      _cmd_sessions(): (0, "")}, None),
+    ({_cmd_default(): (0, "graphical.target\n"), _cmd_gdm(): (3, "inactive\n"),
+      _cmd_sessions(): (0, "")}, None),
+    ({_cmd_default(): (0, "multi-user.target\n"), _cmd_gdm(): (3, "inactive\n"),
+      _cmd_sessions(): (0, "1 " + "x" * 17000)}, None),
+])
+def test_recoge_sesion_lectura_fallida_o_ambigua_es_nc(
+        tmp_path: Path, salidas: dict[str, tuple[int, str]],
+        fallas: dict[str, type[BaseException]] | None,
+        monkeypatch: pytest.MonkeyPatch) -> None:
+    r = _huella_sesion(tmp_path, _correr_sesion(salidas, fallas), monkeypatch)
+    assert h.es_nc(r), r
+
+
+@pytest.mark.parametrize("duracion_consulta", [4.0, 3.9])
+def test_sonda_sesion_presupuesto_global_detiene_lecturas_seriales(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, duracion_consulta: float) -> None:
+    reloj = [0.0]
+    llamadas: list[list[str]] = []
+    sesiones = "".join(_fila_sesion(str(i)) for i in range(1, 11))
+    monkeypatch.setattr(h.time, "monotonic", lambda: reloj[0])
+
+    def runner(args: list[str], **kw: Any) -> Any:
+        llamadas.append(args)
+        joined = " ".join(args)
+        if joined == _cmd_default():
+            rc, out = 0, "graphical.target\n"
+        elif joined == _cmd_gdm():
+            rc, out = 0, "active\n"
+        elif joined == _cmd_sessions():
+            rc, out = 0, sesiones
+        elif args[0:2] == ["loginctl", "show-session"]:
+            assert joined == _cmd_show(args[2])
+            rc, out = 0, _propiedades_sesion(display="")
+        else:
+            raise AssertionError(f"argv inesperado: {args!r}")
+        reloj[0] += duracion_consulta
+        return types.SimpleNamespace(returncode=rc, stdout=out, stderr="")
+
+    r = h.sonda_sesion_grafica(tmp_path, runner)
+    assert h.es_nc(r) and "presupuesto" in r
+    assert h.PRESUPUESTO_SESION_GRAFICA_S <= reloj[0] <= (
+        h.PRESUPUESTO_SESION_GRAFICA_S + h.host_diagnostics.TIMEOUT_S)
+    assert len(llamadas) == (12 if duracion_consulta == 4.0 else 13)
+
+
 # 1 os_release
 def test_os_release_sano(tmp_path: Path) -> None:
     _w(tmp_path, "etc/os-release", 'NAME="Ubuntu"\nPRETTY_NAME="Ubuntu 24.04.3 LTS"\n')
@@ -214,7 +470,7 @@ def _huella(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, kernel: str = "6.17
 
 def test_recoge_cubre_todas_las_sondas_sin_inventar(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     r = _huella(tmp_path, monkeypatch)
-    assert set(r) == set(h.SONDAS) and len(r) == 17 and h.es_nc(r["os_release"])
+    assert set(r) == set(h.SONDAS) and len(r) == 18 and h.es_nc(r["os_release"])
 
 
 def test_recoge_sonda_que_lanza_es_nc(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

@@ -38,6 +38,7 @@ from pathlib import Path
 from typing import Any
 
 from tools import hallazgo
+from tools.capture_io import read_regular_bytes
 from tools import reboot_verdict as rv
 from tools.capture_io import strict_json_loads
 
@@ -69,6 +70,8 @@ CAMPOS_JOB_LEGADO = {
 NOT_COLLECTED = "NOT_COLLECTED"
 UNSUPPORTED = "UNSUPPORTED"
 COLLECTION_FAILED = "COLLECTION_FAILED"
+FRAGMENTATION_MAX_BYTES = 1_000_000
+FRAGMENTATION_MAX_COUNTER_DIGITS = 20
 DATOS = Path(os.environ.get("BLACKBOX_DATA", Path.home() / ".local/share/blackbox"))
 SALIDA = DATOS / "incidentes"
 MUESTRAS_BB = DATOS / "samples"  # `bb sample`, 1 muestra por minuto, con boot_id
@@ -80,6 +83,139 @@ MUESTRAS_BB = DATOS / "samples"  # `bb sample`, 1 muestra por minuto, con boot_i
 ENV_COLA = "BB_COLA_BITACORA"
 ENV_COLA_LEGADO = CLAVE_REF_LEGADO.upper() + "_BITACORA_COLA"
 DECLARACION_CARGA = DATOS / "carga_pausable.json"
+
+
+def _fragmentation_read(path: Path) -> tuple[str, str]:
+    try:
+        raw = read_regular_bytes(path, FRAGMENTATION_MAX_BYTES)
+        if len(raw) > FRAGMENTATION_MAX_BYTES:
+            return COLLECTION_FAILED, "oversized"
+        return "read", raw.decode("ascii")
+    except FileNotFoundError:
+        return NOT_COLLECTED, "missing"
+    except (OSError, UnicodeError):
+        return COLLECTION_FAILED, "unreadable"
+
+
+def _fragmentation_numbers(tokens: list[str]) -> list[int] | None:
+    if not tokens or any(
+        len(token) > FRAGMENTATION_MAX_COUNTER_DIGITS
+        or not re.fullmatch(r"[0-9]+", token)
+        for token in tokens
+    ):
+        return None
+    return [int(token) for token in tokens]
+
+
+def parse_buddyinfo(text: str) -> dict[str, Any]:
+    nodes: dict[str, dict[str, int]] = {}
+    zones: set[tuple[str, str]] = set()
+    for line in text.splitlines():
+        match = re.fullmatch(r"\s*Node\s+(\d+),\s*zone\s+(\S+)\s+(.+?)\s*", line)
+        if not match:
+            if line.strip():
+                return {"status": COLLECTION_FAILED, "reason": "malformed"}
+            continue
+        node, zone, tail = match.groups()
+        values = _fragmentation_numbers(tail.split())
+        if values is None:
+            return {"status": COLLECTION_FAILED, "reason": "malformed"}
+        if zone != "Normal":
+            continue
+        if len(values) < 11:
+            return {"status": COLLECTION_FAILED, "reason": "incomplete"}
+        if (node, zone) in zones:
+            return {"status": COLLECTION_FAILED, "reason": "duplicate_zone"}
+        zones.add((node, zone))
+        nodes[node] = {
+            "order_8_plus": sum(values[8:]),
+            "order_10_plus": sum(values[10:]),
+        }
+    if not nodes:
+        return {"status": COLLECTION_FAILED, "reason": "incomplete"}
+    return {
+        "status": "ok",
+        "nodes": nodes,
+        "sum": {
+            key: sum(node[key] for node in nodes.values())
+            for key in ("order_8_plus", "order_10_plus")
+        },
+    }
+
+
+def parse_pagetypeinfo(text: str) -> dict[str, Any]:
+    nodes: dict[str, dict[str, dict[str, int]]] = {}
+    columns: list[str] | None = None
+    in_table = False
+    rows = 0
+    section_rows = 0
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith(("Page block order:", "Free pages count per migrate type")):
+            if in_table and section_rows == 0:
+                return {"status": COLLECTION_FAILED, "reason": "incomplete"}
+            in_table = False
+            section_rows = 0
+            continue
+        if stripped.startswith("Number of mixed blocks"):
+            if in_table and section_rows == 0:
+                return {"status": COLLECTION_FAILED, "reason": "incomplete"}
+            in_table = False
+            section_rows = 0
+            continue
+        if stripped.startswith("Number of blocks type"):
+            if in_table and section_rows == 0:
+                return {"status": COLLECTION_FAILED, "reason": "incomplete"}
+            candidate = stripped.split()[4:]
+            required = {"Unmovable", "Reclaimable", "Movable"}
+            if not candidate or len(candidate) != len(set(candidate)) or not required.issubset(candidate):
+                return {"status": COLLECTION_FAILED, "reason": "malformed_header"}
+            if columns is not None and candidate != columns:
+                return {"status": COLLECTION_FAILED, "reason": "inconsistent_header"}
+            columns = candidate
+            in_table = True
+            section_rows = 0
+            continue
+        if not in_table or not stripped:
+            continue
+        match = re.fullmatch(r"\s*Node\s+(\d+),\s*zone\s+(\S+)\s+(.+?)\s*", line)
+        if not match:
+            return {"status": COLLECTION_FAILED, "reason": "malformed"}
+        node, zone, tail = match.groups()
+        values = _fragmentation_numbers(tail.split())
+        if not columns or values is None or len(values) != len(columns):
+            return {"status": COLLECTION_FAILED, "reason": "incomplete"}
+        section_rows += 1
+        if zone != "Normal":
+            continue
+        rows += 1
+        if zone in nodes.setdefault(node, {}):
+            return {"status": COLLECTION_FAILED, "reason": "duplicate_zone"}
+        nodes[node][zone] = dict(zip(columns, values))
+    if in_table and section_rows == 0:
+        return {"status": COLLECTION_FAILED, "reason": "incomplete"}
+    if rows == 0:
+        return {"status": COLLECTION_FAILED, "reason": "incomplete"}
+    mobility = sorted({key for zones in nodes.values() for data in zones.values() for key in data})
+    return {
+        "status": "ok",
+        "nodes": nodes,
+        "sum": {
+            key: sum(data.get(key, 0) for zones in nodes.values() for data in zones.values())
+            for key in mobility
+        },
+    }
+
+
+def collect_fragmentation(proc_root: Path) -> dict[str, Any]:
+    sources = {}
+    for key, name, parser in (
+        ("buddyinfo", "buddyinfo", parse_buddyinfo),
+        ("pagetypeinfo", "pagetypeinfo", parse_pagetypeinfo),
+    ):
+        status, content = _fragmentation_read(proc_root / name)
+        sources[key] = parser(content) if status == "read" else {"status": status, "reason": content}
+    return {"schema": "bb-fragmentacion/1", **sources}
 
 
 def ruta_bitacora_cola(entorno: dict[str, str] | None = None, declaracion: Path | None = None) -> Path | None:
@@ -512,6 +648,38 @@ def muestras_bb_del_boot(
     except OSError:
         return [], COLLECTION_FAILED
     return filas, f"0 muestras de bb sample con boot_id {marca} en {d}"
+
+
+def muestra_fragmentacion_del_boot(
+    filas: list[dict[str, Any]], boot_id: str, inicio: float, fin: float
+) -> dict[str, Any]:
+    """Ultima muestra con boot_id exacto y sello temporal dentro del boot."""
+    marca = boot_id.replace("-", "").lower()
+    validas = []
+    for fila in filas:
+        if str(fila.get("boot_id", "")).replace("-", "").lower() != marca:
+            continue
+        raw_ts = fila.get("ts")
+        ts = epoch_de(raw_ts) if isinstance(raw_ts, str) else None
+        if ts is not None and inicio <= ts <= fin and isinstance(fila.get("fragmentacion_memoria"), dict):
+            validas.append((ts, fila["fragmentacion_memoria"]))
+    return max(validas, key=lambda x: x[0])[1] if validas else {
+        "schema": "bb-fragmentacion/1",
+        "buddyinfo": {"status": NOT_COLLECTED},
+        "pagetypeinfo": {"status": NOT_COLLECTED},
+    }
+
+
+def campos_aditivos_1358(
+    filas: list[dict[str, Any]], boot_id: str, inicio: float, fin: float
+) -> dict[str, Any]:
+    return {
+        "fragmentacion_memoria_en_ultima_muestra": muestra_fragmentacion_del_boot(
+            filas, boot_id, inicio, fin
+        ),
+        "uefi_after_power_loss": NOT_COLLECTED,
+        "kernel_panic_on_rcu_stall": NOT_COLLECTED,
+    }
 
 
 def _gw(m: dict[str, Any]) -> dict[str, float] | None:
@@ -1270,6 +1438,9 @@ def reporte(
     sig_id = boots[i + 1]["boot_id"]
     sig_tele = [m for m in telemetria_del_boot(sig_id) if m.get("evento") == "muestra"]
     sig_bb, _ = muestras_bb_del_boot(sig_id)
+    campos_1358 = campos_aditivos_1358(
+        bb, b["boot_id"], b["first_entry"] / 1e6, b["last_entry"] / 1e6
+    )
     primera = primera_respuesta_de_aplicacion(sig_tele, sig_bb)
     plat = plataforma()
     carga = carga_externa(b["boot_id"])
@@ -1300,6 +1471,7 @@ def reporte(
             "fase_de_carga": fase_de_carga(bb, bb_vacio, progreso),
         },
         "progreso_del_engine": progreso,
+        **campos_1358,
         "primera_respuesta_de_aplicacion_tras_el_boot_siguiente": primera,
         "carga_externa": carga,
         CLAVE_CARGA_LEGADO: con_nombres_legado(carga),
@@ -1372,6 +1544,12 @@ def journal_kernel_anonimo(idx: int, nodo: str, lineas: int = 300) -> str:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=(__doc__ or "").split("\n")[0])
     ap.add_argument(
+        "--fragmentacion",
+        action="store_true",
+        help="captura explícita de buddyinfo/pagetypeinfo sin generar reporte de incidente",
+    )
+    ap.add_argument("--proc-root", type=Path, default=Path("/proc"))
+    ap.add_argument(
         "boot",
         nargs="?",
         type=int,
@@ -1410,6 +1588,9 @@ def main(argv: list[str] | None = None) -> int:
         help="anotacion del operador: hubo que pulsar el boton de encendido",
     )
     a = ap.parse_args(argv)
+    if a.fragmentacion:
+        print(json.dumps(collect_fragmentation(a.proc_root), separators=(",", ":")))
+        return 0
     notas = {
         k: v
         for k, v in (
