@@ -54,15 +54,16 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import math
 import sys
 from pathlib import Path
 
+from tools.capture_io import strict_json_loads
 from tools.calibra_psi import (
     FALSOS_POSITIVOS_CONOCIDOS,
     INCIDENTES,
     MUESTRAS,
     UMBRAL_PCT,
-    carga,
     ventanas_exentas,
 )
 
@@ -75,6 +76,82 @@ CORTE_S = 300.0
 # muestreador muerto. Encadenar a traves de el inventaria una racha que nadie
 # observo. 10 min es 10x el intervalo mediano.
 HUECO_MAX_S = 600.0
+
+
+class EntradaInvalida(ValueError):
+    """El corpus contiene una muestra incompleta o imposible de interpretar."""
+
+
+def carga_control(directorio: Path) -> list[tuple[dt.datetime, float]]:
+    """Lee muestras PSI sin convertir una ausencia en cero observado.
+
+    Sólo se ignoran los metadatos reconocidos de burst. Se tolera una última
+    línea JSON truncada por archivo si quedan muestras utilizables. Una muestra
+    PSI parseable debe traer ts y mem_full numérico y finito.
+    """
+    serie = []
+    ficheros = sorted(directorio.glob("*.jsonl"))
+    if not ficheros:
+        raise EntradaInvalida(f"sin archivos JSONL en {directorio}")
+    for fichero in ficheros:
+        try:
+            lineas = fichero.read_text(encoding="utf-8", errors="replace").splitlines(keepends=True)
+        except OSError as exc:
+            raise EntradaInvalida(f"no se pudo leer {fichero}: {exc}") from exc
+        for indice, linea in enumerate(lineas):
+            try:
+                d = strict_json_loads(linea)
+            except ValueError as exc:
+                contenido = linea.rstrip("\r\n")
+                error = getattr(exc, "msg", "")
+                truncada = (
+                    indice == len(lineas) - 1
+                    and not linea.endswith(("\n", "\r"))
+                    and (error.startswith("Unterminated string starting at")
+                         or (bool(contenido) and contenido[-1] not in "}]"
+                             and getattr(exc, "pos", -1) >= len(contenido)))
+                )
+                if truncada:
+                    continue
+                raise EntradaInvalida(f"JSON inválido en {fichero}:{indice + 1}") from exc
+            if not isinstance(d, dict):
+                raise EntradaInvalida(f"fila JSON no es objeto en {fichero}:{indice + 1}")
+            if "burst_inicio" in d or "burst_fin" in d:
+                es_inicio = (set(d) == {"ts", "burst_inicio", "motivo"}
+                             and d["burst_inicio"] is True
+                             and isinstance(d["motivo"], str) and bool(d["motivo"].strip()))
+                es_fin = set(d) == {"ts", "burst_fin"} and d["burst_fin"] is True
+                if not (es_inicio or es_fin):
+                    raise EntradaInvalida(f"marcador de burst híbrido o inválido en {fichero}:{indice + 1}")
+                try:
+                    dt.datetime.strptime(d.get("ts", ""), "%Y-%m-%dT%H:%M:%S%z")
+                except (TypeError, ValueError) as exc:
+                    raise EntradaInvalida(f"timestamp inválido en {fichero}:{indice + 1}") from exc
+                continue
+            if "psi" not in d:
+                raise EntradaInvalida(f"objeto PSI ausente en {fichero}:{indice + 1}")
+            if not isinstance(d["psi"], dict):
+                raise EntradaInvalida(f"objeto PSI inválido en {fichero}:{indice + 1}")
+            try:
+                t = dt.datetime.strptime(d.get("ts", ""), "%Y-%m-%dT%H:%M:%S%z")
+            except (TypeError, ValueError) as exc:
+                raise EntradaInvalida(f"timestamp inválido en {fichero}:{indice + 1}") from exc
+            psi = d["psi"]
+            if "mem_full" not in psi or psi["mem_full"] is None or isinstance(psi["mem_full"], bool):
+                raise EntradaInvalida(f"psi.mem_full ausente o inválido en {fichero}:{indice + 1}")
+            try:
+                valor = float(psi["mem_full"])
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise EntradaInvalida(f"psi.mem_full inválido en {fichero}:{indice + 1}") from exc
+            if not math.isfinite(valor):
+                raise EntradaInvalida(f"psi.mem_full no finito en {fichero}:{indice + 1}")
+            if not 0 <= valor <= 100:
+                raise EntradaInvalida(f"psi.mem_full fuera de [0, 100] en {fichero}:{indice + 1}")
+            serie.append((t.replace(tzinfo=None), valor))
+    serie.sort(key=lambda r: r[0])
+    if not serie:
+        raise EntradaInvalida(f"sin muestras PSI utilizables en {directorio}")
+    return serie
 
 
 # FALSOS_POSITIVOS_CONOCIDOS y ventanas_exentas viven en `tools.calibra_psi` desde el 2026-10-16 (una sola fuente:
@@ -140,9 +217,16 @@ def main(argv=None) -> int:
                     help="reglas a comparar: 1 es el defecto, 2 el arreglo")
     a = ap.parse_args(argv)
 
-    serie = carga(a.muestras)
-    if not serie:
-        print(f"COULD_NOT_RUN: sin muestras en {a.muestras}", file=sys.stderr)
+    if not math.isfinite(a.corte) or a.corte <= 0:
+        print("COULD_NOT_RUN: --corte debe ser finito y mayor que cero", file=sys.stderr)
+        return 2
+    if any(b <= 0 for b in a.bajas):
+        print("COULD_NOT_RUN: cada valor de --bajas debe ser mayor que cero", file=sys.stderr)
+        return 2
+    try:
+        serie = carga_control(a.muestras)
+    except EntradaInvalida as exc:
+        print(f"COULD_NOT_RUN: {exc}", file=sys.stderr)
         return 2
 
     print(f"corpus {len(serie)} muestras  {serie[0][0]} -> {serie[-1][0]}")

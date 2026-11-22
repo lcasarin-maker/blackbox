@@ -12,7 +12,11 @@ from __future__ import annotations
 import datetime as dt
 import importlib.machinery as machinery
 import importlib.util as util
+import json
+import os
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
@@ -149,6 +153,141 @@ def test_sin_corpus_es_COULD_NOT_RUN_y_no_limpio(tmp_path, capsys):
     rc = cr.main(["--muestras", str(tmp_path / "no-existe")])
     assert rc == 2, "sin corpus, ni 0 ni 1: la tercera salida"
     assert "COULD_NOT_RUN" in capsys.readouterr().err
+
+
+def _ejecuta_cli(tmp_path, filas, *args):
+    muestras = tmp_path / "muestras"
+    muestras.mkdir(parents=True, exist_ok=True)
+    (muestras / "sintetico.jsonl").write_text(
+        "".join(json.dumps(f) + "\n" for f in filas), encoding="utf-8")
+    env = dict(os.environ, HOME=str(tmp_path / "home"),
+               BLACKBOX_DATA=str(tmp_path / "blackbox"), TMPDIR=str(tmp_path))
+    return subprocess.run(
+        [sys.executable, "-B", "-m", "tools.control_racha", "--muestras",
+         str(muestras), *args], cwd=RAIZ, env=env, text=True, capture_output=True)
+
+
+def _fila(minuto, psi):
+    return {"ts": f"2025-01-01T00:{minuto:02d}:00+00:00", "psi": psi}
+
+
+def test_cli_rachas_y_lectura_valida_sin_cero_inventado(tmp_path):
+    sano = _ejecuta_cli(tmp_path / "sano", [_fila(i, {"mem_full": 0}) for i in range(7)],
+                        "--corte", "300", "--bajas", "2")
+    assert sano.returncode == 0, sano.stdout + sano.stderr
+    assert "VEREDICTO: LIMPIO" in sano.stdout
+    for truncada in ('{"ts":"fila truncada"', '{"ts":"2025-01'):
+        (tmp_path / "sano" / "muestras" / "sintetico.jsonl").write_text(
+            json.dumps({"burst_fin": True, "ts": "2025-01-01T00:07:00+0000"}) + "\n" +
+            "".join(json.dumps(_fila(i, {"mem_full": 0})) + "\n" for i in range(7)) +
+            truncada, encoding="utf-8")
+        metadatos_y_truncada = subprocess.run(
+            [sys.executable, "-B", "-m", "tools.control_racha", "--muestras",
+             str(tmp_path / "sano" / "muestras"), "--bajas", "2"], cwd=RAIZ,
+            env=dict(os.environ, HOME=str(tmp_path / "home"), TMPDIR=str(tmp_path)),
+            text=True, capture_output=True)
+        assert metadatos_y_truncada.returncode == 0, metadatos_y_truncada.stdout + metadatos_y_truncada.stderr
+    rojo = _ejecuta_cli(tmp_path / "rojo", [_fila(i, {"mem_full": 99}) for i in range(7)],
+                        "--corte", "300", "--bajas", "2")
+    assert rojo.returncode == 1, rojo.stdout + rojo.stderr
+    assert "FALSO POSITIVO" in rojo.stdout
+
+
+@pytest.mark.parametrize("psi", [{}, {"mem_full": None}, {"mem_full": "bad"},
+                                   {"mem_full": "nan"}, {"mem_full": "inf"},
+                                   {"mem_full": -0.1}, {"mem_full": 100.1}])
+def test_cli_lectura_invalida_es_could_not_run(tmp_path, psi):
+    result = _ejecuta_cli(tmp_path, [_fila(i, {"mem_full": 0}) for i in range(6)]
+                          + [_fila(6, psi)], "--bajas", "2")
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "COULD_NOT_RUN" in result.stderr
+
+
+@pytest.mark.parametrize("fila", [{"ts": "2025-01-01T00:06:00+00:00"},
+                                    {"ts": "2025-01-01T00:06:00+00:00", "psi": None},
+                                    {"ts": "2025-01-01T00:06:00+00:00", "psi": []}])
+def test_cli_objeto_muestra_sin_psi_valido_es_could_not_run(tmp_path, fila):
+    result = _ejecuta_cli(tmp_path, [_fila(i, {"mem_full": 0}) for i in range(6)] + [fila],
+                          "--bajas", "2")
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "COULD_NOT_RUN" in result.stderr
+
+
+def test_cli_fila_completa_malformada_al_final_es_could_not_run(tmp_path):
+    muestras = tmp_path / "muestras"
+    muestras.mkdir()
+    (muestras / "sintetico.jsonl").write_text(
+        "".join(json.dumps(_fila(i, {"mem_full": 0})) + "\n" for i in range(6)) +
+        "{malformada}\n", encoding="utf-8")
+    env = dict(os.environ, HOME=str(tmp_path / "home"), TMPDIR=str(tmp_path))
+    result = subprocess.run(
+        [sys.executable, "-B", "-m", "tools.control_racha", "--muestras",
+         str(muestras), "--bajas", "2"], cwd=RAIZ, env=env,
+        text=True, capture_output=True)
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "COULD_NOT_RUN" in result.stderr
+
+
+def test_cli_claves_psi_duplicadas_son_could_not_run(tmp_path):
+    muestras = tmp_path / "muestras"
+    muestras.mkdir()
+    filas = [f'{{"ts":"2025-01-01T00:{i:02d}:00+0000",'
+             '"psi":{"mem_full":77,"mem_full":0}}' for i in range(7)]
+    (muestras / "sintetico.jsonl").write_text("\n".join(filas), encoding="utf-8")
+    env = dict(os.environ, HOME=str(tmp_path / "home"), TMPDIR=str(tmp_path))
+    result = subprocess.run(
+        [sys.executable, "-B", "-m", "tools.control_racha", "--muestras",
+         str(muestras), "--corte", "300", "--bajas", "2"], cwd=RAIZ,
+        env=env, text=True, capture_output=True)
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "COULD_NOT_RUN" in result.stderr
+
+
+def test_cli_marcadores_de_burst_exactos_son_metadatos_validos(tmp_path):
+    filas = [_fila(i, {"mem_full": 0}) for i in range(7)]
+    inicio = {"ts": "2025-01-01T00:00:00+0000", "burst_inicio": True,
+              "motivo": "psi mem_full=77"}
+    fin = {"ts": "2025-01-01T00:06:00+0000", "burst_fin": True}
+    result = _ejecuta_cli(tmp_path, [inicio, *filas, fin], "--corte", "300", "--bajas", "2")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "VEREDICTO: LIMPIO" in result.stdout
+
+
+def test_cli_campo_burst_con_muestra_psi_sigue_siendo_dato(tmp_path):
+    filas = [_fila(i, {"mem_full": 0}) for i in range(7)]
+    filas[3]["burst"] = True
+    result = _ejecuta_cli(tmp_path, filas, "--corte", "300", "--bajas", "2")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "corpus 7 muestras" in result.stdout
+
+
+@pytest.mark.parametrize("marcador", [
+    {"ts": "2025-01-01T00:06:00+0000", "burst_inicio": True,
+     "motivo": "psi mem_full=77", "mem_free_kb": 123},
+    {"ts": "2025-01-01T00:06:00+0000", "burst_fin": True, "mem_free_kb": 123},
+    {"ts": "2025-01-01T00:06:00+0000", "burst": True, "mem_free_kb": 123},
+])
+def test_cli_marcador_hibrido_o_dato_burst_sin_psi_es_could_not_run(tmp_path, marcador):
+    result = _ejecuta_cli(tmp_path, [_fila(i, {"mem_full": 0}) for i in range(7)] + [marcador],
+                          "--corte", "300", "--bajas", "2")
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "COULD_NOT_RUN" in result.stderr
+
+
+@pytest.mark.parametrize("corte", ["nan", "inf", "0", "-1"])
+def test_cli_corte_invalido_es_could_not_run(tmp_path, corte):
+    result = _ejecuta_cli(tmp_path, [_fila(i, {"mem_full": 0}) for i in range(7)],
+                          "--corte", corte, "--bajas", "2")
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "COULD_NOT_RUN" in result.stderr
+
+
+@pytest.mark.parametrize("bajas", ["0", "-1"])
+def test_cli_bajas_invalidas_es_could_not_run(tmp_path, bajas):
+    result = _ejecuta_cli(tmp_path, [_fila(i, {"mem_full": 0}) for i in range(7)],
+                          "--bajas", bajas)
+    assert result.returncode == 2, result.stdout + result.stderr
+    assert "COULD_NOT_RUN" in result.stderr
 
 
 # --- falsos positivos conocidos: excepcion con caducidad atada a su ficha (2026-10-16) ---
