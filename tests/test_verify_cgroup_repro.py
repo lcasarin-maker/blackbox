@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 from pathlib import Path
 import runpy
+import subprocess
+import sys
 
 import pytest
 
@@ -141,6 +144,79 @@ def test_cli_verdicts(tmp_path, monkeypatch, capsys, status, rc):
     assert json.loads(capsys.readouterr().out)['status'] == status
 
 
+def _run_real_cli(path, timeout=2):
+    try:
+        return subprocess.run(
+            [sys.executable, '-B', '-m', 'tools.verify_cgroup_repro', str(path)],
+            check=False, capture_output=True, text=True, timeout=timeout,
+        ), False
+    except subprocess.TimeoutExpired:
+        return None, True
+
+
+def test_cli_valid_synthetic_observations_return_pass(tmp_path, capture):
+    path = tmp_path / 'valid.json'
+    path.write_text(json.dumps(capture), encoding='utf-8')
+    result, timed_out = _run_real_cli(path)
+    assert not timed_out, 'CLI timed out on regular synthetic JSON'
+    assert result.returncode == 0, result.stdout
+    assert json.loads(result.stdout)['status'] == 'pass'
+
+
+@pytest.mark.parametrize('duplicate', ['document', 'worker_row'])
+def test_cli_rejects_duplicate_json_keys(tmp_path, capture, duplicate):
+    text = json.dumps(capture)
+    if duplicate == 'document':
+        text = text.replace('"schema": 1', '"schema": 2, "schema": 1', 1)
+    else:
+        run = next(row for row in capture['runs'] if row['api'] == 'cpu_touch')
+        rows = run['stdout'].splitlines()
+        rows[1] = rows[1].replace('"pid": 1', '"pid": 999, "pid": 1', 1)
+        run['stdout'] = '\n'.join(rows)
+        text = json.dumps(capture)
+    path = tmp_path / 'duplicate.json'
+    path.write_text(text, encoding='utf-8')
+    result, timed_out = _run_real_cli(path)
+    assert not timed_out, 'CLI timed out on regular synthetic JSON'
+    assert result.returncode == 2, result.stdout
+    assert json.loads(result.stdout)['status'] == 'unknown'
+
+
+def test_cli_cpu_positive_control_still_returns_fail(tmp_path, capture):
+    run = next(row for row in capture['runs'] if row['api'] == 'cpu_touch')
+    rows = [json.loads(line) for line in run['stdout'].splitlines()]
+    rows[1]['files']['memory.current']['value'] = '0'
+    run['stdout'] = '\n'.join(json.dumps(row) for row in rows)
+    path = tmp_path / 'cpu-fail.json'
+    path.write_text(json.dumps(capture), encoding='utf-8')
+    result, timed_out = _run_real_cli(path)
+    assert not timed_out, 'CLI timed out on regular synthetic JSON'
+    assert result.returncode == 1, result.stdout
+    assert json.loads(result.stdout)['status'] == 'fail'
+
+
+@pytest.mark.parametrize('kind', ['missing', 'directory', 'fifo', 'symlink', 'oversized', 'invalid_json'])
+def test_cli_rejects_unreadable_nonregular_or_oversized_files(tmp_path, capture, kind):
+    path = tmp_path / 'evidence.json'
+    if kind == 'directory':
+        path.mkdir()
+    elif kind == 'fifo':
+        os.mkfifo(path)
+    elif kind == 'symlink':
+        target = tmp_path / 'target.json'
+        target.write_text(json.dumps(capture), encoding='utf-8')
+        path.symlink_to(target)
+    elif kind == 'oversized':
+        raw = json.dumps(capture) + (' ' * (512 * 1024 + 1))
+        path.write_text(raw, encoding='utf-8')
+    elif kind == 'invalid_json':
+        path.write_text('{', encoding='utf-8')
+    result, timed_out = _run_real_cli(path)
+    assert not timed_out, f'CLI blocked on {kind} evidence'
+    assert result.returncode == 2, result.stdout
+    assert json.loads(result.stdout)['status'] == 'unknown'
+
+
 @pytest.mark.parametrize('payload', [None, b'\xff', b'{'])
 def test_cli_read_failure(tmp_path, capsys, payload):
     path = tmp_path/'capture.json'
@@ -157,3 +233,14 @@ def test_script_entry(tmp_path, monkeypatch, capsys):
         runpy.run_path(subject.__file__, run_name='__main__')
     assert exc.value.code == 2
     assert json.loads(capsys.readouterr().out)['status'] == 'unknown'
+
+
+def test_isolated_script_entry(tmp_path, capture):
+    path = tmp_path / 'capture.json'
+    path.write_text(json.dumps(capture), encoding='utf-8')
+    result = subprocess.run(
+        [sys.executable, '-I', str(Path(subject.__file__).resolve()), str(path)],
+        cwd=tmp_path, check=False, capture_output=True, text=True, timeout=2,
+    )
+    assert result.returncode == 0, result.stderr or result.stdout
+    assert json.loads(result.stdout)['status'] == 'pass'
