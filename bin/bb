@@ -690,6 +690,21 @@ cmd_sample() {
   local commit_pct residuo
   commit_pct=$(compromiso_pct); residuo=$(residuo_mb)
 
+  # pagetypeinfo puede drenar páginas (CONFIG_PAGE_OWNER) y es root-readable;
+  # captura explícita opt-in, sin sudo ni bloqueo del muestreador por defecto.
+  local fragmentacion='{"schema":"bb-fragmentacion/1","buddyinfo":{"status":"NOT_COLLECTED"},"pagetypeinfo":{"status":"NOT_COLLECTED"}}'
+  if [ "${BB_FRAGMENTACION_OPT_IN:-0}" = 1 ]; then
+    local bb_root
+    bb_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+    if ! fragmentacion=$(cd "$bb_root" && timeout 2 python3 -m tools.incident_report --fragmentacion --proc-root "$PROC" 2>/dev/null); then
+      echo "[bb] fragmentacion opt-in: captura no completada (timeout o error); se anota COLLECTION_FAILED" >&2
+      fragmentacion='{"schema":"bb-fragmentacion/1","buddyinfo":{"status":"COLLECTION_FAILED"},"pagetypeinfo":{"status":"COLLECTION_FAILED"}}'
+    elif [ -z "$fragmentacion" ]; then
+      echo "[bb] fragmentacion opt-in: recolector sin salida; se anota COLLECTION_FAILED" >&2
+      fragmentacion='{"schema":"bb-fragmentacion/1","buddyinfo":{"status":"COLLECTION_FAILED"},"pagetypeinfo":{"status":"COLLECTION_FAILED"}}'
+    fi
+  fi
+
   # Apps Electron y su cuenta de renderizadores. Un 0 aqui es la firma exacta
   # del cuelgue: proceso principal vivo, ventana en pantalla, UI muerta.
   # Solo apps Chromium/Electron de verdad: se identifican por tener un proceso
@@ -932,11 +947,11 @@ cmd_sample() {
       echo "[bb] origen del aviso de scope NO registrado (rc=$?)" >&2
   fi
 
-  printf '{"ts":"%s","boot_id":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"cpu_top":[%s],"py_bg":[%s],"gpu":%s,"slices":[%s],"claude_scopes":%s,"scope_pressure_alert":%s,"commit_pct":%s,"residuo_mb":%s,"swap":{"free_kb":%s,"total_kb":%s,"in_pag_s":%s,"out_pag_s":%s,"top":[%s]},"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s},"x":{"estado":"%s","ms":%s},"servicio_ssh":%s,"pidio_origen":%s}\n' \
+  printf '{"ts":"%s","boot_id":"%s","mem_free_kb":%s,"mem_avail_kb":%s,"zombies":%s,"load1":%s,"apps":[%s],"top_rss":[%s],"pidio":[%s],"cpu_top":[%s],"py_bg":[%s],"gpu":%s,"slices":[%s],"claude_scopes":%s,"scope_pressure_alert":%s,"commit_pct":%s,"residuo_mb":%s,"swap":{"free_kb":%s,"total_kb":%s,"in_pag_s":%s,"out_pag_s":%s,"top":[%s]},"psi":{"mem_some":%s,"mem_full":%s,"io_some":%s,"cpu_some":%s},"fragmentacion_memoria":%s,"gateway":"%s","docker":"%s","gw_salud":"%s","disco":"%s","red":"%s","cpu_jiffies":"%s","smi":{"estado":"%s","ms":%s},"x":{"estado":"%s","ms":%s},"servicio_ssh":%s,"pidio_origen":%s}\n' \
     "$ts" "$(cat /proc/sys/kernel/random/boot_id 2>/dev/null || true)" "${mf:-0}" "${ma:-0}" "${zc:-0}" "$la" "$apps" "$top" "$topvsz" "$cputop" "$pybg" "$gpu_json" "$slices" "$claude_scopes" "$scope_pressure_alert" \
     "${commit_pct:-0}" "${residuo:-null}" \
     "${swap_free:-0}" "${swap_total:-0}" "${swpin_s:-0}" "${swpout_s:-0}" "$swaptop" \
-    "${psi_m_some:-0}" "${psi_m_full:-0}" "${psi_io_some:-0}" "${psi_cpu_some:-0}" \
+    "${psi_m_some:-0}" "${psi_m_full:-0}" "${psi_io_some:-0}" "${psi_cpu_some:-0}" "$fragmentacion" \
     "${gw:-CAIDO}" "${dk:-?}" "${salud:-}" "${disco:-}" "${red:-}" "${cpuj:-}" \
     "${smi_estado:-DESCONOCIDO}" "${smi_ms:-0}" \
     "${x_estado:-DESCONOCIDO}" "${x_ms:-0}" "$servicio_probe" "$pidio_origen" >>"$f"
