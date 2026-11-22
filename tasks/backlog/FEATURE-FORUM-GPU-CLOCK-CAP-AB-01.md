@@ -13,7 +13,7 @@ close_check: {"cmd": "python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/
 
 ## Trabajo en la ATOM
 
-A/B opt-in en la ATOM: carga fija contra `nemotron-local` con el rango declarado `300,2800` y con un tope menor (`300,2200`), soak predeclarado y repeticion; registrar reloj aplicado, potencia, temperaturas e interrupciones, y rollback a `300,2800` (no `-rgc`) verificado en la respuesta del driver.
+A/B opt-in en la ATOM. Fijar la carga de `nemotron-local`, la duración, las repeticiones y los umbrales antes de empezar. Medir reloj, potencia, temperaturas e interrupciones. El rango de partida y el de restauración se eligen con evidencia de la sesión actual.
 
 ## Referencia pública
 
@@ -34,13 +34,13 @@ El texto de lo que dicen esos hilos se reubicó el 2026-11-01 a la base de conoc
 
 ## Blackbox coverage and gap
 
-The adopted `atom-clock-lock` unit declares `nvidia-smi -lgc 300,2800` at boot. `atom_gpu_telemetry.py` records GPU power, clock, temperature and throttle signals; `bb scan` reports clock/throttle anomalies. This review did not verify the effective driver range on the live system, and no local A/B establishes whether a lower range prevents the reported failures. The forum reports support a controlled prevention experiment, not a default change or proof that power spikes caused the outages.
+The historical review observed `atom-clock-lock` declaring `300,2800` at boot. The unit can now declare a different range. `atom_gpu_telemetry.py` records GPU power, clock, temperature and throttle signals; `bb scan` reports clock/throttle anomalies. This review did not verify the effective driver range on the live system, and no local A/B establishes whether a lower range prevents the reported failures. The forum reports support a controlled prevention experiment, not a default change or proof that power spikes caused the outages.
 
 ## Scope
 
-On each supported OEM and driver stack, compare the declared 300,2800 range with an owner-selected lower cap under the same bounded, reproducible inference workload. Start with the reported 2200 MHz cap on the HP ZGX Nano configuration and a 2100 MHz cap only when the device identity and driver confirm that range is accepted. Record OEM, firmware, BIOS, kernel, driver/module, workload version, effective clock, board/GPU power signals available, temperatures, journal/pstore evidence, performance, run duration and any interruption.
+On each supported OEM and driver stack, compare the original effective policy with an operator-approved lower cap under the same bounded, reproducible inference workload. Select a supported ceiling below the measured original ceiling and preserve the original floor. Record OEM, firmware, BIOS, kernel, driver/module, workload version, effective clock, board/GPU power signals available, temperatures, journal/pstore evidence, performance, run duration and any interruption.
 
-Keep the experiment opt-in. Do not lower the installed 2800 MHz ceiling globally from these reports alone. Record how the persistent service would accept an explicitly configured cap and restore the prior value. The runtime rollback must restore the actual policy (`300,2800` under the current Blackbox unit), since `-rgc` alone returns to the driver's maximum and the unit may reapply its configured range at the next start.
+Keep the experiment opt-in. Runtime rollback must restore the full original range observed in the same window. A generic reset can restore a different range. Leave the persistent service configuration intact during the experiment.
 
 ## Closure evidence
 
@@ -80,5 +80,12 @@ El agente hardware tiene asignada la entrada CLI con JSON literal y códigos 0/1
 ## Criterios ejecutables de `tools.verify_gpu_clock_cap_ab` (2026-10-14)
 Los criterios ejecutables de `tools.verify_gpu_clock_cap_ab` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.
 
-## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
-Disparador: la ventana del motor de 60 min que anuncia Luis con sudo de Luis para `nvidia-smi -lgc` (escritura de root). Comparte la ventana con DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01. Pasos exactos: carga fija contra `nemotron-local` a 300,2800; `sudo nvidia-smi -lgc 300,2200`, misma carga y soak predeclarado; rollback `sudo nvidia-smi -lgc 300,2800` (no `-rgc`: el rango de bb es 300,2800); guardar en `tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/` y correr `python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01`.
+## Avance histórico del 2026-10-14
+
+El lote dejó agendada una ventana de 60 minutos para comparar el rango de partida y un techo menor con la misma carga, bajo autorización del operador. La receta asumía los rangos declarados en esa fecha. Las condiciones siguientes reemplazan esa receta operativa.
+
+## Condiciones vigentes antes de reservar la ventana
+
+La ventana requiere autorización del operador y comparte captura con DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01. Ejecutar `bb status clock lock` en sólo lectura para cotejar la declaración del servicio con la confirmación de su arranque. Obtener además una lectura independiente del rango activo y la lista de relojes admitidos por el driver del equipo del ensayo. La confirmación del arranque acredita aquella aplicación. El reloj instantáneo, el máximo nominal y la confirmación histórica dejan sin acreditar el rango activo.
+
+Si alguna lectura falta, discrepa o devuelve `N/A`, conservar `COULD_NOT_RUN` y detener la preparación antes de cualquier escritura de reloj. Si las lecturas concuerdan, fijar el rango original completo como destino de restauración. Al terminar, repetir la misma lectura independiente y exigir coincidencia exacta. El cierre sigue a cargo de `python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01`.
