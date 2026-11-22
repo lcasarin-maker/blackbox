@@ -21,15 +21,18 @@ import platform
 import re
 import subprocess
 import sys
+import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from tools import interruptores
+from tools import host_diagnostics, interruptores
 
 NOMBRE = "huella_host"
 NC = "NOT_COLLECTED"
 PAQUETES_OTA = ("dgx-spark-ota-update-meta", "nvidia-spark-ota-check")
+PRESUPUESTO_SESION_GRAFICA_S = 48.0
+PRESUPUESTO_RECOGE_SESION_S = 52.0
 
 Correr = Callable[..., Any]
 
@@ -444,6 +447,109 @@ def sonda_cx7_hotplug(raiz: Path, correr: Correr) -> Any:
     return {"marcador": (raiz / "etc/nvidia/cx7-hotplug-enabled").is_file(), "hotplug_enabled": bandera if bandera is not None else _nc("hotplug_enabled ausente o ilegible")}
 
 
+def sonda_sesion_grafica(raiz: Path, correr: Correr) -> Any:
+    """Observa target, GDM y sesiones locales; no prueba login funcional ni login loop."""
+    limite = time.monotonic() + PRESUPUESTO_SESION_GRAFICA_S
+
+    def consultar(argv: list[str], accepted: tuple[int, ...] = ()) -> dict[str, Any]:
+        if time.monotonic() >= limite:
+            return {"status": "could_not_run", "error": "global query budget exhausted"}
+        try:
+            resultado = host_diagnostics.run_readonly(argv, correr, accepted)
+        except (AttributeError, TypeError, ValueError, KeyError, IndexError,
+                OSError, subprocess.SubprocessError) as exc:
+            return {"status": "could_not_run", "error": f"{type(exc).__name__}: {exc}"}
+        if time.monotonic() >= limite:
+            return {"status": "could_not_run", "error": "global query budget exhausted"}
+        return resultado
+
+    def nc_consulta(resultado: dict[str, Any], motivo: str) -> str:
+        if resultado.get("error") == "global query budget exhausted":
+            return _nc("presupuesto global de consultas agotado")
+        return _nc(motivo)
+
+    target_result = consultar(["systemctl", "get-default"])
+    if target_result.get("status") != "ok" or target_result.get("stdout_truncated"):
+        return nc_consulta(target_result, "systemctl get-default no pudo leerse")
+    target = target_result.get("stdout", "")
+    if target not in {"graphical.target", "multi-user.target"}:
+        return _nc("systemctl get-default ambiguo o no reconocido")
+
+    gdm_result = consultar(["systemctl", "is-active", "gdm.service"], (3, 4))
+    if gdm_result.get("stdout_truncated"):
+        return _nc("salida de gdm.service truncada")
+    gdm = gdm_result.get("stdout", "")
+    if gdm not in {"active", "inactive"}:
+        return nc_consulta(gdm_result, "estado de gdm.service ausente, fallido o ambiguo")
+    if ((gdm == "active" and gdm_result.get("returncode") != 0)
+            or (gdm == "inactive" and gdm_result.get("returncode") != 3)):
+        return _nc("código de salida incompatible con el estado de gdm.service")
+
+    sessions_result = consultar(["loginctl", "list-sessions", "--no-pager", "--no-legend"])
+    if sessions_result.get("status") != "ok" or sessions_result.get("stdout_truncated"):
+        return nc_consulta(sessions_result, "loginctl list-sessions no pudo leerse")
+    session_ids: list[str] = []
+    for line in sessions_result.get("stdout", "").splitlines():
+        fields = line.split()
+        if not fields:
+            continue
+        if (len(fields) < 5
+                or not re.fullmatch(r"(?:[0-9]+|c[0-9]+)", fields[0])
+                or not fields[1].isdigit()
+                or not fields[2]
+                or not fields[3]
+                or not fields[4]):
+            return _nc("loginctl list-sessions devolvió una fila ambigua")
+        session_ids.append(fields[0])
+    if len(set(session_ids)) != len(session_ids):
+        return _nc("loginctl list-sessions devolvió IDs duplicados")
+    if len(session_ids) > 32:
+        return _nc("loginctl list-sessions excedió el límite de 32 sesiones inspeccionables")
+
+    graphical_local = 0
+    greeters = 0
+    for session_id in session_ids:
+        detail = consultar(["loginctl", "show-session", session_id,
+                            "--all", "-p", "Active", "-p", "Remote", "-p", "Type",
+                            "-p", "Class", "-p", "Seat", "-p", "Display"])
+        if detail.get("status") != "ok" or detail.get("stdout_truncated"):
+            return nc_consulta(detail, "loginctl show-session no pudo leerse")
+        properties: dict[str, str] = {}
+        for line in detail.get("stdout", "").splitlines():
+            key, separator, value = line.partition("=")
+            if (not separator or key in properties
+                    or key not in {"Active", "Remote", "Type", "Class", "Seat", "Display"}):
+                return _nc("loginctl show-session devolvió propiedades ambiguas")
+            properties[key] = value
+        if set(properties) != {"Active", "Remote", "Type", "Class", "Seat", "Display"}:
+            return _nc("loginctl show-session omitió propiedades requeridas")
+        if (properties["Active"] not in {"yes", "no"}
+                or properties["Remote"] not in {"yes", "no"}
+                or properties["Type"] not in {"tty", "x11", "wayland", "mir", "unspecified"}
+                or properties["Class"] not in {"user", "greeter", "lock-screen", "background"}
+                or (properties["Seat"] not in {"", "-"}
+                    and not re.fullmatch(r"seat[0-9]+", properties["Seat"]))):
+            return _nc("loginctl show-session devolvió valores no reconocidos")
+        local_seat = bool(re.fullmatch(r"seat[0-9]+", properties["Seat"]))
+        graphical_type = properties["Type"] in {"x11", "wayland", "mir"}
+        local = (properties["Active"] == "yes" and properties["Remote"] == "no"
+                 and local_seat and graphical_type)
+        if local and properties["Class"] == "user":
+            graphical_local += 1
+        elif local and properties["Class"] == "greeter":
+            greeters += 1
+
+    common = {"target": target, "gdm": gdm,
+              "sesiones_graficas_locales": graphical_local, "greeters": greeters}
+    if graphical_local:
+        return {"estado": "sesion_grafica_local_observada", **common}
+    if gdm == "active":
+        return {"estado": "gdm_activo_sin_sesion_grafica_local", **common}
+    if target == "multi-user.target" and gdm == "inactive" and not greeters:
+        return {"estado": "headless_declarado", **common}
+    return _nc("estado gráfico sin clasificación inequívoca")
+
+
 SONDAS: dict[str, Callable[[Path, Correr], Any]] = {
     "os_release": sonda_os_release,
     "kernel": sonda_kernel,
@@ -462,15 +568,28 @@ SONDAS: dict[str, Callable[[Path, Correr], Any]] = {
     "arranque_tras_actualizacion": sonda_arranque_tras_actualizacion,
     "recomendaciones_personal": sonda_recomendaciones_personal,
     "cx7_hotplug": sonda_cx7_hotplug,
+    "sesion_grafica": sonda_sesion_grafica,
 }
 
 
 def recoge(raiz: Path = Path("/"), correr: Correr = subprocess.run) -> dict[str, Any]:
     """Una lectura de todas las sondas; una sonda que lanza se registra como NOT_COLLECTED, no tumba la huella."""
+    inicio = time.monotonic()
+    limite_sesion = inicio + PRESUPUESTO_RECOGE_SESION_S
     out: dict[str, Any] = {}
     for nombre, f in SONDAS.items():
         try:
-            out[nombre] = f(raiz, correr)
+            if nombre == "sesion_grafica":
+                def correr_acotado(args: list[str], **kwargs: Any) -> Any:
+                    restante = limite_sesion - time.monotonic()
+                    if restante <= 0:
+                        raise subprocess.TimeoutExpired(args, 0)
+                    kwargs["timeout"] = min(float(kwargs.get("timeout", host_diagnostics.TIMEOUT_S)), restante)
+                    return correr(args, **kwargs)
+
+                out[nombre] = f(raiz, correr_acotado)
+            else:
+                out[nombre] = f(raiz, correr)
         except (OSError, ValueError, KeyError, IndexError, subprocess.SubprocessError) as e:  # una sonda rota (lectura, formato, subproceso) no oculta las demas
             out[nombre] = _nc(f"{type(e).__name__}: {e}")
     return out
