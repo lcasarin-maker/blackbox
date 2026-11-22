@@ -25,6 +25,15 @@ Registrada en `DECISIONS.md`. Descartadas: desactivar oomd y dejarlo como estaba
 
 Costo aceptado y limite: ver la entrada de `DECISIONS.md`.
 
+
+## Decision de Luis, 2026-11-21: aplazar la ventana OOM
+
+La política del 18/11 sigue aplicable: mantener oomd activo y evaluar `ManagedOOMPreference=avoid` en laboratorio antes de cualquier despliegue. La ventana se aplaza y queda sin reserva. Arranque del invitado, cotejo de límites y parada efectivos, PSI y elección de víctima quedan `COULD_NOT_RUN` por aplazamiento. Esta ficha permanece abierta, con su `close_check` original.
+
+Se conserva el paquete local `~/data/blackbox/laboratorio-oomd-orca/2026-11-21/`: imagen Ubuntu Minimal ARM64 20261105 en sólo lectura (SHA-256 `3dc8370d923978d4b610fa7964d1b36ba040eefb43198809ca5bc8ac51777b18`), diseño, firma, manifiesto y controles. Las ramas propuestas son hermanas con límites duros de 512 MiB en el padre, 256 MiB por rama y 128 MiB por hoja. Validación estática: un positivo rc 0 y cuatro negativos rc 1. El control de parada externo sintético termina el proceso de prueba que ignora TERM (rc 137); QMP y la parada de una VM real quedan pendientes. No se inició una VM ni se indujo presión.
+
+La siguiente ventana, cuando Luis la reactive, comienza con el invitado en reposo y la comprobación de límites y parada externa, antes de medir preferencia o víctima. Reencolado y despliegue se siguen por separado.
+
 ## No medido
 
 Que habria matado oomd sin ese scope; si `avoid` lo habria desviado; que actividad de Orca produjo la presion (el 2026-11-17 la alerta de bb mostro PSI `full` avg10=22.98 un instante despues).
