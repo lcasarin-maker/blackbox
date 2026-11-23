@@ -88,6 +88,16 @@ Los criterios ejecutables de `tools.verify_gpu_clock_cap_ab` se miden en esta fi
 
 Estado de la captura real: `fail=0`, `could_not_run=1`. La ficha conserva su `close_check` y permanece abierta.
 
+## Excepción de publicación del 2026-11-22
+
+Luis autorizó una sola publicación de `master` con la fila `clock-gpu-ab-required` en `COULD_NOT_RUN` por la captura física ausente. Antes del push se ejecuta el pre-push oficial sobre el SHA y el rango exactos. Sólo se permite continuar si esa fila es el único impedimento y las demás filas requeridas pasan. La excepción se consume al intentar ese único push y no aplica a publicaciones posteriores. La ficha conserva su criterio de cierre.
+
+Orden de pruebas para cerrar la ficha:
+
+1. Medir la lectura del rango efectivo en modo sólo lectura. Comprobar que el verificador rechaza una lectura ausente, un rango distinto y una restauración sin confirmación.
+2. Acreditar el rango inicial y reservar la ventana autorizada. Ejecutar la misma carga con el rango inicial y con el cap de prueba. Registrar zonas térmicas, rendimiento y estabilidad dentro de la ventana.
+3. Restaurar el rango inicial y comprobarlo con la misma interfaz. Correr este `close_check` y el de la ficha de tradeoff sobre ambas capturas. Mantener las dos fichas abiertas si alguna prueba falla o queda sin ejecutar.
+
 ## Avance histórico del 2026-10-14
 
 El lote dejó agendada una ventana de 60 minutos para comparar el rango de partida y un techo menor con la misma carga, bajo autorización del operador. La receta asumía los rangos declarados en esa fecha. Las condiciones siguientes reemplazan esa receta operativa.
