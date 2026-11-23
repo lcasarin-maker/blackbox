@@ -80,6 +80,14 @@ El agente hardware tiene asignada la entrada CLI con JSON literal y códigos 0/1
 ## Criterios ejecutables de `tools.verify_gpu_clock_cap_ab` (2026-10-14)
 Los criterios ejecutables de `tools.verify_gpu_clock_cap_ab` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-GPU-CLOCK-CAP-AB-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.
 
+## Pendiente después de integrar el gate por impacto
+
+1. Identificar una interfaz soportada que lea el mínimo y máximo efectivos del bloqueo de reloj en el GB10. En el driver 580.178.04, `nvidia-smi -q -d CLOCK` sale con código 0 y muestra frecuencias instantáneas, máximas y de aplicación. La consulta `clocks.min.graphics` sale con código 2. El rango declarado por el servicio acredita la configuración solicitada.
+2. Conectar esa lectura al verificador. Comprobar una lectura válida y los rechazos de lectura ausente, rango incorrecto y restauración sin confirmación. Mantener `could_not_run` si la interfaz falta.
+3. Con ventana autorizada y rango de partida confirmado, capturar la misma carga antes y después del cap de prueba. Confirmar la restauración del rango original y aportar el inventario térmico de esa misma ventana a la [ficha de tradeoff](DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md).
+
+Estado de la captura real: `fail=0`, `could_not_run=1`. La ficha conserva su `close_check` y permanece abierta.
+
 ## Avance histórico del 2026-10-14
 
 El lote dejó agendada una ventana de 60 minutos para comparar el rango de partida y un techo menor con la misma carga, bajo autorización del operador. La receta asumía los rangos declarados en esa fecha. Las condiciones siguientes reemplazan esa receta operativa.

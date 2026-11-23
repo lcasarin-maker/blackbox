@@ -224,7 +224,9 @@
           "pytest",
           "-q",
           "-m",
-          "not slow and not e2e"
+          "not slow and not e2e",
+          "--deselect",
+          "tests/test_debt_registration_controls.py::test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01"
         ]
       },
       "env": {
@@ -246,6 +248,55 @@
       ],
       "hooks": [
         "pre-push"
+      ]
+    },
+    {
+      "id": "clock-gpu-ab-required",
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "timeout_ms": 900000,
+      "cache": false,
+      "inputs": [
+        "."
+      ],
+      "git_context": true,
+      "could_not_run_exit_codes": [
+        2
+      ],
+      "base": "origin/master",
+      "inherit_env": [
+        "XDG_RUNTIME_DIR",
+        "DBUS_SESSION_BUS_ADDRESS"
+      ],
+      "hooks": [
+        "pre-push"
+      ],
+      "applies_to": [
+        "bin/bb",
+        "enable-privileged.sh",
+        "adopted/system-config/etc_systemd_system_atom-clock-lock.service",
+        "tools/reloj_atascado.py",
+        "tools/atom_gpu_telemetry.py",
+        "tools/verify_clock_cap_tradeoff.py",
+        "tools/verify_gpu_clock_cap_ab.py",
+        "tools/hardware_evidence.py",
+        "tools/capture_io.py",
+        "tests/test_debt_registration_controls.py",
+        "tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01/**",
+        "tasks/evidence/DELTA-FORUM-THERMAL-TELEMETRY-COVERAGE-01/**",
+        "tools/incident_report.py",
+        "tools/thermal_coverage.py",
+        "tools/host_diagnostics.py",
+        "tasks/backlog/DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01.md",
+        "tasks/backlog/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md",
+        "tests/test_closure_kernel_selectors.py",
+        "tools/__init__.py"
+      ],
+      "argv": [
+        "python3",
+        "-c",
+        "import json\nfrom tools.verify_clock_cap_tradeoff import verify\nresult = verify()\nprint(json.dumps(result, sort_keys=True))\nstatus = result.get(\"status\")\ncould_not_run = result.get(\"could_not_run\")\nfail = result.get(\"fail\")\nif status == \"pass\" and type(fail) is int and fail == 0 and type(could_not_run) is int and could_not_run == 0:\n    code = 0\nelif status == \"fail\" and type(fail) is int and fail > 0 and type(could_not_run) is int and could_not_run == 0:\n    code = 1\nelse:\n    code = 2\nraise SystemExit(code)"
       ]
     },
     {
