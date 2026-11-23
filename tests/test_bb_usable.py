@@ -231,11 +231,12 @@ def test_notify_manda_de_verdad_por_el_socket(bbu, tmp_path, monkeypatch):
     asi que se comprueba que SALE, no solo que no revienta."""
     import socket
 
-    ruta = tmp_path / "notify.sock"
+    monkeypatch.chdir(tmp_path)
+    ruta = "notify.sock"
     srv = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-    srv.bind(str(ruta))
+    srv.bind(ruta)
     srv.settimeout(2)
-    monkeypatch.setenv("NOTIFY_SOCKET", str(ruta))
+    monkeypatch.setenv("NOTIFY_SOCKET", ruta)
     try:
         bbu.notify("WATCHDOG=1")
         assert srv.recv(64) == b"WATCHDOG=1"
@@ -249,9 +250,10 @@ def test_notify_sin_socket_no_manda_nada_y_no_revienta(bbu, tmp_path, monkeypatc
     ahi NO puede llegar nada al socket."""
     import socket
 
-    ruta = tmp_path / "notify2.sock"
+    monkeypatch.chdir(tmp_path)
+    ruta = "notify2.sock"
     srv = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
-    srv.bind(str(ruta))
+    srv.bind(ruta)
     srv.settimeout(0.2)
     monkeypatch.delenv("NOTIFY_SOCKET", raising=False)
     try:
