@@ -228,7 +228,29 @@
           "--deselect",
           "tests/test_debt_registration_controls.py::test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01",
           "--deselect",
-          "tests/test_closure_hardware.py::test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01"
+          "tests/test_closure_hardware.py::test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01",
+          "--deselect",
+          "tests/test_control_racha.py::test_el_gate_sale_0_sobre_el_corpus_real",
+          "--deselect",
+          "tests/test_control_racha.py::test_control_negativo_el_gate_SI_sale_1_con_el_corte_bajado",
+          "--deselect",
+          "tests/test_control_racha.py::test_el_gate_imprime_el_falso_positivo_conocido_como_deuda",
+          "--deselect",
+          "tests/test_debt_registration_controls.py::test_debt_skip_test_control_racha_118",
+          "--deselect",
+          "tests/test_debt_registration_controls.py::test_debt_skip_test_control_racha_130",
+          "--deselect",
+          "tests/test_debt_registration_controls.py::test_debt_skip_test_demonio_al_dia_52",
+          "--deselect",
+          "tests/test_debt_registration_controls.py::test_delta_root_display_carveout_oem_fix_gate_01",
+          "--deselect",
+          "tests/test_debt_registration_controls.py::test_delta_forum_kv_quant_metric_provenance_gate_01",
+          "--deselect",
+          "tests/test_debt_registration_controls.py::test_delta_forum_ota_driver_kernel_effective_tuple_01",
+          "--deselect",
+          "tests/test_debt_registration_controls.py::test_delta_forum_recovery_apt_update_01",
+          "--deselect",
+          "tests/test_debt_registration_controls.py::test_delta_forum_qwen_mtp_parser_cancel_state_check_01"
         ]
       },
       "env": {
@@ -247,6 +269,432 @@
       "inherit_env": [
         "XDG_RUNTIME_DIR",
         "DBUS_SESSION_BUS_ADDRESS"
+      ],
+      "hooks": [
+        "pre-push"
+      ]
+    },
+    {
+      "id": "watchdog-runtime-required",
+      "argv": [
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--runxfail",
+        "tests/test_debt_registration_controls.py::test_debt_skip_test_demonio_al_dia_52"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "timeout_ms": 120000,
+      "cache": false,
+      "hooks": [
+        "pre-push"
+      ],
+      "could_not_run_exit_codes": [
+        2
+      ],
+      "applies_to": [
+        "adopted/system-config/etc_systemd_system_bb-usable.service",
+        "bin/bb-usable",
+        "enable-privileged.sh",
+        "pyproject.toml",
+        "pytest.ini",
+        "systemd/bb-usable.service",
+        "tasks/backlog/DEBT-SKIP-TEST-DEMONIO-AL-DIA-52.md",
+        "tasks/done/DEBT-SKIP-TEST-DEMONIO-AL-DIA-52.md",
+        "tasks/done/DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO.md",
+        "tasks/evidence/DEBT-SKIP-TEST-DEMONIO-AL-DIA-52.*",
+        "tasks/evidence/DEBT-SKIP-TEST-DEMONIO-AL-DIA-52/**",
+        "tasks/evidence/DEBT-UNA-BAJADA-MOMENTANEA-ABSUELVE-UN-COLAPSO/**",
+        "tests/conftest.py",
+        "tests/test_atom_gpu_telemetry_bb.py",
+        "tests/test_bb_bash.py",
+        "tests/test_bb_usable.py",
+        "tests/test_closure_kernel_selectors.py",
+        "tests/test_debt_registration_controls.py",
+        "tests/test_demonio_al_dia.py",
+        "tools/__init__.py",
+        "tools/atom_gpu_telemetry.py",
+        "tools/bb_root_manifest.py",
+        "tools/bb_root_run.py",
+        "tools/capture_io.py",
+        "tools/cgroup_repro.py",
+        "tools/cuda_integrity.py",
+        "tools/demonio_al_dia.sh",
+        "tools/host_diagnostics.py",
+        "tools/memory_profile.py",
+        "tools/preflight.py",
+        "tools/provider_trace.py",
+        "tools/verify_apt_critical_removals.py"
+      ],
+      "inherit_env": [
+        "XDG_RUNTIME_DIR",
+        "DBUS_SESSION_BUS_ADDRESS"
+      ]
+    },
+    {
+      "id": "display-carveout-required",
+      "argv": [
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--runxfail",
+        "tests/test_debt_registration_controls.py::test_delta_root_display_carveout_oem_fix_gate_01"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "timeout_ms": 120000,
+      "cache": false,
+      "hooks": [
+        "pre-push"
+      ],
+      "could_not_run_exit_codes": [
+        2
+      ],
+      "applies_to": [
+        "pyproject.toml",
+        "pytest.ini",
+        "tasks/backlog/DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01.md",
+        "tasks/done/DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01.md",
+        "tasks/evidence/DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01/**",
+        "tests/conftest.py",
+        "tests/test_atom_gpu_telemetry_bb.py",
+        "tests/test_bb_bash.py",
+        "tests/test_bb_usable.py",
+        "tests/test_closure_kernel_selectors.py",
+        "tests/test_debt_registration_controls.py",
+        "tests/test_hardware_batch03_controls.py",
+        "tools/__init__.py",
+        "tools/atom_gpu_telemetry.py",
+        "tools/bb_root_manifest.py",
+        "tools/bb_root_run.py",
+        "tools/capture_io.py",
+        "tools/cgroup_repro.py",
+        "tools/cuda_integrity.py",
+        "tools/etapas_arranque.py",
+        "tools/hallazgo.py",
+        "tools/hardware_batch03_controls.py",
+        "tools/hitos_incidente.py",
+        "tools/host_diagnostics.py",
+        "tools/incident_report.py",
+        "tools/interruptores.py",
+        "tools/medidor_energia.py",
+        "tools/memory_profile.py",
+        "tools/observador_ping.py",
+        "tools/preflight.py",
+        "tools/provider_trace.py",
+        "tools/reboot_ledger.py",
+        "tools/reboot_verdict.py",
+        "tools/testigo/bb_testigo.py",
+        "tools/thermal_coverage.py",
+        "tools/ultimo_aliento.py",
+        "tools/verifica_display_en_unit.sh",
+        "tools/verify_apt_critical_removals.py"
+      ]
+    },
+    {
+      "id": "kv-quant-runtime-required",
+      "argv": [
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--runxfail",
+        "tests/test_debt_registration_controls.py::test_delta_forum_kv_quant_metric_provenance_gate_01"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "timeout_ms": 120000,
+      "cache": false,
+      "hooks": [
+        "pre-push"
+      ],
+      "could_not_run_exit_codes": [
+        2
+      ],
+      "applies_to": [
+        "pyproject.toml",
+        "pytest.ini",
+        "tasks/backlog/DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01.md",
+        "tasks/done/DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01.md",
+        "tasks/evidence/DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01/**",
+        "tests/conftest.py",
+        "tests/test_atom_gpu_telemetry_bb.py",
+        "tests/test_bb_bash.py",
+        "tests/test_bb_usable.py",
+        "tests/test_closure_kernel_selectors.py",
+        "tests/test_debt_registration_controls.py",
+        "tests/test_hardware_batch02_controls.py",
+        "tools/__init__.py",
+        "tools/apt_sources.py",
+        "tools/atom_gpu_telemetry.py",
+        "tools/bb_root_manifest.py",
+        "tools/bb_root_run.py",
+        "tools/capture_io.py",
+        "tools/cgroup_repro.py",
+        "tools/cuda_integrity.py",
+        "tools/forum_finding.py",
+        "tools/forum_hardware_subjects.py",
+        "tools/hardware_batch02_controls.py",
+        "tools/hardware_batch03_controls.py",
+        "tools/hardware_evidence.py",
+        "tools/hitos_incidente.py",
+        "tools/host_diagnostics.py",
+        "tools/memory_profile.py",
+        "tools/nvme_readonly.py",
+        "tools/preflight.py",
+        "tools/provider_trace.py",
+        "tools/read_integrity.py",
+        "tools/update_boot_coherence.py",
+        "tools/update_drm_coherence.py",
+        "tools/verify_apt_critical_removals.py",
+        "tools/verify_apt_sources_closure.py",
+        "tools/verify_clock_cap_tradeoff.py",
+        "tools/verify_forum_pstore.py",
+        "tools/verify_gpu_clock_cap_ab.py",
+        "tools/verify_memory_saver.py",
+        "tools/verify_usb_hid_postupdate.py",
+        "tools/verify_wifi_isolation.py"
+      ]
+    },
+    {
+      "id": "ota-tuple-required",
+      "argv": [
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--runxfail",
+        "tests/test_debt_registration_controls.py::test_delta_forum_ota_driver_kernel_effective_tuple_01"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "timeout_ms": 120000,
+      "cache": false,
+      "hooks": [
+        "pre-push"
+      ],
+      "could_not_run_exit_codes": [
+        2
+      ],
+      "applies_to": [
+        "docs/evidence/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01-capture.md",
+        "pyproject.toml",
+        "pytest.ini",
+        "tasks/backlog/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01.md",
+        "tasks/done/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01.md",
+        "tasks/evidence/DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01/**",
+        "tests/conftest.py",
+        "tests/test_atom_gpu_telemetry_bb.py",
+        "tests/test_bb_bash.py",
+        "tests/test_bb_usable.py",
+        "tests/test_closure_kernel_selectors.py",
+        "tests/test_debt_registration_controls.py",
+        "tests/test_hardware_batch02_controls.py",
+        "tools/__init__.py",
+        "tools/apt_sources.py",
+        "tools/atom_gpu_telemetry.py",
+        "tools/bb_root_manifest.py",
+        "tools/bb_root_run.py",
+        "tools/capture_io.py",
+        "tools/cgroup_repro.py",
+        "tools/cuda_integrity.py",
+        "tools/forum_finding.py",
+        "tools/forum_hardware_subjects.py",
+        "tools/hardware_batch02_controls.py",
+        "tools/hardware_batch03_controls.py",
+        "tools/hardware_evidence.py",
+        "tools/hitos_incidente.py",
+        "tools/host_diagnostics.py",
+        "tools/memory_profile.py",
+        "tools/nvme_readonly.py",
+        "tools/preflight.py",
+        "tools/provider_trace.py",
+        "tools/read_integrity.py",
+        "tools/update_boot_coherence.py",
+        "tools/update_drm_coherence.py",
+        "tools/verify_apt_critical_removals.py",
+        "tools/verify_apt_sources_closure.py",
+        "tools/verify_clock_cap_tradeoff.py",
+        "tools/verify_forum_pstore.py",
+        "tools/verify_gpu_clock_cap_ab.py",
+        "tools/verify_memory_saver.py",
+        "tools/verify_usb_hid_postupdate.py",
+        "tools/verify_wifi_isolation.py"
+      ]
+    },
+    {
+      "id": "apt-recovery-required",
+      "argv": [
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--runxfail",
+        "tests/test_debt_registration_controls.py::test_delta_forum_recovery_apt_update_01"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "timeout_ms": 120000,
+      "cache": false,
+      "hooks": [
+        "pre-push"
+      ],
+      "could_not_run_exit_codes": [
+        2
+      ],
+      "applies_to": [
+        "pyproject.toml",
+        "pytest.ini",
+        "tasks/backlog/DELTA-FORUM-RECOVERY-APT-UPDATE-01.md",
+        "tasks/done/DELTA-FORUM-RECOVERY-APT-UPDATE-01.md",
+        "tasks/evidence/DELTA-FORUM-RECOVERY-APT-UPDATE-01/**",
+        "tests/conftest.py",
+        "tests/test_atom_gpu_telemetry_bb.py",
+        "tests/test_bb_bash.py",
+        "tests/test_bb_usable.py",
+        "tests/test_closure_kernel_selectors.py",
+        "tests/test_debt_registration_controls.py",
+        "tests/test_hardware_batch02_controls.py",
+        "tools/__init__.py",
+        "tools/apt_sources.py",
+        "tools/atom_gpu_telemetry.py",
+        "tools/bb_root_manifest.py",
+        "tools/bb_root_run.py",
+        "tools/capture_io.py",
+        "tools/cgroup_repro.py",
+        "tools/cuda_integrity.py",
+        "tools/forum_finding.py",
+        "tools/forum_hardware_subjects.py",
+        "tools/hardware_batch02_controls.py",
+        "tools/hardware_batch03_controls.py",
+        "tools/hardware_evidence.py",
+        "tools/hitos_incidente.py",
+        "tools/host_diagnostics.py",
+        "tools/memory_profile.py",
+        "tools/nvme_readonly.py",
+        "tools/preflight.py",
+        "tools/provider_trace.py",
+        "tools/read_integrity.py",
+        "tools/update_boot_coherence.py",
+        "tools/update_drm_coherence.py",
+        "tools/verify_apt_critical_removals.py",
+        "tools/verify_apt_sources_closure.py",
+        "tools/verify_clock_cap_tradeoff.py",
+        "tools/verify_forum_pstore.py",
+        "tools/verify_gpu_clock_cap_ab.py",
+        "tools/verify_memory_saver.py",
+        "tools/verify_usb_hid_postupdate.py",
+        "tools/verify_wifi_isolation.py"
+      ]
+    },
+    {
+      "id": "parser-cancel-runtime-required",
+      "argv": [
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "--runxfail",
+        "tests/test_debt_registration_controls.py::test_delta_forum_qwen_mtp_parser_cancel_state_check_01"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "timeout_ms": 120000,
+      "cache": false,
+      "hooks": [
+        "pre-push"
+      ],
+      "could_not_run_exit_codes": [
+        2
+      ],
+      "applies_to": [
+        "docs/evidence/BB-INSTRUMENTS-requests.md",
+        "pyproject.toml",
+        "pytest.ini",
+        "systemd/bb-canario-motor.service",
+        "systemd/bb-canario-motor.timer",
+        "tasks/backlog/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01.md",
+        "tasks/done/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01.md",
+        "tasks/evidence/DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01/**",
+        "tests/conftest.py",
+        "tests/test_atom_gpu_telemetry_bb.py",
+        "tests/test_bb_bash.py",
+        "tests/test_bb_usable.py",
+        "tests/test_canario_motor.py",
+        "tests/test_chat_sse_capture.py",
+        "tests/test_closure_kernel_selectors.py",
+        "tests/test_debt_registration_controls.py",
+        "tests/test_openclaw_contract.py",
+        "tests/test_runtime_batch02_controls.py",
+        "tests/test_runtime_batch03_controls.py",
+        "tools/__init__.py",
+        "tools/atom_gpu_telemetry.py",
+        "tools/bb_root_manifest.py",
+        "tools/bb_root_run.py",
+        "tools/canario_motor.py",
+        "tools/capture_io.py",
+        "tools/cgroup_repro.py",
+        "tools/chat_sse_capture.py",
+        "tools/cuda_integrity.py",
+        "tools/host_diagnostics.py",
+        "tools/interruptores.py",
+        "tools/json_schema_subset.py",
+        "tools/memory_profile.py",
+        "tools/openclaw_contract.py",
+        "tools/preflight.py",
+        "tools/provider_trace.py",
+        "tools/runtime_batch01_controls.py",
+        "tools/runtime_batch02_controls.py",
+        "tools/runtime_batch03_controls.py",
+        "tools/verify_apt_critical_removals.py"
+      ]
+    },
+    {
+      "id": "racha-corpus-local",
+      "argv": [
+        "python3",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_control_racha.py::test_el_gate_sale_0_sobre_el_corpus_real",
+        "tests/test_control_racha.py::test_control_negativo_el_gate_SI_sale_1_con_el_corte_bajado",
+        "tests/test_control_racha.py::test_el_gate_imprime_el_falso_positivo_conocido_como_deuda",
+        "tests/test_debt_registration_controls.py::test_debt_skip_test_control_racha_118",
+        "tests/test_debt_registration_controls.py::test_debt_skip_test_control_racha_130"
+      ],
+      "env": {
+        "PYTHONDONTWRITEBYTECODE": "1"
+      },
+      "timeout_ms": 120000,
+      "cache": false,
+      "could_not_run_exit_codes": [
+        2
+      ],
+      "inherit_env": [
+        "BLACKBOX_RACHA_SAMPLES"
       ],
       "hooks": [
         "pre-push"

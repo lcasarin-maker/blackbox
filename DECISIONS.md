@@ -529,3 +529,21 @@ El repositorio es publico y debe quedar limpio de temas ajenos. Estas son las de
 Voto de Luis. `clock-gpu-ab-required` ejecuta en `pre-push` `tools.verify_clock_cap_tradeoff.verify()`, la misma función cuyo resultado verifica el selector de cierre exacto `tests/test_debt_registration_controls.py::test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01`. La fila imprime el objeto JSON y solo mapea a 0 un `pass` con conteos enteros presentes `fail=0` y `could_not_run=0`; un `fail` con `fail>0` y `could_not_run=0` da 1; estados desconocidos, conteos ausentes o inconsistentes dan 2 (CNR). El módulo no ofrece una CLI fiel: `python3 -m tools.verify_clock_cap_tradeoff` terminó con rc 0 y stdout vacío; por eso la fila invoca la función estructurada. Verifica las capturas existentes; no ejecuta ni genera el ensayo físico A/B. La prueba A/B física continúa siendo requisito para cerrar ambas fichas, y sus `close_check` originales permanecen intactos.
 
 Se descarta cargar pytest para esta fila: la colección podría saltarse el selector y contaminar la salida. La suite general conserva su alcance y excluye solo este caso; `applies_to` cubre los verificadores, productores y archivos de evidencia del camino directo. La adopción modifica `simple.json`, por lo que Simplecode fuerza la ejecución del contrato completo: `installed-bootstrap.json` registra 6 filas seleccionadas, 6 pendientes y `ready=false`. No hay excepción de bootstrap; el candidato queda aislado hasta que el gate normal termine.
+
+## 2026-11-22 · Publicación de Blackbox sin reiniciar la ATOM
+
+Voto de Luis. El watchdog, la pantalla 6K/4K, KV cuantizado, la tupla OTA,
+la recuperación APT y la cancelación del parser tienen filas de pre-push
+por impacto. Conservan sus selectores originales y bloquean cuando cambia
+el sujeto, su verificador o su evidencia. Los cambios a dependencias
+compartidas activan las filas que las usan. Las fichas físicas conservan
+sus criterios de cierre.
+
+Simplecode ejecuta todas las filas cuando cambia el contrato. Se autoriza
+un único push del commit auditado si el pre-push oficial del rango exacto
+confirma que pasan las demás filas y que cualquier bloqueo corresponde
+únicamente a los seis casos preexistentes o a la captura pendiente del
+reloj de la GPU. La autorización se consume al intentar ese push. Los
+pushes posteriores siguen el gate normal. El ensayo A/B con restauración
+sigue siendo obligatorio para cerrar la ficha del reloj. Se descartan el
+reinicio de la ATOM, una exención permanente y cerrar fichas sin mediciones.

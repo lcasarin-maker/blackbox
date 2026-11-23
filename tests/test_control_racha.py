@@ -114,16 +114,47 @@ def test_el_corte_es_el_MISMO_que_el_del_demonio():
 # ------------------------------------ el gate, de punta a punta
 
 
+def _run_gate_real(capsys, *args):
+    corpus = os.getenv("BLACKBOX_RACHA_SAMPLES")
+    if corpus is None:
+        return cr.main(list(args)), capsys.readouterr().out
+    if not Path(corpus).is_absolute() or not Path(corpus).is_dir():
+        pytest.exit("COULD_NOT_RUN: corpus de racha requiere un directorio absoluto", returncode=2)
+    mount = "/samples"
+    ready = "RACHA_SANDBOX_READY"
+    try:
+        result = subprocess.run(
+            ["bwrap", "--unshare-net", "--clearenv", "--setenv", "HOME", "/",
+             "--ro-bind", "/usr", "/usr", "--ro-bind", "/lib", "/lib",
+             "--ro-bind-try", "/lib64", "/lib64", "--dev", "/dev",
+             "--ro-bind", str(RAIZ / "tools"), "/work/tools", "--chdir", "/work",
+             "--ro-bind", corpus, mount,
+             "/usr/bin/sh", "-c", 'printf "%s\\n" "$1" >&2; shift; exec "$@"',
+             "racha", ready, "/usr/bin/python3", "-B", "-m", "tools.control_racha",
+             "--muestras", mount, *args],
+            cwd=RAIZ, capture_output=True, text=True, timeout=15,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        pytest.exit(f"COULD_NOT_RUN: no se pudo ejecutar el aislamiento de racha ({exc})",
+                    returncode=2)
+    if not result.stderr.startswith(f"{ready}\n"):
+        pytest.exit(f"COULD_NOT_RUN: aislamiento de racha sin arranque ({result.stderr.strip()})",
+                    returncode=2)
+    if result.returncode == 2:
+        pytest.exit("COULD_NOT_RUN: corpus real ausente o inválido en el aislamiento de racha",
+                    returncode=2)
+    return result.returncode, result.stdout + result.stderr
+
+
 def test_el_gate_sale_0_sobre_el_corpus_real(capsys):
     """Sobre las muestras de esta maquina. Si no hay corpus, COULD_NOT_RUN y
     se dice -- no se llama limpio a lo que no se pudo medir."""
-    rc = cr.main([])
+    rc, salida = _run_gate_real(capsys)
     if rc == 2:
         pytest.skip(
-            f"COULD_NOT_RUN: corpus real ausente en {cr.MUESTRAS}; "
+            "COULD_NOT_RUN: corpus real ausente o inválido; "
             "owner=Blackbox; trigger=restaurar el corpus registrado"
         )
-    salida = capsys.readouterr().out
     assert rc == 0, f"el control reporta falsos positivos:\n{salida}"
     assert "VEREDICTO: LIMPIO" in salida
 
@@ -132,13 +163,12 @@ def test_control_negativo_el_gate_SI_sale_1_con_el_corte_bajado(capsys):
     """La otra direccion, y es la que da valor al test de arriba. Con el corte
     en 180 s entra la excursion sana mas larga del corpus y el veredicto se
     tiene que volver rojo."""
-    rc = cr.main(["--corte", "180"])
+    rc, salida = _run_gate_real(capsys, "--corte", "180")
     if rc == 2:
         pytest.skip(
-            f"COULD_NOT_RUN: corpus real ausente en {cr.MUESTRAS}; "
+            "COULD_NOT_RUN: corpus real ausente o inválido; "
             "owner=Blackbox; trigger=restaurar el corpus registrado"
         )
-    salida = capsys.readouterr().out
     assert rc == 1, (
         "el control no puede salir negativo, asi que su 'LIMPIO' no verifica "
         f"nada:\n{salida}")
@@ -336,8 +366,7 @@ def test_la_excepcion_no_tapa_un_stall_igual_FUERA_de_su_ventana():
 
 
 def test_el_gate_imprime_el_falso_positivo_conocido_como_deuda(capsys):
-    rc = cr.main([])
+    rc, salida = _run_gate_real(capsys)
     if rc == 2:
         pytest.skip("COULD_NOT_RUN: corpus real ausente; owner=Blackbox; trigger=restaurar el corpus registrado")
-    salida = capsys.readouterr().out
     assert "falso positivo CONOCIDO excluido (deuda abierta DEBT-COLAPSO-CONFINADO" in salida
