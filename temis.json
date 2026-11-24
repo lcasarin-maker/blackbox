@@ -863,7 +863,10 @@
       "policy": {
         "kind": "types",
         "python": "python3",
-        "args": []
+        "args": [
+          "--artifacts-env",
+          "TEMIS_NATIVE_ARTIFACTS_DIR"
+        ]
       },
       "env": {
         "PYTHONDONTWRITEBYTECODE": "1"
@@ -876,7 +879,8 @@
       "git_context": true,
       "could_not_run_exit_codes": [],
       "inherit_env": [
-        "PYTHONUSERBASE"
+        "PYTHONUSERBASE",
+        "TEMIS_NATIVE_ARTIFACTS_DIR"
       ],
       "read_only": true,
       "hooks": [
