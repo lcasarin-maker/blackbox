@@ -256,6 +256,7 @@ efectos de esta spec, y `tools/inventario.py --check` lo bloquea en el commit.
 | `tools/read_integrity.py` | Compara hashes buffered/O_DIRECT de una región acotada con digest suministrado; preserva fallos y verifica estabilidad del archivo | `tests/test_read_integrity.py`; caso GX10 conserva validación experimental pendiente |
 | `tools/provider_trace.py` | Evalúa selección efectiva de proveedor por petición y transición de worker en JSONL; conserva fallback e incompletitud | `tests/test_provider_trace.py`; fixtures declarados y traza real pendiente |
 | `tools/kernel_charges.bt` | Borrador de probes de cargo/descargo kmem 6.17 con mapas por cgroup ejecutor; dueño real desconocido | Headers de ABI y limitación de validación bpftrace sin root en `tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt`; compilación y captura pendientes |
+| `tools/espacio_libre.py` | Vigilante de espacio libre, inodos, tendencia y bloques físicos (ATOM y equipo testigo): `os.statvfs`, lectura de `bb-estado-externo/1`, `diskstats`, `cgroup io.stat`, temperaturas NVMe, FDs `(deleted)` y alertas `85/92/96 %` con histéresis (`bb disco` / `bb espacio-libre`) | `tests/test_espacio_libre.py`, con controles negativos de fallo `statvfs`, tendencia insuficiente, ráfaga única y equipo testigo caído |
 
 Los siguientes controles reciben evidencias suministradas. Sus pruebas de fixtures verifican el instrumento; los hashes acreditan consistencia de bytes y el cierre de cada investigación exige su captura y criterio originales.
 
