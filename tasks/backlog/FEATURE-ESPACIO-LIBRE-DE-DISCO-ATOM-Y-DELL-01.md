@@ -8,7 +8,7 @@ severity: P1
 origin: measured
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-25
-close_check: {"cmd": "python3 -m pytest -q tests/test_espacio_libre.py", "expect": "exit_zero", "porque": "Mide que el vigilante de espacio libre exista y pase su prueba: umbrales, tendencia en días hasta llenarse, aviso y frescura. Hoy sale distinto de 0: el archivo de prueba no existe (medido 2026-11-25) y ninguna ficha ni unidad de bb vigila el disco como instrumento propio. Un pytest ausente cuenta como fallo, nunca como éxito. No mide el control negativo por mutación ni que el aviso llegue al teléfono: los revisa quien cierre."}
+close_check: {"cmd": "python3 -m pytest -q tests/test_espacio_libre.py && test -f tools/estado_externo.py", "expect": "exit_zero", "porque": "V1 local (tools/espacio_libre.py y tests/test_espacio_libre.py) ya existe y pasa; la ficha permanece abierta hasta publicar la muestra de la Dell en tools/estado_externo.py (FEATURE-ESTADO-EXTERNO-UN-SOLO-CANAL-01)."}
 ---
 
 ## Por qué
@@ -21,6 +21,8 @@ El espacio libre es una medición básica y hoy bb no la tiene como instrumento 
 - La Dell tiene dos volúmenes de datos con más de 1 TB libres cada uno.
 
 ## Qué hacer
+
+(V1 local aterrizada en `tools/espacio_libre.py` y `tests/test_espacio_libre.py`: lectura de uso, inodos, tendencia, top directorios locales y control negativo. Resta acoplar el canal externo único para la Dell y votar los umbrales.)
 
 1. **Muestra periódica** del espacio total, usado y libre de cada volumen de la ATOM y de la Dell, publicada en el archivo único de `FEATURE-ESTADO-EXTERNO-UN-SOLO-CANAL-01` y guardada en una serie con retención declarada.
 2. **Tendencia.** Días estimados hasta llenarse, con la tasa medida en la ventana, y la ventana declarada. Con pocas muestras sale `NOT_COLLECTED`, nunca una estimación inventada.

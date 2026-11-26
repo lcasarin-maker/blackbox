@@ -128,3 +128,7 @@ Hasta entonces, un reinicio borra los worktrees de /tmp: el trabajo commiteado e
 ## Actualizacion 2026-10-28 13:32
 
 El enjambre de opencode termino (ultimo registro 23:21 del 2026-10-27: `Your credit balance is too low`). Los worktrees `/tmp/opencode/wt-pdf-f*` y las ramas `swarm/*` ya no existen (`git worktree list` de `<proyecto-A>`: solo `main` y un worktree de codex); `/tmp` baja de 298779 a 105979 entradas. El procedimiento de mudanza queda para la proxima vez que un enjambre cree worktrees en `/tmp`; la causa del arranque lento (volumen de `/tmp` al apagar) sigue vigente.
+
+## Desacoplamiento de frontera (2026-11-26, orden de Luis)
+
+La corrección de los lanzadores que escribían worktrees en `/tmp` pasó al backlog de su proyecto dueño. En `blackbox`, esta ficha conserva únicamente la verificación física del próximo arranque (`userspace < 30 s` en `systemd-analyze`) y la vigilancia de inodos y entradas en `/tmp`.

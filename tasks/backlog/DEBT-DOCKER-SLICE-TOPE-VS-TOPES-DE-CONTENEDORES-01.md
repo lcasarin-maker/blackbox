@@ -38,3 +38,6 @@ Quedan por hacer: el consumidor de conocimiento (una linea en su script), la ses
 
 ## Voto de Luis 2026-10-16: `--pids-limit=2048` para el motor y pgvector externo
 Registrado en `DECISIONS.md`. Queda por aplicar en los creadores, fuera de este repo: (1) `/srv/ai/gateway/main.py`, funcion `build_vllm_args`, anadir `"--pids-limit", "2048"` junto a `--memory` (no esta en git); medir antes `ls /proc/$(docker inspect -f '{{.State.Pid}}' nemotron-server)/task | wc -l` para comprobar que 2048 deja holgura. (2) una referencia externa, `levantar()`, anadir `--pids-limit=2048` al `docker run`. Sigue sin creador hallado para `proyecto-A-pg` (flags: `--memory=2g --memory-swap=2g --pids-limit=2048`) y `nemotron-bolt-test`. La ficha sigue abierta hasta que los tres creadores vivos lo persistan.
+
+## Desacoplamiento de frontera (2026-11-26, orden de Luis)
+Los lanzadores de contenedores pertenecientes a otros repositorios se trasladaron a sus respectivos backlogs. En `blackbox`, esta ficha queda acotada únicamente a: (1) el techo de `16 GiB` de `docker.slice` (ya aplicado), y (2) persistir `--pids-limit=2048` en `tools/gateway/main.py` cuando se complete la recepción del gateway (`FEATURE-GATEWAY-VLLM-Y-RIESGOS-DE-MAQUINA-DESDE-CONSUMIDOR-01`).
