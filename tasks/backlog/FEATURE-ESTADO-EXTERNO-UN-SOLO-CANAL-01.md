@@ -30,12 +30,11 @@ Nada de eso llega a la ATOM con frescura:
 
 ## Qué hacer
 
-0. **Primero, comparar lo que corre con lo que está en el repo.** Medido el 2026-11-25: `tools/testigo/bb_testigo.py` pesa 58,106 bytes en el repo (último commit del 2026-11-22) y la copia desplegada en el equipo testigo pesa 55,133 bytes, con fecha de escritura del 2026-11-06. Los tamaños difieren, así que el testigo en ejecución no es la versión del repo. No se comparó el contenido: no se sabe qué cambió ni si importa. Antes de tocar nada:
-   - Calcular el SHA-256 de la copia desplegada y de la del repo, y diferenciar sus contenidos, sólo con lectura en el equipo testigo.
-   - Listar los cambios del repo posteriores a la copia desplegada (`git log` sobre el archivo) y clasificar cada uno: corrección de defecto, función nueva o ajuste de formato.
-   - Comparar también `bb_alarma.py` y `receptor_netconsole.py`, que corren en el mismo equipo.
-   - Registrar la comparación con comando y salida literales. Si hay cambios que afecten el formato de las series, decidir con Luis si se despliegan antes o junto con esta ficha, para no mezclar dos cambios en un solo redespliegue.
-   - Añadir a bb una comprobación de deriva: la huella de lo desplegado contra la del repo, publicada en el archivo único con su edad. Una deriva se declara y no se oculta.
+0. **Primero, comparar lo que corre con lo que está en el repo (medido y registrado 2026-11-26).**
+   - `tools/testigo/bb_testigo.py`: repo `a1c41fd7749461d3fb7051017bc852741ab7be437d4723461c227ea6909643f8` vs equipo testigo `a677e6baeff388f82f9d49bbd1bd5aab28feef8d1a09d7c179bd01cd37d6e1c7` (55,133 bytes, 2026-11-06). Diff posterior en repo (`2d1f92fd..HEAD`): `6541ea0a` (Digest SHA-256 para enchufe Shelly), `3522a4dc`/`d5bad497` (validación y parametrización sin IPs privadas), `68be422a` (guards de tipos pyright).
+   - `tools/testigo/bb_alarma.py`: repo `f1740e1930ca2d061c9975d05f0cc58dc48bd315cd03e82c92b6c7c9ee268065` vs equipo testigo `94e39f1b57176b4ba8bbc9695c7c39c3fb777f930f1805dcd7b0f5f4886dd95e` (6,406 bytes, 2026-11-06).
+   - `tools/testigo/bb_wol.py`: repo `8922de06008894ebd42414879174798fba5267cffaba77ba0307dde4311f33d4` vs equipo testigo `ef20aff7939c1663b1e81d7437a81931ab894ac41bd3290007fa31ae988170c2` (2,557 bytes, 2026-11-09).
+   - `tools/estado_externo.py` incluye `medir_deriva_despliegue` para publicar la comparación SHA-256 y su edad en `bb-estado-externo/1`. El redespliegue al equipo testigo queda sujeto a autorización expresa de Luis.
 1. **Archivo único `bb-estado-externo/1`.** El equipo testigo escribe, de forma atómica (`os.replace`), un archivo pequeño con: `ts` y `intervalo_s`; latido del testigo con su edad; vida del testigo, de la alarma y del receptor, cada uno con su propio latido; estado de los tres caminos de la alarma; edad y tamaño del log de netconsole; sondeos de la ventana de 5 minutos (porcentaje bueno, RTT p50 y p95 por TCP y por ICMP); y el enchufe (`ok`, potencia, voltaje, corriente, energía del día en Wh y `energia_fuente`).
 2. **RTT en ICMP:** ficha propia, `FEATURE-TESTIGO-RTT-EN-FILAS-ICMP-01`. El archivo único publica ese RTT cuando exista.
 3. **Energía acumulada:** ficha propia, `FEATURE-ENERGIA-ACUMULADA-DEL-ENCHUFE-01`. El archivo único publica sus Wh. Otras secciones del archivo con ficha propia: disco libre (`FEATURE-ESPACIO-LIBRE-DE-DISCO-ATOM-Y-DELL-01`) y Tailscale y RustDesk (`FEATURE-ESTADO-ENLACES-TAILSCALE-Y-RUSTDESK-01`).

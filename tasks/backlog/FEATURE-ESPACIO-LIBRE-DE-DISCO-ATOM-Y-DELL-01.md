@@ -26,7 +26,7 @@ El espacio libre es una medición básica y hoy bb no la tiene como instrumento 
 
 1. **Muestra periódica** del espacio total, usado y libre de cada volumen de la ATOM y de la Dell, publicada en el archivo único de `FEATURE-ESTADO-EXTERNO-UN-SOLO-CANAL-01` y guardada en una serie con retención declarada.
 2. **Tendencia.** Días estimados hasta llenarse, con la tasa medida en la ventana, y la ventana declarada. Con pocas muestras sale `NOT_COLLECTED`, nunca una estimación inventada.
-3. **Umbrales propuestos (a votar por Luis):** aviso al 85 %, urgente al 92 %, crítico al 96 %, y aviso por días restantes bajo 7. Cada cruce emite un aviso al teléfono con la misma disciplina que `aviso_earlyoom.py`: una ráfaga, un mensaje, sin repetirlo.
+3. **Umbrales votados por Luis (2026-11-26):** aviso al 85 %, urgente al 92 %, crítico al 96 %, y aviso por días restantes bajo 7 (implementados en `tools/espacio_libre.py`). Cada cruce emite un aviso al teléfono con la misma disciplina que `aviso_earlyoom.py`: una ráfaga, un mensaje, sin repetirlo.
 4. **Quién llena el disco.** Junto al aviso, los diez directorios de primer nivel que más crecieron en la ventana, sólo como lectura. El análisis por repo y por proceso queda fuera de bb: lo hace el consumidor que gobierna esos repos.
 5. **Frescura declarada.** Una lectura que falla se publica como `COULD_NOT_RUN` con su causa. Una Dell que no responde es «sin dato», nunca disco lleno ni disco libre.
 

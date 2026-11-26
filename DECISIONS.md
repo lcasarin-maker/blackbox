@@ -8,6 +8,13 @@ Meter cada voto aquí lo convierte en el log que la línea de arriba prohíbe.
 
 ---
 
+## 2026-11-26 · Ciclo de vida de fichas (`tasks/archive/`) y umbrales del vigilante de disco (votos de Luis)
+
+- **Ciclo de fichas (`tasks/archive/`):** las fichas cerradas en `tasks/done/` cuyo código y pruebas ya están integrados pasan físicamente a `tasks/archive/` (`tasks/done/.gitkeep` se conserva para mantener la estructura canónica). `skills/debt/scan.py` exige `close_check` al cerrar (`backlog` → `done`), exime de comando ejecutable a los descartes (`void_wontfix`, `duplicate`, `discarded`) y trata `tasks/archive/` como histórico estático sin re-ejecutar sus `close_check`; toda protección continua vive en `tests/` y `temis.json`. **Motivo medido:** en `scan.py --paralelo 8`, `105` de `291` fichas de `tasks/done/` fallaban (`95` por envejecimiento de descartes o rutas retiradas como `.simplecode` y `python3 -m ruff`, `2` por timeout bajo carga y `10` sobre comandos vivos que se auditaron una a una: `9` ya cubiertas en `tests/`/`backlog/` y `1` regresión real abierta en `DEBT-RUST-USABLE-PARIDAD-MAPA-MEMORIA-01`). **Descartado:** mantener 291 `close_check` históricos ejecutándose en cada `/debt` o apagar `tasks/done/` sin movimiento físico ni auditoría de las 10 fichas vivas.
+- **Umbrales del vigilante de disco (`FEATURE-ESPACIO-LIBRE-DE-DISCO-ATOM-Y-DELL-01`):** `85 %` aviso, `92 %` urgente, `96 %` crítico y `< 7 días` restantes (con disciplina de ráfaga única). **Motivo medido:** la raíz está en `82.8 %` (`python3 -m tools.espacio_libre --json`) y varía varios puntos en pocos días. **Descartado:** elevar a `90/94/97/3d` (deja < 350 GB libres antes de alertar) o modo sólo lectura sin aviso al teléfono.
+
+---
+
 ## 2026-10-13 · `apt-mark hold` sobre `dgx-spark-ota-update-meta`
 
 Aplicado por Luis con sudo. Medido despues: `apt-mark showhold` lista el paquete y `dpkg` lo marca `hi` en la version 26.09.2. Razon: NVIDIA aviso en el hilo 383185 que no se actualice al kernel 7.0.0-1019-nvidia; GRUB ya fija el kernel 6.17.0-1032, y el hold evita que una OTA lo cambie sin revision. Descartado: dejarlo sin retener (una OTA automatica podia traer el kernel 7.0). Costo: no llegan OTA de NVIDIA por esa via hasta `sudo apt-mark unhold dgx-spark-ota-update-meta`; antes de quitarlo, correr `sudo nvidia-spark-ota-check summary` y leer el foro.

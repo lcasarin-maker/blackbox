@@ -23,8 +23,16 @@ def test_el_dockerd_del_lab_no_desactiva_el_puente_por_defecto() -> None:
 
 def test_el_lab_usa_su_propio_puente_con_su_propia_subred() -> None:
     codigo = "\n".join(_codigo())
-    assert "--bridge=bblab0" in codigo and "--bip=172.31.250.1/24" in codigo
+    assert "--bridge=bblab0" in codigo
+    assert "ip addr add 172.31.250.1/24 dev bblab0" in codigo
     assert "docker0" in codigo, "debe vigilar el puente de produccion"
+
+
+def test_dockerd_no_combina_bridge_y_bip() -> None:
+    """Control negativo: dockerd aborta si recibe --bridge y --bip a la vez."""
+    codigo = "\n".join(_codigo())
+    assert "--bridge=bblab0" in codigo
+    assert "--bip=" not in codigo
 
 
 def test_up_aborta_si_docker0_desaparece_y_down_borra_solo_su_puente() -> None:

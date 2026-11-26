@@ -257,6 +257,10 @@ efectos de esta spec, y `tools/inventario.py --check` lo bloquea en el commit.
 | `tools/provider_trace.py` | Evalúa selección efectiva de proveedor por petición y transición de worker en JSONL; conserva fallback e incompletitud | `tests/test_provider_trace.py`; fixtures declarados y traza real pendiente |
 | `tools/kernel_charges.bt` | Borrador de probes de cargo/descargo kmem 6.17 con mapas por cgroup ejecutor; dueño real desconocido | Headers de ABI y limitación de validación bpftrace sin root en `tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/abi-check.txt`; compilación y captura pendientes |
 | `tools/espacio_libre.py` | Vigilante de espacio libre, inodos, tendencia y bloques físicos (ATOM y equipo testigo): `os.statvfs`, lectura de `bb-estado-externo/1`, `diskstats`, `cgroup io.stat`, temperaturas NVMe, FDs `(deleted)` y alertas `85/92/96 %` con histéresis (`bb disco` / `bb espacio-libre`) | `tests/test_espacio_libre.py`, con controles negativos de fallo `statvfs`, tendencia insuficiente, ráfaga única y equipo testigo caído |
+| `tools/energia_acumulada.py` | Cálculo de Wh por hora y por día del enchufe medidor (`contador` o integración trapezoidal), con conteo de huecos sin rellenar y rechazo de `ok: false` | `tests/test_energia_acumulada.py` |
+| `tools/estado_enlaces.py` | Lectura de estado de Tailscale (`direct`/`relay`/`offline`) y RustDesk con sanitización de identificadores y alerta en ráfaga única | `tests/test_estado_enlaces.py` |
+| `tools/estado_externo.py` | Publicación atómica `bb-estado-externo/1`, comparación SHA-256 de deriva en equipo testigo y descarga hacia `/run/bb-estado-externo/estado_externo.json` | `tests/test_estado_externo.py` |
+| `tools/correlacion_consumo_carga.py` | Log alineado cada 5 s con presupuesto de disco y correlación Pearson/Spearman por régimen con barrido de desfase | `tests/test_correlacion_consumo_carga.py` |
 
 Los siguientes controles reciben evidencias suministradas. Sus pruebas de fixtures verifican el instrumento; los hashes acreditan consistencia de bytes y el cierre de cada investigación exige su captura y criterio originales.
 

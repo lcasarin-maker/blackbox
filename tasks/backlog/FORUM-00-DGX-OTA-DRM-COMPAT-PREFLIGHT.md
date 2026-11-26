@@ -77,3 +77,6 @@ Sigue ABIERTA. Lo que falta es de Luis, en la consola:
    `ssh <usuario>@<equipo> 'cd ~/projects/blackbox && python3 -m tools.update_drm_coherence trial --phase antes --out tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT'`
    aplicar la OTA objetivo o la configuracion alterna, reiniciar, y la misma orden con `--phase objetivo`; volver a la configuracion de antes, reiniciar, y `--phase rollback`. Ciclar AC solo si el fabricante lo permite.
 5. Cierre: `python3 -m tools.verify_forum_finding --id FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT --evidence tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT` debe salir rc=0.
+
+## Recibo de solo lectura (2026-11-26)
+- `sudo -n bb-root-run drm-modeset-leer` dejó `/var/lib/bb-root-run/drm-modeset-leer-20261126T223618.342192Z.txt`: `boot_id=fbd2252c-b838-4c4f-a9a5-aa21e0212c8e`, `nvidia_drm.modeset=N`, `nvidia_drm.fbdev=Y`.

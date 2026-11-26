@@ -242,12 +242,137 @@ def trae_testigo(cfg_ruta: Path, destino: Path, correr: Correr = subprocess.run,
     return res
 
 
+def _sha256_archivo(ruta: Path) -> str:
+    import hashlib
+
+    h = hashlib.sha256()
+    with ruta.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def trae_testigo_incremental(
+    cfg_ruta: Path,
+    destino: Path,
+    *,
+    listar_remoto: Callable[[dict[str, Any]], list[dict[str, Any]]] | None = None,
+    leer_rango: Callable[[dict[str, Any], str, int], bytes] | None = None,
+    ahora: float | None = None,
+) -> dict[str, Any]:
+    """Copia incrementalmente solo bytes nuevos de series activas (incluido alarma.jsonl) y evita recopiar rotados con mismo tamaño y huella."""
+    t = datetime.now(timezone.utc).timestamp() if ahora is None else ahora
+    estado_path = destino / "trae.json"
+    prev: dict[str, Any] = {}
+    if estado_path.is_file():
+        try:
+            prev = json.loads(estado_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            prev = {}
+    cursores: dict[str, Any] = dict(prev.get("cursores") or {})
+
+    res: dict[str, Any] = {
+        "estado": "NOT_COLLECTED",
+        "epoch": t,
+        "bytes_transferidos": 0,
+        "archivos": [],
+        "cursores": cursores,
+    }
+    try:
+        cfg = json.loads(cfg_ruta.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        cfg = None
+    if not isinstance(cfg, dict) or not isinstance(cfg.get("origen"), str) or not ORIGEN_TESTIGO.fullmatch(cfg["origen"]):
+        res["motivo"] = f"falta o es invalido {cfg_ruta.name}"
+        destino.mkdir(parents=True, exist_ok=True)
+        estado_path.write_text(json.dumps(res, ensure_ascii=False) + "\n", encoding="utf-8")
+        return res
+
+    if listar_remoto is None or leer_rango is None:
+        # Sin inyeccion de transporte incremental cae a trae_testigo atomico existente
+        base = trae_testigo(cfg_ruta, destino, ahora=t)
+        base.setdefault("cursores", cursores)
+        base.setdefault("bytes_transferidos", 0)
+        return base
+
+    destino.mkdir(parents=True, exist_ok=True)
+    try:
+        remotos = listar_remoto(cfg)
+    except Exception as exc:  # noqa: BLE001
+        res["motivo"] = f"listado remoto: {type(exc).__name__}: {exc}"
+        estado_path.write_text(json.dumps(res, ensure_ascii=False) + "\n", encoding="utf-8")
+        return res
+
+    transferidos = 0
+    actualizados: list[str] = []
+    for item in remotos:
+        nombre = str(item.get("nombre") or "")
+        tam_remoto = int(item.get("tamano") or 0)
+        sha_remoto = item.get("sha256")
+        if not nombre:
+            continue
+        local = destino / nombre
+        cur = dict(cursores.get(nombre) or {})
+        offset = int(cur.get("offset") or 0)
+
+        # Rotado ya presente con mismo tamano y huella: no se recopia
+        if "." in nombre and nombre.rsplit(".", 1)[-1].isdigit() and local.is_file():
+            if local.stat().st_size == tam_remoto and (not sha_remoto or _sha256_archivo(local) == sha_remoto):
+                actualizados.append(nombre)
+                continue
+
+        if local.is_file() and local.stat().st_size == tam_remoto and offset == tam_remoto:
+            actualizados.append(nombre)
+            continue
+
+        if tam_remoto < offset:
+            offset = 0  # archivo rotado o truncado
+
+        try:
+            delta = leer_rango(cfg, nombre, offset)
+        except Exception as exc:  # noqa: BLE001
+            res["motivo"] = f"lectura {nombre}: {type(exc).__name__}: {exc}"
+            estado_path.write_text(json.dumps(res, ensure_ascii=False) + "\n", encoding="utf-8")
+            return res
+
+        with tempfile.NamedTemporaryFile(dir=destino, prefix=f".tmp-{nombre}-", delete=False) as tf:
+            tmp_p = Path(tf.name)
+        try:
+            existente = local.read_bytes()[:offset] if (offset > 0 and local.is_file()) else b""
+            contenido = existente + delta
+            tmp_p.write_bytes(contenido)
+            os.replace(tmp_p, local)
+        finally:
+            if tmp_p.exists():
+                tmp_p.unlink()
+
+        transferidos += len(delta)
+        cursores[nombre] = {
+            "offset": offset + len(delta),
+            "tamano": offset + len(delta),
+            "sha256": _sha256_archivo(local),
+        }
+        actualizados.append(nombre)
+
+    res["estado"] = "OK"
+    res["bytes_transferidos"] = transferidos
+    res["archivos"] = sorted(actualizados)
+    res["cursores"] = cursores
+    estado_path.write_text(json.dumps(res, ensure_ascii=False) + "\n", encoding="utf-8")
+    return res
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="observador_ping")
     ap.add_argument("--paso", action="store_true", help="un ping segun el interruptor observador_ping (lo repite bb-observador-ping.timer)")
     ap.add_argument("--sync", action="store_true", help="trae el log del NAS (nas.json) y lo mezcla en ping.jsonl; lo repite bb-observador-ping-sync.timer")
     ap.add_argument("--trae-testigo", action="store_true", help="copia las series del testigo (testigo.json) a externo/testigo/; lo corre bb-reboot-verdict")
+    ap.add_argument("--trae-testigo-incremental", action="store_true", help="copia incremental de series del testigo incluyendo alarma.jsonl")
     a = ap.parse_args(argv)
+    if a.trae_testigo_incremental:
+        r = trae_testigo_incremental(_datos() / "testigo.json", _datos() / "testigo")
+        print(json.dumps(r, ensure_ascii=False))
+        return 0 if r["estado"] == "OK" else 1
     if a.trae_testigo:
         r = trae_testigo(_datos() / "testigo.json", _datos() / "testigo")
         print(json.dumps(r, ensure_ascii=False))

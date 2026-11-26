@@ -169,6 +169,9 @@ cmd_up() {
     espera_socket "$CTRD_SOCK" "$RUN_DIR/containerd.log"
 
     log "arrancando dockerd de laboratorio ($LAB_SOCK)"
+    ip link show bblab0 >/dev/null 2>&1 || ip link add name bblab0 type bridge
+    ip addr show dev bblab0 | grep -qF "172.31.250.1/24" || ip addr add 172.31.250.1/24 dev bblab0
+    ip link set dev bblab0 up
     setsid dockerd \
         --config-file "$CONF_DIR/daemon.json" \
         --host "$LAB_HOST" \
@@ -178,7 +181,7 @@ cmd_up() {
         --containerd "$CTRD_SOCK" \
         --containerd-namespace "$NS" \
         --containerd-plugins-namespace "$NS-plugins" \
-        --bridge=bblab0 --bip=172.31.250.1/24 --iptables=false --ip6tables=false --ip-forward=false \
+        --bridge=bblab0 --iptables=false --ip6tables=false --ip-forward=false \
         --ip-masq=false --userland-proxy=false \
         >"$RUN_DIR/dockerd.log" 2>&1 &
     espera_socket "$LAB_SOCK" "$RUN_DIR/dockerd.log"

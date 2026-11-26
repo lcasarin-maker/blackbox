@@ -61,3 +61,7 @@ Los criterios ejecutables de `tools.verify_forum_finding` se miden en esta ficha
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Preparado (regla de solo lectura): `adopted/root-scripts/watchdog-propietario.sh` (`fuser -v` sobre los dos nodos del watchdog sin abrirlos, boot_id y estado sysfs; tests en `tests/test_bb_root_manifest.py`, con el parser `_parse_fuser` del verificador sobre su salida y controles negativos). Como usuario da `fuser rc=1` (medido hoy): sin root el dueno sigue UNKNOWN. Disparadores: (1) Luis re-aprueba el manifiesto (`python3 -m tools.bb_root_manifest --propose` y el `sudo sh -c` de la ultima linea; un solo paso para todo el lote) y corre `sudo -n bb-root-run watchdog-propietario`; (2) el cierre exige ademas un arranque con el bit 0x20 de `bootstatus`, que solo da el reinicio provocado de DEBT-WATCHDOG-SIN-CONTROL-NEGATIVO-01.
+
+## Recibo de solo lectura (2026-11-26)
+- `sudo -n bb-root-run watchdog-propietario` dejó `/var/lib/bb-root-run/watchdog-propietario-20261126T223618.177648Z.txt`: `boot_id=fbd2252c-b838-4c4f-a9a5-aa21e0212c8e`, `/dev/watchdog0: root 1 F.... systemd`, `fuser rc=0`, `identity=SBSA Generic Watchdog`, `state=active`, `timeout=60`, `nowayout=0`, `bootstatus=0`.
+- Queda pendiente únicamente el arranque con `bootstatus` bit `0x20` de la ventana disruptiva (`DEBT-WATCHDOG-SIN-CONTROL-NEGATIVO-01`).

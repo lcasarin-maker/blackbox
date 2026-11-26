@@ -265,21 +265,41 @@ def comando_ping(host: str, sistema: str, timeout_s: float) -> Optional[List[str
     return None
 
 
+_RTT_ICMP_RE = re.compile(r"(?:time|tiempo)\s*([=<])\s*([0-9]+(?:[.,][0-9]+)?)\s*ms", re.I)
+
+
+def _parse_rtt_icmp(salida: Any) -> Optional[float]:
+    texto = salida.decode("utf-8", errors="replace") if isinstance(salida, (bytes, bytearray)) else str(salida or "")
+    m = _RTT_ICMP_RE.search(texto)
+    if not m:
+        return None
+    val = float(m.group(2).replace(",", "."))
+    if m.group(1) == "<" and val <= 1.0:
+        return 0.5
+    return round(val, 2)
+
+
 def sondea_icmp(host: str, sistema: str, timeout_s: float, correr: Correr = subprocess.run) -> Dict[str, Any]:
     base: Dict[str, Any] = {"fuente": "icmp", "destino": host}
     cmd = comando_ping(host, sistema, timeout_s)
     if cmd is None:
-        return {**base, "ok": False, "estado": "error", "error": f"sin ping para {sistema}"}
+        return {**base, "ok": False, "estado": "error", "rtt_ms": None, "error": f"sin ping para {sistema}"}
     extra = {"creationflags": 0x08000000} if sys.platform == "win32" else {}  # CREATE_NO_WINDOW: sin ventana por segundo
     try:
         r = correr(cmd, capture_output=True, check=False, timeout=timeout_s + 3.0, **extra)
     except (OSError, subprocess.SubprocessError) as e:
-        return {**base, "ok": False, "estado": "error", "error": type(e).__name__}
+        return {**base, "ok": False, "estado": "error", "rtt_ms": None, "error": type(e).__name__}
     ok = r.returncode == 0
+    salida = r.stdout if isinstance(r.stdout, (bytes, bytearray)) else str(r.stdout or "").encode("utf-8", errors="replace")
     if sistema == "win32":  # Windows sale 0 tambien con «host de destino inaccesible» de un router: solo un eco trae TTL=
-        salida = r.stdout if isinstance(r.stdout, bytes) else str(r.stdout or "").encode()
         ok = ok and b"TTL=" in salida.upper()
-    return {**base, "ok": ok, "estado": "eco" if ok else "sin_eco"}
+    if not ok:
+        return {**base, "ok": False, "estado": "sin_eco", "rtt_ms": None}
+    rtt = _parse_rtt_icmp(salida)
+    fila: Dict[str, Any] = {**base, "ok": True, "estado": "eco", "rtt_ms": rtt}
+    if rtt is None:
+        fila["rtt_motivo"] = "sin_rtt_en_salida"
+    return fila
 
 
 class _DigestSHA256(urllib.request.HTTPDigestAuthHandler):

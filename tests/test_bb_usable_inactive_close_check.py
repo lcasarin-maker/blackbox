@@ -7,7 +7,7 @@ import subprocess
 import pytest
 
 
-CARD = Path(__file__).resolve().parents[1] / 'tasks/backlog/DEBT-BB-USABLE-INACTIVO-DEJA-CIEGO-EL-WATCHDOG-01.md'
+CARD = Path(__file__).resolve().parents[1] / 'tasks/archive/DEBT-BB-USABLE-INACTIVO-DEJA-CIEGO-EL-WATCHDOG-01.md'
 
 
 @pytest.mark.parametrize(('output', 'status', 'expected'), [
