@@ -39,4 +39,5 @@ con el archivo. Un scope inexistente da `DropInPaths=` vacio (control negativo).
 - Ejecutados `rc=0`: `earlyoom-proteger`, `apt-guardia-instalar` (validado en caja), `pstore-preparar`, `arranque-forense`.
 - Laboratorio Docker OCI nivel 2 (`tools/portero_docker_lab.sh up -> prueba -> down`): `5 de 5 casos` PASS (`fallos=0 could_not_run=0`, `down: restos=0`), registrado en `tasks/evidence/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01/prueba-nivel2-20261126T195324.txt`.
 - `bin/bb drift`: `revisados: 69, divergentes: 0, ausentes: 1, suspendidos: 0`.
+- Modulos `INSTALA` (14 archivos) en `/usr/local/lib/blackbox/tools/` y `/etc/blackbox/rojo.json` instalados; `bb-arranque-ok.service` (`0/SUCCESS`, `sano: true`, `could_not_run: []`) y `bb-punto-restauracion.service` (`0/SUCCESS`, `puntos validos: 3 de 3`, `COULD_NOT_RUN: 0`).
 - Evidencia consolidada en `tasks/evidence/DEBT-DESPLIEGUES-PENDIENTES-DE-LUIS-01/despliegue.txt` (`despliegues_hechos`). Queda pendiente únicamente evaluar el punto 4 (decisiones de `oomd` en su ficha propia) antes de mover esta ficha a `tasks/archive/`.
