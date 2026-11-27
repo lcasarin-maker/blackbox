@@ -24,7 +24,7 @@ def test_el_dockerd_del_lab_no_desactiva_el_puente_por_defecto() -> None:
 def test_el_lab_usa_su_propio_puente_con_su_propia_subred() -> None:
     codigo = "\n".join(_codigo())
     assert "--bridge=bblab0" in codigo
-    assert "ip addr add 172.31.250.1/24 dev bblab0" in codigo
+    assert "ip addr replace 172.31.250.1/24 dev bblab0" in codigo
     assert "docker0" in codigo, "debe vigilar el puente de produccion"
 
 

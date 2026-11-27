@@ -170,7 +170,7 @@ cmd_up() {
 
     log "arrancando dockerd de laboratorio ($LAB_SOCK)"
     ip link show bblab0 >/dev/null 2>&1 || ip link add name bblab0 type bridge
-    ip addr show dev bblab0 | grep -qF "172.31.250.1/24" || ip addr add 172.31.250.1/24 dev bblab0
+    ip addr replace 172.31.250.1/24 dev bblab0
     ip link set dev bblab0 up
     setsid dockerd \
         --config-file "$CONF_DIR/daemon.json" \

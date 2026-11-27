@@ -3,7 +3,9 @@ id: DEBT-BB-USABLE-INACTIVO-DEJA-CIEGO-EL-WATCHDOG-01
 kind: task
 domain: MONITORING
 title: "bb-usable esta cargado pero inactivo: el watchdog de hardware sigue ciego ante una maquina inservible"
-status: open
+status: done
+closed: 2026-11-26
+closure_type: fixed
 severity: P2
 origin: detected
 detector: {"rule": "bin/bb status", "confidence": 1.0}
@@ -47,3 +49,9 @@ flock -x [RUTA_LOCAL_PRIVADA] python3 -m pytest -q -p no:cacheprovider --basetem
 
 ## Aparte, sin ficha propia hoy
 `CIEGO earlyoom ante agotamiento de memoria unificada`: su umbral lee MemAvailable, que marco 56 % durante los congelamientos del 2026-09-22/23 (ver `bin/bb status`). Es un limite conocido del instrumento; si se quiere cerrar, abrir ficha con un umbral que no dependa de MemAvailable.
+
+## Cierre operativo (2026-11-26)
+- `sudo systemctl restart bb-usable.service` ejecutado por Luis en la ATOM: `bb-usable.service arranco Thu 2026-11-26 16:36:29 CST, despues de la ultima modificacion de bin/bb-usable` y `ARMADO bb-usable`.
+- `close_check` verificado en vivo (`rc=0`, `ARMADO bb-usable`, `could_not_run: 0`).
+- Gate `pre-push` `watchdog-runtime-required` (`python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_debt_registration_controls.py::test_debt_skip_test_demonio_al_dia_52`): `1 passed in 0.83s`.
+- Cerrada y archivada en `tasks/archive/` por voto de Luis (2026-11-26).
