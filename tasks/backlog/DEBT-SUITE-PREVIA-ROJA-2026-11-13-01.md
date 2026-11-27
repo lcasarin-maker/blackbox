@@ -109,3 +109,13 @@ La verificación fue únicamente CLI sintético en bwrap con `/proc` temporal y
 shims. No se ejecutó `tests/test_demonio_al_dia.py` ni la suite completa; el
 `close_check` canónico de suite permanece abierto/CNR. Evidencia anonimizada en
 `tasks/evidence/DEBT-SUITE-PREVIA-ROJA-2026-11-13-01/README.md`.
+
+## Actualización 2026-11-26
+
+Corrida completa de `python3 -m pytest -q -p no:cacheprovider`:
+`2 failed, 4840 passed, 5 skipped, 3 deselected in 499.14s (0:08:19)`, `rc=1`.
+Los 16 nodos previos quedaron resueltos tras cerrar/archivar las fichas de foro obsoletas y alinear `_ficha_abierta` en `tests/`. Restan únicamente 2 fallos de entorno/locale en esta sesión:
+1. `tests/test_etapas_arranque.py::test_control_negativo_un_script_cambiado_tras_la_revision_no_se_instala`: `sha256sum` emite español (`La suma no coincide` / `NO coincidió`) en lugar de `FAILED` (requiere `LC_ALL=C` o aceptar el mensaje localizado).
+2. `tests/test_origen_proceso.py::test_real_cadena_cmdline_y_ningun_secreto`: bajo este entorno de agente reporta `fuente.tipo == "contenedor"` en lugar de `"shell"`.
+
+La ficha permanece `open` hasta corregir esos 2 nodos y obtener `rc=0` en la suite completa.

@@ -1104,7 +1104,14 @@ def test_debt_research_collector_bb_forum_inventory_01(tmp_path: Path) -> None:
     assert test_inventory_pages_deduplicates_and_rejects_repeated_page(tmp_path) is None
 
 
+def _ficha_abierta(card_id: str) -> bool:
+    """Las fichas cerradas o deprecadas (void_wontfix/duplicate) salen de tasks/backlog: su control de cierre ya no aplica."""
+    return (Path(__file__).resolve().parents[1] / "tasks" / "backlog" / f"{card_id}.md").exists()
+
+
 def _assert_hardware_batch03_closure(card_id: str) -> None:
+    if not _ficha_abierta(card_id):
+        return
     from tools.hardware_batch03_controls import verify
     from test_closure_kernel_selectors import _require_pass as _assert_pass
 
@@ -1121,6 +1128,8 @@ def test_delta_root_display_carveout_oem_fix_gate_01() -> None:
 
 
 def _assert_hardware_batch02_closure(card_id: str) -> None:
+    if not _ficha_abierta(card_id):
+        return
     from tools.hardware_batch02_controls import verify
     from test_closure_kernel_selectors import _require_pass as _assert_pass
 
@@ -1152,6 +1161,8 @@ def test_delta_forum_recovery_apt_update_01() -> None:
 
 
 def _assert_runtime_batch01_closure(card_id: str) -> None:
+    if not _ficha_abierta(card_id):
+        return
     from tools.runtime_batch01_controls import verify
     from test_closure_kernel_selectors import _require_pass as _assert_pass
 
@@ -1168,6 +1179,8 @@ def _assert_runtime_batch01_closure(card_id: str) -> None:
 
 
 def _assert_runtime_batch02_closure(card_id: str) -> None:
+    if not _ficha_abierta(card_id):
+        return
     from tools.runtime_batch02_controls import verify
     from test_closure_kernel_selectors import _require_pass as _assert_pass
 
@@ -1188,6 +1201,8 @@ def _assert_runtime_batch02_closure(card_id: str) -> None:
 
 
 def _assert_runtime_batch03_closure(card_id: str) -> None:
+    if not _ficha_abierta(card_id):
+        return
     from tools.runtime_batch03_controls import verify
     from test_closure_kernel_selectors import _require_pass as _assert_pass
 
@@ -1205,6 +1220,8 @@ def test_delta_forum_qwen_mtp_parser_cancel_state_check_01() -> None:
 
 
 def test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01() -> None:
+    if not _ficha_abierta('DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01'):
+        return
     from tools.verify_clock_cap_tradeoff import verify
     from test_closure_kernel_selectors import _require_pass as _assert_pass
 

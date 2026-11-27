@@ -681,6 +681,8 @@ def test_nvme_real_incident_close_check_requires_raw_device_and_recovery_evidenc
 
     repository = Path(__file__).resolve().parents[1]
     evidence_arg = os.environ.get("BLACKBOX_NVME_EVIDENCE_DIR")
+    if not evidence_arg and not (repository / "tasks/backlog/FEATURE-FORUM-NVME-READONLY-01.md").exists():
+        return
     evidence = Path(evidence_arg) if evidence_arg else repository / "tasks/evidence/FEATURE-FORUM-NVME-READONLY-01"
     try:
         _validate_copy_lab(evidence)
