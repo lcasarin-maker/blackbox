@@ -1,0 +1,8 @@
+# Despliegues verificados en host (2026-11-26)
+- Portero y drop-in `50-bb-portero.conf`: desplegados (2026-10-26).
+- Escalon `bb-usable.service`: activo y `ARMADO` (2026-11-26, `watchdog-runtime-required` `1 passed`).
+- Manifiesto `bb-root-run`: `python3 -m tools.bb_root_manifest --check` -> `aprobados iguales: 12, cambios: 0, could_not_run: 0`.
+- Scripts sellados ejecutados `rc=0`: `earlyoom-proteger`, `apt-guardia-instalar`, `pstore-preparar`, `arranque-forense`.
+- Laboratorio Docker OCI nivel 2 (`tools/portero_docker_lab.sh`): `5 de 5 casos` PASS (`fallos=0 could_not_run=0`, `down: restos=0`); salida en `tasks/evidence/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01/prueba-nivel2-20261126T195324.txt`.
+- `bin/bb drift`: `revisados: 69   divergentes: 0   ausentes: 1   suspendidos: 0`.
+despliegues_hechos

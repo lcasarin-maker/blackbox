@@ -33,3 +33,10 @@ con el archivo. Un scope inexistente da `DropInPaths=` vacio (control negativo).
 ## Anadido 2026-10-30 (/cerrar-deuda): script sellado de root para el bug-report de NVIDIA
 
 `FEATURE-RELOJ-CAPTURA-DE-INCIDENTE-ANTES-DE-QUITAR-AC-01` (cerrada) deja escrito y probado sin root `adopted/root-scripts/nvidia-bug-report.sh` y su entrada en el manifiesto propuesto, pero NO instalado: hasta que Luis lo instale, la pieza `nvidia_bug_report` de la captura sale `could_not_run NO_INSTALADO` (la captura nunca sale COMPLETA). Pasos exactos en `adopted/pendiente-de-despliegue/LEEME.txt`: `python3 -m tools.bb_root_manifest --propose` desde el checkout principal y el `sudo sh -c '...'` que imprime en su ultima linea. Lo ejecuta Luis con sudo.
+
+## Avance 2026-11-26: manifiesto 12/12 aprobado y laboratorio OCI nivel 2 verificado (5/5 PASS)
+- `python3 -m tools.bb_root_manifest --check`: `aprobados iguales: 12, cambios: 0, could_not_run: 0`.
+- Ejecutados `rc=0`: `earlyoom-proteger`, `apt-guardia-instalar` (validado en caja), `pstore-preparar`, `arranque-forense`.
+- Laboratorio Docker OCI nivel 2 (`tools/portero_docker_lab.sh up -> prueba -> down`): `5 de 5 casos` PASS (`fallos=0 could_not_run=0`, `down: restos=0`), registrado en `tasks/evidence/FEATURE-CONTENEDORES-TOPE-PROPIO-Y-RUNTIME-OCI-01/prueba-nivel2-20261126T195324.txt`.
+- `bin/bb drift`: `revisados: 69, divergentes: 0, ausentes: 1, suspendidos: 0`.
+- Evidencia consolidada en `tasks/evidence/DEBT-DESPLIEGUES-PENDIENTES-DE-LUIS-01/despliegue.txt` (`despliegues_hechos`). Queda pendiente únicamente evaluar el punto 4 (decisiones de `oomd` en su ficha propia) antes de mover esta ficha a `tasks/archive/`.
