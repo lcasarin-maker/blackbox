@@ -3,12 +3,14 @@ id: DELTA-ROOT-DISPLAY-CARVEOUT-OEM-FIX-GATE-01
 kind: task
 domain: VERDICT
 title: "Validar root display carveout oem fix gate 01"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_debt_registration_controls.py::test_delta_root_display_carveout_oem_fix_gate_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Registro y responsable
@@ -118,3 +120,9 @@ $ journalctl -k --no-pager -o short-iso | head -1 | cut -c1-60     # el journal 
 ```
 
 Veredicto: ABIERTA. Hay cuatro `NV_ERR_NO_MEMORY` del driver en el journal retenido (desde el 2026-10-19; el del 2026-10-13 ya rotó) en el OEM exacto del sujeto. La ausencia de Sway y de `scanoutcarveout` esta medida, pero el sujeto posible de la ficha es "asignaciones del driver que fallan en este OEM", y eso existe y se repite. Sigue pendiente la atribucion (que proceso pedia memoria) y la decision de Luis sobre cual es el sujeto.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Bloqueador: `tools/hardware_batch03_controls.py:_display_carveout` exige reproducir `NV_ERR_NO_MEMORY` en monitor 6K y probar BIOS display carveout multi-OEM; esta ATOM opera sin falla de carveout 6K.
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha de captura física de foro sale del backlog activo.

@@ -3,12 +3,14 @@ id: FORUM-02-PSTORE-KERNEL-REGRESSION
 kind: task
 domain: KERNEL
 title: "Leer pstore y validar una corrección de kernel para reinicios FPAC/PSCI en GB10"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_forum_finding --id FORUM-02-PSTORE-KERNEL-REGRESSION --evidence tasks/evidence/FORUM-02-PSTORE-KERNEL-REGRESSION", "expect": "exit_zero", "porque": "Verificador específico pendiente: debe validar captura pstore, identidad de la pila, resolución del vendor y recomendación de rollback/actualización con control."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Trabajo en la ATOM
@@ -73,3 +75,9 @@ Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6
 
 ## Criterios ejecutables de `tools.verify_forum_finding` (2026-10-14)
 Los criterios ejecutables de `tools.verify_forum_finding` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Bloqueador: `tools/verify_forum_pstore.py` exige un volcado real en `pstore` con firma `FPAC`/`PSCI`/`NMI` (regresión de kernel 1014 en DGX Spark FE); jamás ocurrió en este host (`6.17.0-1032-nvidia`).
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha de captura física de foro sale del backlog activo.

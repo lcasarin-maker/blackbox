@@ -21,3 +21,9 @@ Con vLLM y los jobs parados y los datos guardados: `echo c | sudo tee /proc/sysr
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Disparador: un reinicio provocado por Luis en ventana controlada (vLLM y trabajos parados). Hoy `bootstatus=0` y `boot_id` 934fa20f-d0ee-4d90-af73-d42abee3e09e (medido). El panic de `echo c | sudo tee /proc/sysrq-trigger` prueba `kernel.panic=10`, no el watchdog: para el caso que exige el close_check hay que congelar el pet de systemd (por ejemplo `sudo kill -STOP 1`) y esperar el reset del SBSA (timeout 60 s). Tras el arranque: `cat /sys/class/watchdog/watchdog0/bootstatus` (el bit 0x20 es reset por watchdog) en `prueba.md` como `bootstatus=N`, y en la misma sesion `sudo -n bb-root-run watchdog-propietario` y `sudo -n bb-root-run arranque-forense`: el mismo reinicio alimenta FEATURE-FORUM-SBSA-WATCHDOG-STATE-01, FEATURE-FORUM-RCU-PANIC-PSTORE-01 y FEATURE-LECTOR-PSTORE-BERT-ROOT-01.
+
+## Voto de Luis 2026-11-26 (/vote): ejecutar al cerrar la sesión actual de Orca
+
+- **Decidido:** dejar los comandos listos para ejecutarlos al cerrar la sesión de Orca.
+- **Motivo:** evitar matar la sesión actual de `orca-ide` mientras se trabaja; se ejecuta en el próximo cierre/reinicio.
+- **Descartado:** posponer sin fecha conservando el uptime actual sin probar `netconsole`, `watchdog` ni `bb reloj --ab 3`.

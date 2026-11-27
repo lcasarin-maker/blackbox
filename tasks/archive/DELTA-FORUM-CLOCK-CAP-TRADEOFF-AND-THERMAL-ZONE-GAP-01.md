@@ -3,12 +3,14 @@ id: DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01
 kind: task
 domain: VERDICT
 title: "Validar forum clock cap tradeoff and thermal zone gap 01"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_debt_registration_controls.py::test_delta_forum_clock_cap_tradeoff_and_thermal_zone_gap_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Trabajo en la ATOM
@@ -82,3 +84,9 @@ Falta una ventana autorizada con `atom_gpu_telemetry` registrando las siete zona
 La fila `clock-gpu-ab-required` en `simple.json` llama al verificador compuesto cuando el cambio afecta al control del reloj, su verificación o la evidencia. El selector del `close_check` sigue vigente. La primera publicación del cambio en `simple.json` activa todas las filas de Simplecode, incluida esta.
 
 La lectura del candidato devuelve `unknown` con `fail=0` y `could_not_run=1`. El inventario térmico disponible pasa sus comprobaciones, incluida la identificación de sensores. Sigue pendiente obtener el rango efectivo mediante una interfaz soportada, medir y confirmar la restauración en la [ficha A/B](FEATURE-FORUM-GPU-CLOCK-CAP-AB-01.md) y adjuntar el inventario de esa misma ventana. La ficha permanece abierta.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Bloqueador: depende de dos capacidades inexistentes en este hardware/driver GB10: (1) las zonas `acpitz` no exponen `temp*_label` en `hwmon`, y (2) el driver NVIDIA `580.178.04` en GB10 no expone el rango `-lgc` aplicado (`DEBT-RELOJ-VERIFICADOR-SIN-LECTURA-DEL-RANGO-LGC-APLICADO-01`, ya archivada como `void_wontfix`).
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha de captura física de foro sale del backlog activo.

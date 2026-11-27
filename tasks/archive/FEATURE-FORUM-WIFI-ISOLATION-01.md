@@ -3,12 +3,14 @@ id: FEATURE-FORUM-WIFI-ISOLATION-01
 kind: task
 domain: HOST_USABILITY
 title: "Detect and recover Wi-Fi isolation without misclassifying a live host as frozen"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_wifi_isolation --evidence tasks/evidence/FEATURE-FORUM-WIFI-ISOLATION-01", "expect": "exit_zero", "porque": "Must prove the recorded NetworkManager and supplicant failure is distinguished from a host freeze, test a bounded recovery policy on the cited stack, and preserve rollback evidence."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Trabajo en la ATOM
@@ -68,3 +70,9 @@ El agente hardware tiene asignada la entrada CLI con JSON literal y códigos 0/1
 
 ## Criterios ejecutables de `tools.verify_wifi_isolation` (2026-10-14)
 Los criterios ejecutables de `tools.verify_wifi_isolation` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-WIFI-ISOLATION-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Bloqueador: `tools/verify_wifi_isolation.py` exige A/B de roaming Wi-Fi MT7925; esta ATOM opera por Ethernet cableada y Tailscale, con Wi-Fi desconectado.
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha de captura física de foro sale del backlog activo.

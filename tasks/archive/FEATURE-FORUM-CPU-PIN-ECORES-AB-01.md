@@ -3,12 +3,14 @@ id: FEATURE-FORUM-CPU-PIN-ECORES-AB-01
 kind: task
 domain: GPU
 title: "Validate pinning inference host threads to the A725 cores as an opt-in thermal mitigation"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-21
 close_check: {"cmd": "python3 -m tools.verify_cpu_pin_ab --evidence tasks/evidence/FEATURE-FORUM-CPU-PIN-ECORES-AB-01", "expect": "exit_zero", "porque": "Debe comparar, con la misma carga y el mismo cap de reloj, el proceso de inferencia sin pin contra el pin a cpu 0-4,10-14 (A725), registrando las 7 thermal zones acpitz, clocks efectivos y throughput, con repeticion, control negativo (pin a los X925 no debe enfriar) y rollback verificado. Si falta hardware o carga, imprimir could_not_run y conservar open."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Trabajo en la ATOM
@@ -51,3 +53,9 @@ El verificador del `close_check` existe: `tools/verify_cpu_pin_ab.py` (tests: `t
 Contrato: `verify(evidence_dir) -> dict` con `status` (`pass` / `fail` / `unknown`), `fail`, `could_not_run`, `reason`; `main()` sale 0 en pass, 1 en fail (evidencia contradictoria), 2 en unknown (falta o incompleta). Lee `<dir>/ab.json`; el esquema esta en el docstring del modulo. Exige los tres brazos (`unpinned`, `pin_a725` a 0-4,10-14, `pin_x925` a 5-9,15-19 como control negativo), >= 2 repeticiones por brazo de >= 1800 s con la GPU bajo carga, las 7 zonas `acpitz`, clocks efectivos, decode/prefill, potencia, `clocks_event_reasons`, mismo cap y misma tupla de workload en todas las corridas, readback de `taskset -p`, `midr_el1` de los dos conjuntos y rollback a 0-19 leido de vuelta. Si el control X925 tambien enfria, `fail`: el instrumento no discrimina. Un resultado nulo del pin A725 es valido y pasa con `effect: "null"`.
 
 El A/B real sigue pendiente y la ficha sigue `open` en `backlog/`: exige corridas de >= 30 min por brazo con carga en la GPU y repeticion, es decir hardware y tiempo que ningun agente produjo. No se capturo ninguna evidencia real; el verificador solo juzga lo que alguien le entregue (el origen de la captura no se autentica).
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Experimento opt-in del foro (3 brazos × 2 repeticiones de 30 min = 3 h fijando vLLM a núcleos A725); la ATOM opera entre 43–51 °C sin throttling (`clocks_event_reasons.active = 0x0`).
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha sale del backlog activo.

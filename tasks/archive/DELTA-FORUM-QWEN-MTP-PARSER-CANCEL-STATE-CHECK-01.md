@@ -3,12 +3,14 @@ id: DELTA-FORUM-QWEN-MTP-PARSER-CANCEL-STATE-CHECK-01
 kind: task
 domain: VERDICT
 title: "Validar forum qwen mtp parser cancel state check 01"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_debt_registration_controls.py::test_delta_forum_qwen_mtp_parser_cancel_state_check_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Trabajo en la ATOM
@@ -97,3 +99,9 @@ Veredicto: ABIERTA. Ausencia medida solo de Qwen y MTP; el motor corre con el mi
 ## Decision de Luis 2026-10-20 (boleta /vote): se cierra solo la mitad MTP; queda el caso del parser
 La mitad MTP del reporte (decodificacion especulativa) queda fuera de alcance: ausente en este equipo (medido el 2026-10-20: `speculative_config=None`, cero `--speculative-config` en el comando del contenedor). La ficha sigue abierta SOLO por el caso "cancelar a mitad del stream y comprobar que la siguiente tool call se emite con `qwen3_xml`" (version de un nodo en `tools/canario_motor.py`), porque el motor corre `--tool-call-parser qwen3_xml`, el mismo parser del reporte.
 Limite declarado: el `close_check` sigue siendo el original (evidencia real del sujeto, hoy `could_not_run`). Cuando el caso del parser tenga su prueba, el `close_check` se redefine para medirlo; hasta entonces no se relaja. Descartado por Luis: cerrarla entera como `void_wontfix` (motivo: sin motivo declarado).
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Bloqueador: `tools/runtime_batch03_controls.py:_mtp_parser_cancel` exige una matriz completa `parser × MTP (mtp_tokens > 0) × cancelación × restart`; este host no sirve Qwen ni decodificación especulativa MTP (`speculative_config=None`), y el canario de tool-calls de `nemotron-local` ya corre en `tools/canario_motor.py`.
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha de captura física de foro sale del backlog activo.

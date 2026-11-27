@@ -134,6 +134,8 @@ def test_el_muestreo_corre_en_otro_hilo_y_no_bloquea_la_decision():
     hilos = []
 
     def colgado():
+        if hilos:
+            threading.Event().wait()
         hilos.append(threading.current_thread().name)
         arrancado.set()
         liberar.wait(timeout=5.0)  # simula nvidia-smi bloqueado por el cerrojo del driver
@@ -269,8 +271,14 @@ def test_script_entrypoint_llama_a_principal(tmp_path, monkeypatch):
             raise Alto
         threading.Event().wait()  # el hilo demonio de muestreo queda aparcado
 
+    def _run_aparcado(*args, **kwargs):
+        if threading.current_thread() is not threading.main_thread():
+            threading.Event().wait()
+        raise FileNotFoundError("sin nvidia-smi")
+
     monkeypatch.setenv("BLACKBOX_DATA", str(tmp_path))  # modo off: no registra nada
     monkeypatch.setenv("PATH", str(tmp_path))  # sin nvidia-smi: el hilo recibe un OSError real y sigue
+    monkeypatch.setattr(g.subprocess, "run", _run_aparcado)
     monkeypatch.setattr(g.time, "sleep", duerme)
     with pytest.raises(Alto):
         runpy.run_path(g.__file__, run_name="__main__")

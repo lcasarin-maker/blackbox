@@ -3,12 +3,14 @@ id: FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT
 kind: task
 domain: DISPLAY
 title: "Detect unsupported nvidia-drm modeset override before DGX OS OTA"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: PREVENTION
 created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT --evidence tasks/evidence/FORUM-00-DGX-OTA-DRM-COMPAT-PREFLIGHT", "expect": "exit_zero", "porque": "Show that OTA compatibility checks detect a conflicting DRM modeset override before update, with safe recovery and a clean-system negative control."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Trabajo en la ATOM
@@ -80,3 +82,9 @@ Sigue ABIERTA. Lo que falta es de Luis, en la consola:
 
 ## Recibo de solo lectura (2026-11-26)
 - `sudo -n bb-root-run drm-modeset-leer` dejó `/var/lib/bb-root-run/drm-modeset-leer-20261126T223618.342192Z.txt`: `boot_id=fbd2252c-b838-4c4f-a9a5-aa21e0212c8e`, `nvidia_drm.modeset=N`, `nvidia_drm.fbdev=Y`.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Bloqueador: `tools/update_drm_coherence.py:226` exige `ota-target.json` de dominio HTTPS del fabricante y `recovery-trial.json` en 3 `boot_ids` distintos con cambio de configuración DRM. El recibo local `drm-modeset-leer` (`nvidia_drm.modeset=N, fbdev=Y`) ya fue capturado y el preflight `tools/update_drm_coherence.py` ya está probado en unit tests.
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha de captura física de foro sale del backlog activo.

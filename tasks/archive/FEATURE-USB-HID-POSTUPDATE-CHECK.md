@@ -3,12 +3,14 @@ id: FEATURE-USB-HID-POSTUPDATE-CHECK
 kind: task
 domain: USB
 title: "Detect USB-HID perdido tras actualización de kernel o driver"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_usb_hid_postupdate --evidence tasks/evidence/FEATURE-USB-HID-POSTUPDATE-CHECK", "expect": "exit_zero", "porque": "El cierre debe separar fallo USB-HID real, máquina headless, módulo integrado en kernel y telemetría inaccesible; comprobar que el servicio sigue activo no demuestra que el teclado ni el acceso remoto funcionen."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Fuente y alcance de la evidencia
@@ -69,3 +71,9 @@ Perfil contra el que se clasifico: un nodo GB10 Gigabyte, DGX OS 7.2.3, kernel 6
 
 ## Criterios ejecutables de `tools.verify_usb_hid_postupdate` (2026-10-14)
 Los criterios ejecutables de `tools.verify_usb_hid_postupdate` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-USB-HID-POSTUPDATE-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Bloqueador: `tools/verify_usb_hid_postupdate.py` exige 3 arranques distintos (`pre-update`, `affected` con pérdida real de driver USB HID y `recovery`).
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha de captura física de foro sale del backlog activo.

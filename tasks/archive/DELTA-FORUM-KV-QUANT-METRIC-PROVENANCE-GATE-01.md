@@ -3,12 +3,14 @@ id: DELTA-FORUM-KV-QUANT-METRIC-PROVENANCE-GATE-01
 kind: task
 domain: VERDICT
 title: "Validar forum kv quant metric provenance gate 01"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_debt_registration_controls.py::test_delta_forum_kv_quant_metric_provenance_gate_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Trabajo en la ATOM
@@ -95,3 +97,9 @@ $ which docker python3                   -> /usr/bin/docker  /opt/miniforge3/bin
 ```
 
 Veredicto: ABIERTA. La mitad llama.cpp esta ausente, pero la ficha pide una regla de procedencia (no mezclar RSS, cgroup, MemAvailable y bytes de KV) que aplica a vLLM, y el motor local expone `kv_cache_usage_perc`, `cache_config_info` y KV en fp8 (cuantizado). El sujeto existe; cerrar como `void_wontfix` seria suprimir. Siguiente paso: capturar `/metrics` crudo y etiquetar los contadores por separado, segun la "Version para un solo nodo".
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Bloqueador: `tools/hardware_batch02_controls.py:_kv_quant` exige corridas A/B `baseline` vs `quantized` de KV cache sobre un benchmark del foro; el motor local `nemotron-server` usa configuración fija de producción.
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha de captura física de foro sale del backlog activo.

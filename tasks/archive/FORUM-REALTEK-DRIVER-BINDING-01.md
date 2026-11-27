@@ -3,12 +3,14 @@ id: FORUM-REALTEK-DRIVER-BINDING-01
 kind: task
 domain: NETWORK
 title: "Evitar pérdida de Realtek tras warm reboot por binding al driver equivocado"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_forum_finding --id FORUM-REALTEK-DRIVER-BINDING-01 --evidence tasks/evidence/FORUM-REALTEK-DRIVER-BINDING-01", "expect": "exit_zero", "porque": "Verificador pendiente: prueba binding PCI efectivo y paquete/módulo compatible; warm/cold reboot A/B y rollback con controles de otra NIC, driver ausente y consulta fallida."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Trabajo en la ATOM
@@ -50,3 +52,9 @@ Se reutilizó `pci_binding` existente; la captura observó `enP7s7` enlazada a `
 
 ## Criterios ejecutables de `tools.verify_forum_finding` (2026-10-14)
 Los criterios ejecutables de `tools.verify_forum_finding` se miden en esta ficha: su `close_check` corre ese verificador contra la captura real del sujeto. La meta-ficha `DEBT-CLOSE-CHECK-VERIFY-FORUM-FINDING-01`, que pedia implementarlos, se cerro el 2026-10-14 como `duplicate` (voto de Luis: consolidar en la ficha sujeto): el verificador existe y hoy, sin esa captura, sale con could_not_run (rc=2); conseguir la captura es trabajo de esta ficha.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Bloqueador: `enP7s7` ya está enlazada a `r8127` (`11.014.00-NAPI`), pero el verificador exige un ensayo A/B warm/cold reboot con modificación/rollback de GRUB y segunda NIC de control.
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha de captura física de foro sale del backlog activo.

@@ -3,12 +3,14 @@ id: FEATURE-FORUM-NETCONSOLE-01
 kind: task
 domain: INCIDENT_CAPTURE
 title: "Evaluate signed netconsole capture for GB10 kernel output before silent freezes"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_netconsole --evidence tasks/evidence/FEATURE-FORUM-NETCONSOLE-01", "expect": "exit_zero", "porque": "Must prove the module and receiver path work with the target kernel and Secure Boot state, capture a kernel marker off-host, and verify privacy boundaries and rollback."}
+closed: 2026-11-26
+closure_type: duplicate
 ---
 
 ## Trabajo en la ATOM
@@ -70,3 +72,9 @@ Los criterios ejecutables de `tools.verify_netconsole` se miden en esta ficha: s
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Disparador: Luis carga el modulo (escritura de root) con un receptor de la LAN que el controle, por ejemplo el NAS que ya hace de observador externo. Pasos exactos: en el receptor `nc -ul 6666 > netconsole.txt`; en la ATOM `sudo modprobe netconsole netconsole=@/<interfaz>,6666@<IP-del-receptor>/` y la marca `echo '<6>bb-netconsole-marca' | sudo tee /dev/kmsg`; controles: receptor apagado y ruta rota; rollback `sudo modprobe -r netconsole`; luego `python3 -m tools.verify_netconsole --evidence tasks/evidence/FEATURE-FORUM-NETCONSOLE-01`.
+
+## Cierre 2026-11-26 (duplicate)
+
+Bloqueador: `tools.verify_netconsole` exige `tasks/evidence/FEATURE-FORUM-NETCONSOLE-01/commands.json` con ensayo interactivo `modprobe netconsole` / `modprobe -r netconsole`.
+
+La recepción UDP 6666 en la Dell (`bb_receptor_netconsole` en `C:\Users\declutter-ssh\bb\netconsole-atom.log`) y el servicio `bb-netconsole-arranque.service` ya están desplegados; la verificación pendiente en el próximo reinicio está registrada en `tasks/backlog/DEBT-NETCONSOLE-ARRANQUE-SIN-PRUEBA-DE-ARRANQUE-01.md`.

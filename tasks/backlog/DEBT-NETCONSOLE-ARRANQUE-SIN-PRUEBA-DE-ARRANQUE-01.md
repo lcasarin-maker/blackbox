@@ -23,3 +23,9 @@ no nacer (`netconsole: <if> doesn't exist`).
 Tras el primer reinicio en 6.17.0-1032: (1) el close_check de arriba; (2) la Dell recibe lineas del arranque (`netconsole-atom.log`);
 (3) `journalctl -k -b | grep -i netconsole` sin `doesn't exist`. Si falla: `sudo bash tools/opt_in_captura.sh retrocede netconsole-arranque`
 y reaplicar `netconsole-runtime`. Salida de emergencia: `adopted/opt-in/LEEME.md` (las entradas recovery de GRUB no llevan la capa).
+
+## Voto de Luis 2026-11-26 (/vote): ejecutar al cerrar la sesión actual de Orca
+
+- **Decidido:** dejar los comandos listos para ejecutarlos al cerrar la sesión de Orca.
+- **Motivo:** evitar matar la sesión actual de `orca-ide` mientras se trabaja; se ejecuta en el próximo cierre/reinicio.
+- **Descartado:** posponer sin fecha conservando el uptime actual sin probar `netconsole`, `watchdog` ni `bb reloj --ab 3`.

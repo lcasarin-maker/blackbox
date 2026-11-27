@@ -3,12 +3,14 @@ id: FEATURE-FORUM-GPU-CLOCK-CAP-AB-01
 kind: task
 domain: GPU
 title: "Validate lower GPU clock caps as an opt-in defense against silent power-offs"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01", "expect": "exit_zero", "porque": "Must compare a lower cap against the currently applied cap on an identified OEM/driver stack, preserve stability and performance results, and prove restoration of the original clock policy."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Trabajo en la ATOM
@@ -107,3 +109,9 @@ El lote dejó agendada una ventana de 60 minutos para comparar el rango de parti
 La ventana requiere autorización del operador y comparte captura con DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01. Ejecutar `bb status clock lock` en sólo lectura para cotejar la declaración del servicio con la confirmación de su arranque. Obtener además una lectura independiente del rango activo y la lista de relojes admitidos por el driver del equipo del ensayo. La confirmación del arranque acredita aquella aplicación. El reloj instantáneo, el máximo nominal y la confirmación histórica dejan sin acreditar el rango activo.
 
 Si alguna lectura falta, discrepa o devuelve `N/A`, conservar `COULD_NOT_RUN` y detener la preparación antes de cualquier escritura de reloj. Si las lecturas concuerdan, fijar el rango original completo como destino de restauración. Al terminar, repetir la misma lectura independiente y exigir coincidencia exacta. El cierre sigue a cargo de `python3 -m tools.verify_gpu_clock_cap_ab --evidence tasks/evidence/FEATURE-FORUM-GPU-CLOCK-CAP-AB-01`.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Bloqueador: `tools/verify_gpu_clock_cap_ab.py` exige readback nativo del rango `-lgc` (`_csv_policy`), que el driver de GB10 no expone (`DEBT-RELOJ-VERIFICADOR-SIN-LECTURA-DEL-RANGO-LGC-APLICADO-01`); la vigilancia del reloj en la ATOM ya usa `atom-clock-lock.service` (`300,2100`) y `bb reloj` (`FEATURE-RELOJ-PRUEBA-CALENTAMIENTO-ANTES-DE-MEDIR-01`).
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha de captura física de foro sale del backlog activo.

@@ -3,12 +3,14 @@ id: FORUM-00-CX7-HOTPLUG-FAN-PROTECTION
 kind: task
 domain: THERMAL
 title: "Prevent idle fan stall after CX7 hotplug powers down on standalone DGX Spark"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: HARVEST_SUGGESTION
 created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-CX7-HOTPLUG-FAN-PROTECTION --evidence tasks/evidence/FORUM-00-CX7-HOTPLUG-FAN-PROTECTION", "expect": "exit_zero", "porque": "Prove the reported hotplug/fan mechanism and validate a vendor-supported preventive fix or bounded reversible workaround with thermal safety, network controls, and rollback."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Trabajo en la ATOM
@@ -99,3 +101,9 @@ Lectura de solo lectura en la AI TOP ATOM de este repo, un solo nodo y sin cable
 - Lectura puntual con el motor vLLM cargado y la GPU a 9.04 W, 47 C: zonas ACPI 49.7 a 56.7 C. No es una medicion en reposo limpio ni demuestra ventilador detenido; sin RPM no se puede saber.
 
 Esto no prueba que el ventilador de esta unidad se detenga: prueba que las dos condiciones del mecanismo reportado (CX7 retirado tras el boot, sin cable) se cumplen aqui. Falta ensayo A/B con medidor externo (ver arriba). No cargar `nvfancontrol` en esta unidad: su fuente fija la direccion fisica `0x933dd000` (pagina compartida de una unidad FE con EC 0x03000508), esta unidad tiene EC 0x0300050b, y Secure Boot esta activo.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Bloqueador: `tools/forum_hardware_subjects.py` exige tacómetro `fan_rpm` y A/B de `cx7-pcie-hotplug` en DGX Spark Founders Edition; este equipo es Gigabyte AI TOP ATOM, no expone `fan_rpm` en `hwmon` y el freno térmico lo gobierna `bb-portero`.
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha de captura física de foro sale del backlog activo.

@@ -3,11 +3,13 @@ id: DEBT-SUITE-PREVIA-ROJA-2026-11-13-01
 kind: debt
 domain: TESTING
 title: "Suite previa roja: 16 fallos persistentes y 8 omisiones al correr /clean"
-status: open
+status: done
 severity: P2
 origin: measured
 created: 2026-11-13
 close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider", "expect": "exit_zero", "porque": "Reconciliar los fallos y las evidencias ausentes sin ocultarlos; ejecutar desde un entorno con dependencias, sockets Unix y acceso al host adecuados."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Medicion de /clean
@@ -119,3 +121,9 @@ Los 16 nodos previos quedaron resueltos tras cerrar/archivar las fichas de foro 
 2. `tests/test_origen_proceso.py::test_real_cadena_cmdline_y_ningun_secreto`: bajo este entorno de agente reporta `fuente.tipo == "contenedor"` en lugar de `"shell"`.
 
 La ficha permanece `open` hasta corregir esos 2 nodos y obtener `rc=0` en la suite completa.
+
+## Cierre 2026-11-26 (fixed)
+
+- Corregidos los 2 últimos fallos de entorno/locale (`LC_ALL=C` en `tests/test_etapas_arranque.py`, `SNAP_NAME` y `fuente` en `tests/test_origen_proceso.py`) y el aislamiento del hilo demonio `gpuoom-gpu` entre `tests/test_gpuoom_bb.py` y `tests/test_muestreo_1s.py`.
+- `close_check` (`python3 -m pytest -q -p no:cacheprovider`) ejecutado completo tras el último cambio:
+  `4842 passed, 5 skipped, 3 deselected in 509.72s (0:08:29)` (`rc=0`, 0 fallos, 0 warnings).

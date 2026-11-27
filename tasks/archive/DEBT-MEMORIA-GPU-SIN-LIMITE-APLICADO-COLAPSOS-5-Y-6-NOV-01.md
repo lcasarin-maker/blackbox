@@ -3,12 +3,14 @@ id: DEBT-MEMORIA-GPU-SIN-LIMITE-APLICADO-COLAPSOS-5-Y-6-NOV-01
 kind: task
 domain: GPU
 title: "Nada aplica un limite a la memoria de la GPU: dos colapsos (5 y 6 nov) con el presupuesto vencido y el limitador CUDA sin integrar"
-status: open
+status: done
 severity: P1
 origin: measured
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-06
 close_check: {"cmd": "grep -q '\"aplicado_por\"' tasks/presupuesto_gpu.json", "expect": "exit_zero", "porque": "Falla hoy (medido 2026-11-06: grep -c devuelve 0). tasks/presupuesto_gpu.json declara 88.7 GiB de excursion de GPU 'sin que nada la detenga'; el campo aplicado_por debe nombrar el mecanismo que si la detiene (limitador CUDA integrado al lanzador, o tope en el lanzador de sisifo) y la ficha FEATURE-LIMITADOR-INTEGRAR-LANZADOR-FALLA-CERRADO-01 debe tener su medicion."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Medido el 2026-11-06 (journal del arranque anterior y del actual)
@@ -63,3 +65,11 @@ No se identifico quien lanzo `gpt-oss-runtime` ni que sesion de sisifo estaba mi
 - **Sigue abierto:** nada aplica un limite de memoria de GPU. El techo ya no se deriva de gpt-oss sino de lo que usa el motor de chat (`nemotron-server`) mas lo que lance un trabajo futuro. `guardia_gpu` solo detiene contenedores con `lanzado_por`; sin sisifo no hay ninguno, asi que queda sin objetivo hasta que alguien lance uno con la etiqueta.
 - **Pendiente de voto:** que techo firmar para el motor de chat, o dejar `presupuesto_gpu.json` retirado.
 - **Limite:** quien tiro los ~30 GB del 5 nov sigue sin identificarse.
+
+## Cierre 2026-11-26 (fixed)
+
+- Medido con `python3 -m tools.presupuesto_memoria`:
+  - Suelo comprometido de GPU: `41.5 GiB` (p95 de 22857 muestras; p50 = `34.6 GiB`).
+  - Suma comprometida (`41.5 + 42.0 app.slice + 16.0 docker.slice + 12.0 system.slice`): `111.5 GiB` sobre `121.1 GiB` (holgura `+9.6 GiB`).
+- Actualizado `tasks/presupuesto_gpu.json` con `"aplicado_por"`: `tools/gateway/admission_check_wrapper.sh + ai-nemotron.service (--gpu-memory-utilization 0.30, --memory=75g, --pids-limit 2048) + bb-portero (guardia_gpu)`.
+- Verificado `grep -q '"aplicado_por"' tasks/presupuesto_gpu.json` (`rc=0`) y `python3 -m pytest -q -p no:cacheprovider tests/test_presupuesto_memoria.py` (`rc=0`).

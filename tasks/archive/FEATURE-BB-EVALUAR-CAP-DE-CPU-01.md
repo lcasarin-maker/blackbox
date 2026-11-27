@@ -3,12 +3,14 @@ id: FEATURE-BB-EVALUAR-CAP-DE-CPU-01
 kind: task
 domain: HARDWARE
 title: "Medir en esta ATOM el efecto de topar la CPU a 2400 MHz sobre la zona termica del SoC"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-11
 close_check: {"cmd": "grep -q 'scaling_max_freq' tasks/evidence/FEATURE-BB-EVALUAR-CAP-DE-CPU-01/ab.md", "expect": "exit_zero", "porque": "Solo cierra con el A/B medido aqui (misma carga, zona termica y tiempo de pared con y sin cap), con rollback. Hoy el archivo no existe."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 Conocimiento: una referencia externa (L41 y L69): cap de CPU a 2400000 kHz en `cpufreq/policy*/scaling_max_freq`, A/B con la misma carga: zonas sostenidas 92 a 84 C y 85 a 80 C, mismo tiempo de pared (n=2 nodos, Founders Edition). El mismo hilo trae el comando exacto (L212).
@@ -29,3 +31,9 @@ La carga debe ser equivalente: el 11-oct el calor del SoC convivio con otros pro
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Disparador: dos ventanas de 2 h con carga equivalente y sudo de Luis (`scaling_max_freq` es escritura de root). Pasos exactos: ventana A sin cap; ventana B con `for p in /sys/devices/system/cpu/cpufreq/policy*; do echo 2400000 | sudo tee $p/scaling_max_freq; done`; rollback `for p in /sys/devices/system/cpu/cpufreq/policy*; do sudo cp $p/cpuinfo_max_freq $p/scaling_max_freq; done`; comparar `residencia_termica_del_boot` y `throttle_del_boot` de `bb incident` y guardar en `ab.md` con la linea `scaling_max_freq` de cada policy.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Experimento opt-in de octubre (topar las 20 políticas `cpufreq` a 2400 MHz durante 4 h); en la ATOM recorta 38 % a los núcleos X925 de 3900 MHz y la protección térmica ya la gobierna `bb-portero`.
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha sale del backlog activo.

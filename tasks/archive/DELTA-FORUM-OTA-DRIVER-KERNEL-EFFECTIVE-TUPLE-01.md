@@ -3,12 +3,14 @@ id: DELTA-FORUM-OTA-DRIVER-KERNEL-EFFECTIVE-TUPLE-01
 kind: task
 domain: VERDICT
 title: "Validar forum ota driver kernel effective tuple 01"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_debt_registration_controls.py::test_delta_forum_ota_driver_kernel_effective_tuple_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Trabajo en la ATOM
@@ -88,3 +90,9 @@ linux-image-6.11.0-1016-nvidia 6.11.0-1016.16
 El control positivo es la propia salida: los comandos encuentran el tuple. `SWBUILD 7.2.3` frente a `dgx-release 7.6.0`, y un `linux-image-6.11` instalado junto al 6.17 en uso, son la desincronizacion entre componentes que la ficha pide distinguir.
 
 Veredicto: ABIERTA. El sujeto existe en su forma exacta; no hay ausencia que medir.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Bloqueador: `tools/hardware_batch02_controls.py` exige captura en tres fases (`before-update`, `after-update`, `rollback`) de una actualización OTA con cambio efectivo de kernel/driver; el host tiene kernel `6.17.0-1032-nvidia` fijado y la transición mayor se sigue en `BLACKBOX-ACTUALIZAR-UBUNTU-26-04-01.md`.
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha de captura física de foro sale del backlog activo.

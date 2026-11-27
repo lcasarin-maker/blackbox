@@ -3,12 +3,14 @@ id: FORUM-00-KERNEL-INITRD-UPDATE-GATE
 kind: task
 domain: KERNEL
 title: "Validar módulos e initramfs antes de reiniciar tras una actualización DGX OS"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_forum_finding --id FORUM-00-KERNEL-INITRD-UPDATE-GATE --evidence tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE", "expect": "exit_zero", "porque": "Demostrar un gate previo al reboot que detecta estado dpkg/DKMS incoherente, ausencia de initrd/módulo para el kernel objetivo y una recuperación arrancable; incluir negativos de kernel sano y rollback."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Trabajo en la ATOM
@@ -107,3 +109,9 @@ Los criterios ejecutables de `tools.verify_forum_finding` se miden en esta ficha
 ## Avance 2026-10-16: el gate ya puede cerrar; falta solo la prueba de arranque
 `tools/update_boot_coherence.py` (solo lectura) recaptura `commands.json`/`preflight.json` para el kernel objetivo `7.0.0-1019-nvidia` (instalado, no fijado en GRUB) con previo `6.17.0-1032-nvidia`: `dpkg --audit` vacio, `apt-get -s check` rc 0 (simulacion, sin lock: el hueco `apt_check` de 2026-10-02 queda cubierto), vmlinuz/initrd no vacios, modulo `nvidia` del objetivo con vermagic propio y firma `Canonical Ltd. Kernel Module Signing`, Secure Boot habilitado. El verificador ahora deriva el snapshot de las filas crudas (un snapshot registrado que las contradiga da `fail`), exige que el gate bloquee siete negativos de incidente construidos mutando esas filas (dpkg a medio configurar, dependencias rotas, vmlinuz ausente, initrd vacio, modulo sin firmar con Secure Boot, modulo de otro kernel, sin kernel previo; un gate ciego a cualquiera da `fail`) y solo da `pass` con `recovery-trial.json`: tres arranques con boot_id distinto, el ultimo y el primero en el kernel previo y el del medio en otro kernel elegido a mano. Antes de este cambio el verificador no tenia ninguna ruta a `pass` (terminaba siempre en `unknown`). Tests: `tests/test_update_boot_coherence.py` (sano, 7 negativos, prueba rota en 5 formas, gate ciego por mutacion, snapshot mentiroso, captura sin hostname).
 Disparador (Luis, consola local): `python3 -m tools.update_boot_coherence trial --phase antes --out tasks/evidence/FORUM-00-KERNEL-INITRD-UPDATE-GATE`; `sudo grub-reboot "Advanced options for DGX OS GNU/Linux>DGX OS GNU/Linux, with Linux 6.11.0-1016-nvidia" && sudo reboot` (o elegir 6.11 a mano en el menu GRUB; el nombre de la entrada se infiere de `GRUB_DEFAULT`, `grub.cfg` es 0600 root); tras arrancar, `... trial --phase recuperacion ...` y `sudo reboot`; tras volver a 6.17, `... trial --phase restaurado ...`; despues el close_check.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Bloqueador: el preflight `tools/update_boot_coherence.py` ya existe y está probado, pero el verificador exige un ensayo de reboot en 3 fases hacia un kernel objetivo nuevo y su rollback.
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha de captura física de foro sale del backlog activo.

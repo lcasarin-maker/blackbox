@@ -3,12 +3,14 @@ id: FEATURE-RESIDENTES-INACTIVOS-CONTROL-SIN-RESIDENTE-01
 kind: task
 domain: GPU
 title: "Medir el control que falta: reposo SIN modelo residente contra reposo CON residente en esta ATOM"
-status: open
+status: done
 severity: P3
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-30
 close_check: {"cmd": "grep -qx control_sin_residente_medido tasks/evidence/FEATURE-RESIDENTES-INACTIVOS-CONTROL-SIN-RESIDENTE-01/medicion.txt", "expect": "exit_zero", "porque": "Especificacion pendiente: el archivo no existe hoy (grep sale 2). Pasa solo cuando medicion.txt traiga, con comando y salida literales, al menos 30 muestras de reposo >= 10 min sin residente y 30 con residente, en condiciones de ambiente y carga previa comparables, y termine con la linea completa control_sin_residente_medido (-x: una frase que lo contenga no cierra)."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Origen
@@ -26,3 +28,9 @@ El control exige DESCARGAR el modelo del motor durante una ventana de reposo, y 
 1. Luis fija una ventana en que se puede detener el motor (por ejemplo `docker stop` del contenedor residente, con reinicio posterior) durante al menos 30 min de reposo, con la maquina en un estado comparable al de las ventanas con residente (misma temperatura de arranque aproximada, mismo ambiente).
 2. Reusar `mide_residentes.py` y comparar contra el piso de ruido de 7.2 C; el efecto solo cuenta si lo supera.
 3. Si hay efecto medido, abrir una ficha de accion (descargar tras reposo); descargar el motor sigue siendo decision de Luis.
+
+## Voto de Luis 2026-11-26 (/vote): cierre como void_wontfix
+
+- **Decidido:** cerrar como `void_wontfix`.
+- **Motivo:** la ATOM en reposo con modelo residente ya opera a 43.8–51.4 °C sin throttling (`clocks_event_reasons.active=0x0`); no justifica apagar 5 horas el motor local (`nemotron-server`).
+- **Descartado:** ejecutar una ventana de 5 horas con `nemotron-server` apagado para reunir 30 muestras de 10 min sin residente.

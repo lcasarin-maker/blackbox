@@ -59,3 +59,9 @@ parado), `bb reloj --ab 5` (~2.5 min de carga). Pegar la salida aqui. Si sale `D
 `void_wontfix` con esas cifras y dejar `calentamiento=0`; si sale `SESGO_MEDIDO`, poner `calentamiento=CALENTAMIENTO_MATMULS`
 como defecto de `prueba` y cerrar `fixed`. El close_check (`-k calentamiento`) ya sale 0, pero el "porque" del close_check y el
 control negativo de esta ficha exigen el A/B real: con solo las pruebas la ficha no se cierra.
+
+## Voto de Luis 2026-11-26 (/vote): ejecutar al cerrar la sesión actual de Orca
+
+- **Decidido:** dejar los comandos listos para ejecutarlos al cerrar la sesión de Orca.
+- **Motivo:** evitar matar la sesión actual de `orca-ide` mientras se trabaja; se ejecuta en el próximo cierre/reinicio.
+- **Descartado:** posponer sin fecha conservando el uptime actual sin probar `netconsole`, `watchdog` ni `bb reloj --ab 3`.

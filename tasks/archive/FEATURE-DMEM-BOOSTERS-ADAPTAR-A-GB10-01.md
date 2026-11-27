@@ -3,12 +3,14 @@ id: FEATURE-DMEM-BOOSTERS-ADAPTAR-A-GB10-01
 kind: task
 domain: GPU
 title: "Adaptar la idea de dmemcg-booster (dmem.low/max por cgroup) al portero cuando exista la region dmem"
-status: open
+status: done
 severity: P3
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-12
 close_check: {"cmd": "grep -q booster_dmem_adaptado tasks/evidence/FEATURE-DMEM-BOOSTERS-ADAPTAR-A-GB10-01/medicion.txt", "expect": "exit_zero", "porque": "Voto de Luis 2026-10-12. Cierra cuando exista una region dmem en esta maquina (ver el backport) y el portero escriba dmem.low/dmem.max por cgroup con prueba y control negativo; hasta entonces es solo estudio."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Antecedentes (lectura)
@@ -21,3 +23,9 @@ Lectura de solo lectura: `/sys/fs/cgroup/dmem.capacity` = `nvidia/0000000F:01:00
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Disparador: la ventana del motor de 60 min que anuncia Luis con root de Luis: escribir `dmem.low`/`dmem.max` es escritura en cgroupfs (no cabe en un script de solo lectura), y `user.slice` no delega `dmem` (medido hoy: solo `cpu memory pids`). Paso exacto: con el motor sirviendo, `echo "nvidia/0000000F:01:00.0/vidmem <bytes>" | sudo tee <cgroup del contenedor>/dmem.low`, medir con `bb gpumem` y un control sin la escritura, y escribir `booster_dmem_adaptado` en `medicion.txt`.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Exige escribir `dmem.low`/`dmem.max` sobre la región `dmem` del módulo parcheado retirado; bajo el módulo kernel NVIDIA oficial firmado de `6.17.0-1032-nvidia`, `cat /sys/fs/cgroup/dmem.capacity` está vacío y `python3 -m tools.dmem_tope` devuelve `NOT_COLLECTED: sin region dmem`.
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha sale del backlog activo.

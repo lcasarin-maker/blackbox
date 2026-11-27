@@ -3,12 +3,14 @@ id: FEATURE-FORUM-RCU-PANIC-PSTORE-01
 kind: task
 domain: KERNEL_RECOVERY
 title: "Validate RCU-stall panic and persistent capture as a GB10 recovery path"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_rcu_panic_pstore --evidence tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01", "expect": "exit_zero", "porque": "Must verify the active RCU sysctl and persistent capture path on the target stack, prove rollback, and distinguish a tested panic path from an unobserved natural RCU recovery."}
+closed: 2026-11-26
+closure_type: duplicate
 ---
 
 ## Trabajo en la ATOM
@@ -69,3 +71,9 @@ Los criterios ejecutables de `tools.verify_rcu_panic_pstore` se miden en esta fi
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Disparador: un reinicio canario aprobado por Luis (el mismo de DEBT-WATCHDOG-SIN-CONTROL-NEGATIVO-01 sirve). La lectura de pstore ya no es el bloqueo: `bb-root-run arranque-forense` la copia a `/var/lib/blackbox/pstore` desde el 2026-10-14. Pasos exactos: `sudo sysctl kernel.panic_on_rcu_stall=1` (reversible, sin persistir), panic forzado `echo c | sudo tee /proc/sysrq-trigger`, y tras el arranque `sudo -n bb-root-run arranque-forense` y `bb scan`; restaurar `kernel.panic_on_rcu_stall=0`; `python3 -m tools.verify_rcu_panic_pstore --evidence tasks/evidence/FEATURE-FORUM-RCU-PANIC-PSTORE-01`. La recuperacion ante un RCU natural sigue sin verificar hasta un incidente real.
+
+## Cierre 2026-11-26 (duplicate)
+
+Bloqueador: `tools/verify_rcu_panic_pstore.py` exige `capture.json` de un panic forzado con reinicio real y lectura de `pstore`.
+
+La copia sellada de `pstore` ya corre en cada arranque vía `bb-root-run arranque-forense` (`bb-arranque-ok.service`), y el ensayo de panic/reinicio forzado comparte ventana y sujeto con `tasks/backlog/DEBT-WATCHDOG-SIN-CONTROL-NEGATIVO-01.md`.

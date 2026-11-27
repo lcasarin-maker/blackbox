@@ -3,12 +3,14 @@ id: FORUM-00-DOCKER-OOM-RESTART-LOOP
 kind: task
 domain: HOST_USABILITY
 title: "Contener reinicios de workloads que vuelven a dejar inservible el host"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m pytest tests/test_workload_restart_containment.py -q --runxfail", "expect": "exit_zero", "porque": "Prueba pendiente: debe limitar la reincidencia de un workload identificado y permitir recuperación conservando datos, sin bloquear un reinicio sano ni atribuir todo reboot a OOM. 2026-10-30: se agrego --runxfail; sin el, el ciclo real de reinicio corria como xfail y el comando daba rc=0 con el ensayo ausente."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Trabajo en la ATOM
@@ -71,3 +73,9 @@ Recibo y logs: `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/docker-real-selector-
 - Cierre completo accionable hoy: no. Preparación coordinable: sin acción adicional demostrada en esta revisión.
 - Evidencias de clasificación: `tasks/backlog/FORUM-00-DOCKER-OOM-RESTART-LOOP.md`, `tasks/evidence/OPEN-96-CLASSIFICATION-2026-10-04/batches/batch_08.json`, `tasks/evidence/FORUM-00-DOCKER-OOM-RESTART-LOOP/progress.txt`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Bloqueador: `tests/test_workload_restart_containment.py::test_restart_recovery_close_check_uses_real_cycle_evidence` exige capturar un incidente real de contenedor con `--restart=always` ciclando en OOM; en este host todos los contenedores usan `RestartPolicy=no`, `docker.slice` tiene tope de `16G` y `--pids-limit 2048` ya está aplicado.
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha de captura física de foro sale del backlog activo.

@@ -3,12 +3,13 @@ id: DEBT-CORRER-FIELDIAG-EN-ESTA-ATOM-01
 kind: task
 domain: THERMAL
 title: "Correr NVIDIA Field Diagnostics (dgx-spark-fieldiag) en esta ATOM y conservar su summary.json"
-status: open
+status: deferred
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-26
 close_check: {"cmd": "test -s tasks/evidence/DEBT-CORRER-FIELDIAG-EN-ESTA-ATOM-01/fieldiag-summary.json && grep -qE \"PASS|FAIL|RETEST\" tasks/evidence/DEBT-CORRER-FIELDIAG-EN-ESTA-ATOM-01/fieldiag-summary.json", "expect": "exit_zero", "porque": "Especificacion pendiente: el archivo no existe hoy. bb lo reconoce como <destino>.fieldiag-summary.json (tools/incident_report.py:975). Cierra con el resumen real de la corrida, sea PASS, FAIL o RETEST."}
+deferred_until: 2027-01-25
 ---
 
 ## Origen
@@ -45,3 +46,9 @@ Las etapas de estres de energia y termica pueden llevar al equipo cerca de 97 C 
 
 El close_check falla hoy (archivo ausente). Un summary con resultado distinto de PASS no se oculta ni se reintenta hasta
 que pase: se registra tal cual.
+
+## Voto de Luis 2026-11-26 (/vote): aplazada 60 días (hasta 2027-01-25)
+
+- **Decidido:** dejar en `status: deferred` hasta `2027-01-25`.
+- **Motivo:** la unidad lleva 189+ h de uptime estable sin caídas ni trámite de RMA; se aplaza 60 días para no apagar Secure Boot ni someter el SoC a estrés de ~97 °C hoy.
+- **Descartado:** cerrar como `void_wontfix` definitivo o ejecutar hoy la ventana presencial de 2 horas en `init 3`.

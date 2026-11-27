@@ -3,12 +3,14 @@ id: FEATURE-FORUM-NVME-READONLY-01
 kind: task
 domain: STORAGE
 title: "Detectar pérdida de escritura y preservar evidencia antes de recuperar un NVMe"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m pytest tests/test_nvme_readonly.py -q --runxfail", "expect": "exit_zero", "porque": "Prueba específica pendiente: debe distinguir errores de medio, remount read-only, consultas ilegibles y un dispositivo sano, con salida de evidencia utilizable sin escribir al medio sospechoso. 2026-10-30: se agrego --runxfail; sin el, el selector de incidente real corria como xfail y el comando daba rc=0 con la evidencia ausente."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Trabajo en la ATOM
@@ -69,3 +71,9 @@ Recibo de integración y logs: `tasks/evidence/CLOSURE-CONTROLS-2026-10-03/nvme-
 - Cierre completo accionable hoy: no. Preparación coordinable: sí.
 - Evidencias de clasificación: `tasks/backlog/FEATURE-FORUM-NVME-READONLY-01.md`, `tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/export-copy-lab/run.json`, `tasks/evidence/FEATURE-FORUM-NVME-READONLY-01/host-observation.txt`, `tools/nvme_readonly.py`, `tools/forum_hardware_subjects.py`, `tests/test_nvme_readonly.py`.
 - Impedimentos de inspección: 0. El criterio original permanece intacto; esta clasificación conserva la ficha abierta.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Bloqueador: `tests/test_nvme_readonly.py::test_nvme_real_incident_close_check_requires_raw_device_and_recovery_evidence` exige un incidente físico real de NVMe (`critical_warning > 0`, `media_errors > 0`, error I/O en dmesg o raíz remontada `ro`); el NVMe de esta ATOM está sano (`0` errores).
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha de captura física de foro sale del backlog activo.

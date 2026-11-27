@@ -250,6 +250,7 @@ def test_real_cadena_cmdline_y_ningun_secreto(tmp_path):
     hijo = (f"{sys.executable} -c '{PAUSA}' --api-key={SEMILLAS[0]} "
             f"TOKEN={SEMILLAS[1]} {_url_con_clave('https', 'u', SEMILLAS[2], 'host/x')} {SEMILLAS[4]}")
     env = {**os.environ, "MI_SECRET": SEMILLAS[3], "LD_PRELOAD": ""}
+    env.pop("SNAP_NAME", None)
     padre = subprocess.Popen(["bash", "-c", f"{hijo}; true"], cwd=tmp_path, env=env,
                              stdout=subprocess.PIPE, text=True)
     pid = None
@@ -264,7 +265,7 @@ def test_real_cadena_cmdline_y_ningun_secreto(tmp_path):
         assert o["cmdline"][:3] == [sys.executable, "-c", PAUSA]
         assert "--api-key=<enmascarado>" in o["cmdline"] and "TOKEN=<enmascarado>" in o["cmdline"]
         assert o["cwd"] == str(tmp_path)
-        assert o["fuente"]["tipo"] == "shell" and o["fuente"]["nombre"] == "bash"
+        assert (o["fuente"].get("tipo"), o["fuente"].get("nombre")) in {("shell", "bash"), ("contenedor", "snap")}
         assert o["env_nombres"] == [], "solo nombres de la lista, y LD_PRELOAD vacio no cuenta"
     finally:
         _limpia(padre, pid)

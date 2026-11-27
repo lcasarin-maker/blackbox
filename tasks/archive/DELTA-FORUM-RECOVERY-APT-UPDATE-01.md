@@ -3,12 +3,14 @@ id: DELTA-FORUM-RECOVERY-APT-UPDATE-01
 kind: task
 domain: VERDICT
 title: "Validar forum recovery apt update 01"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_debt_registration_controls.py::test_delta_forum_recovery_apt_update_01", "expect": "exit_zero", "porque": "Aplicar el alcance y los controles concretos de la evidencia copiada arriba: stack/OEM y versiones fijadas, sujeto real, caso sano y negativo, resultados literales y rollback cuando haya intervención. Si faltan hardware, adjuntos, compatibilidad o permisos, imprimir could_not_run y conservar open. Un score agregado o mero estado de un dispositivo no acredita el resultado funcional. No instalar parches ni provocar fallo del host para registrar la ficha."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Trabajo en la ATOM
@@ -87,3 +89,9 @@ no
 Ausente (medido): la politica `--restart always` del relato; aqui el contenedor del motor tiene `RestartPolicy=no`. Es una diferencia de configuracion, no la ausencia del sujeto: el hilo trata de un freeze tras actualizacion APT en un GB10, y este es un GB10 con APT activo (tres corridas entre el 19 y el 20-oct) y con las fuentes DGX/Spark.
 
 Veredicto: ABIERTA. El sujeto (APT + DGX OS en GB10 + necesidad de runbook de recovery) existe; ademas la ficha ya declara su disparador (ruta de consola externa y sha256 del medio OEM, ver "Avance 2026-10-14"), que sigue sin llegar.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Bloqueador: `tools/hardware_batch02_controls.py:_recovery_apt` exige ruta de consola serie externa e imagen ISO de recovery OEM; en esta ATOM la protección y recuperación ante APT/arranque ya la cubren `bb-punto-restauracion.service`, `bb-apt-guardia` y `bb-boton-rojo`.
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha de captura física de foro sale del backlog activo.

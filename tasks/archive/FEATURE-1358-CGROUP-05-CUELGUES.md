@@ -3,12 +3,14 @@ id: FEATURE-1358-CGROUP-05-CUELGUES
 kind: task
 domain: GPU
 title: "Medir por separado contención y efecto sobre los cuelgues de 1358"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_cgroup_plan --phase 05-cuelgues --evidence tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES", "expect": "exit_zero", "porque": "Verificador específico pendiente: debe evaluar resultados reales y controles negativos descritos en esta ficha, no su mera existencia."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Contexto y dependencias
@@ -177,3 +179,9 @@ Los criterios ejecutables de `tools.verify_cgroup_plan` se miden en esta ficha: 
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Disparador: la ventana del motor de 60 min que anuncia Luis. El modulo 580 con dmem parcheado esta cargado (FEATURE-DMEM-BOOSTERS-ADAPTAR-A-GB10-01 midio la region de 50,1 GiB el 2026-10-13), asi que el A/B ya no espera a 03. Paso exacto: ejecutar el protocolo de `tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES/protocol.txt` (presion RAM+CUDA acotada contra el contenedor vLLM, PSI, ultima respuesta util y watchdog) y `python3 -m tools.verify_cgroup_plan --phase 05-cuelgues --evidence tasks/evidence/FEATURE-1358-CGROUP-05-CUELGUES`. Las sub-propuestas multinodo siguen fuera de este equipo.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Depende de `FEATURE-1358-CGROUP-03-NATIVO` y `04-PARCHE` (ya archivadas) y de la región `dmem` del módulo parcheado retirado (`cat /sys/fs/cgroup/dmem.capacity` vacío; `python3 -m tools.dmem_tope` -> `NOT_COLLECTED: sin region dmem`).
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha sale del backlog activo.

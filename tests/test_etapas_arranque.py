@@ -447,6 +447,13 @@ def test_control_negativo_un_script_cambiado_tras_la_revision_no_se_instala(tmp_
     (tmp_path / "sbin").mkdir()
     script = _bloque("instala", tmp_path).replace('"$d/etapa-marca.sh"', str(tmp_path / "otro.sh"))
     (tmp_path / "otro.sh").write_text(MARCA.read_text(encoding="utf-8") + "# cambio\n", encoding="utf-8")
-    r = subprocess.run(["bash", "-c", script], capture_output=True, text=True, timeout=30, check=False)
+    r = subprocess.run(
+        ["bash", "-c", script],
+        env={**os.environ, "LC_ALL": "C"},
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+    )
     assert r.returncode != 0 and "FAILED" in r.stdout + r.stderr
     assert not (tmp_path / "sbin" / "bb-etapa-marca").exists() and not (tmp_path / "etc").exists()

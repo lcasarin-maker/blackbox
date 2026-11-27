@@ -3,12 +3,14 @@ id: FEATURE-MEMORYSAVER-02-TRAZADOR
 kind: task
 domain: GPU
 title: "Adaptar trazador de cargos kernel con atribución a cgroup"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_memory_saver --phase 02-trazador --evidence tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR", "expect": "exit_zero", "porque": "Verificación específica pendiente: ejecutar el sujeto y sus controles, no comprobar solo que el informe exista."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Fuente y dependencias
@@ -63,3 +65,9 @@ Los criterios ejecutables de `tools.verify_memory_saver` se miden en esta ficha:
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Disparador: una captura con bpftrace que corre Luis en persona (bpftrace es root total: no se sella en bb-root-run). Paso exacto: `sudo bpftrace tools/kernel_charges.bt` durante el control CPU, una corrida sin asignacion y una asignacion CUDA acotada de `tools/cgroup_repro.py`, guardando la salida en `tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR/`; despues `python3 -m tools.verify_memory_saver --phase 02-trazador --evidence tasks/evidence/FEATURE-MEMORYSAVER-02-TRAZADOR`. Es la misma captura que pide FEATURE-1358-CGROUP-02-TRAZA.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Traza `bpftrace` de laboratorio para NVIDIA #1358 dependiente de `FEATURE-1358-CGROUP-01-REPRO`, cerrada tras retirar el módulo parcheado y volver al módulo oficial firmado de `6.17.0-1032-nvidia`.
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha sale del backlog activo.

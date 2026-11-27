@@ -3,12 +3,14 @@ id: FEATURE-1358-CGROUP-01-REPRO
 kind: task
 domain: GPU
 title: "Reproducir y delimitar el hueco de contabilidad CUDA"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_cgroup_repro tasks/evidence/FEATURE-1358-CGROUP-01-REPRO/run-profile-integration.json", "expect": "exit_zero", "porque": "Recalcula fases, scopes, deltas y calibración CPU desde stdout crudo; fail por control fallido y unknown por observación ilegible. No acredita contención GPU ni autenticidad del origen."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Contexto y dependencias
@@ -72,3 +74,9 @@ La captura histórica retorna unknown y conserva los deltas legibles. Cuenta 23 
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Medido hoy: la raiz delega `dmem` (`/sys/fs/cgroup/cgroup.subtree_control` lo lista) pero `user.slice`, `user-1000.slice` y `user@1000.service` solo delegan `cpu memory pids`, asi que los scopes del arnes no tienen `dmem.current` (el verificador da `could_not_run_count` 23, status unknown, sobre `run-profile-integration.json`). Disparador: que Luis active `dmem` en ese subarbol (escritura de root en `cgroup.subtree_control` de `user.slice` hacia abajo; systemd 255 no gestiona `dmem` y puede deshacerla en una recarga, asi que va en la ventana del motor de 60 min que anuncia Luis). Paso exacto despues: `python3 -m tools.cgroup_repro` con salida a `run-profile-integration.json` y `python3 -m tools.verify_cgroup_repro` sobre ella.
+
+## Cierre 2026-11-26 (void_wontfix — criterio de utilidad vigente)
+
+Medido el 2026-11-26: `cat /sys/fs/cgroup/dmem.capacity` está vacío y `python3 -m tools.dmem_tope` devuelve `NOT_COLLECTED: sin region dmem` bajo el módulo kernel NVIDIA oficial firmado de `6.17.0-1032-nvidia` tras retirar el módulo parcheado en `DEBT-CAIDAS-DURAS-7-0-MODULO-PARCHADO-01`.
+
+El instrumento verificador y sus controles unitarios permanecen intactos en `tools/` y `tests/`; la ficha sale del backlog activo.

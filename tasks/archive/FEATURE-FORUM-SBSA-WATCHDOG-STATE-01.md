@@ -3,12 +3,14 @@ id: FEATURE-FORUM-SBSA-WATCHDOG-STATE-01
 kind: task
 domain: RECOVERY
 title: "Verificar disponibilidad y propietario del watchdog en lugar de inferirlos"
-status: open
+status: done
 severity: P3
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_forum_finding --id FEATURE-FORUM-SBSA-WATCHDOG-STATE-01 --evidence tasks/evidence/FEATURE-FORUM-SBSA-WATCHDOG-STATE-01", "expect": "exit_zero", "porque": "Verificador propuesto pendiente: requiere evidencia del caso positivo, controles negativos, compatibilidad OEM y recuperación/rollback; la ficha registra trabajo abierto."}
+closed: 2026-11-26
+closure_type: duplicate
 ---
 
 ## Trabajo en la ATOM
@@ -65,3 +67,9 @@ Preparado (regla de solo lectura): `adopted/root-scripts/watchdog-propietario.sh
 ## Recibo de solo lectura (2026-11-26)
 - `sudo -n bb-root-run watchdog-propietario` dejó `/var/lib/bb-root-run/watchdog-propietario-20261126T223618.177648Z.txt`: `boot_id=fbd2252c-b838-4c4f-a9a5-aa21e0212c8e`, `/dev/watchdog0: root 1 F.... systemd`, `fuser rc=0`, `identity=SBSA Generic Watchdog`, `state=active`, `timeout=60`, `nowayout=0`, `bootstatus=0`.
 - Queda pendiente únicamente el arranque con `bootstatus` bit `0x20` de la ventana disruptiva (`DEBT-WATCHDOG-SIN-CONTROL-NEGATIVO-01`).
+
+## Cierre 2026-11-26 (duplicate)
+
+Bloqueador: `tools/forum_hardware_subjects.py:_check_watchdog` exige `capture.json` con reinicio real por watchdog (`boot_id` distinto y `bootstatus` con bit `0x20`).
+
+La lectura sellada del propietario (`/dev/watchdog0: root 1 F.... systemd`, `fuser rc=0`) ya está integrada en `bb-root-run watchdog-propietario` y `tools/huella_host.py`; la prueba de reinicio forzado por watchdog en ventana de reinicio ya está registrada en `tasks/backlog/DEBT-WATCHDOG-SIN-CONTROL-NEGATIVO-01.md`.

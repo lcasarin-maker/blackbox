@@ -2,13 +2,15 @@
 id: BLACKBOX-ACTUALIZAR-UBUNTU-26-04-01
 kind: task
 title: "Actualizar la ATOM de Ubuntu 24.04.5 LTS a 26.04.1 LTS, con respaldo, ensayo y ruta de regreso"
-status: open
+status: done
 severity: P2
 origin: asserted
 created: 2026-11-23
 depende_de: []
 carril: opus
 close_check: {"cmd":"bash -c '. /etc/os-release; [ \"$VERSION_ID\" = \"26.04\" ]'","expect":"exit_zero","porque":"Hoy la ATOM está en Ubuntu 24.04.5 LTS (kernel 6.17.0-1032-nvidia) y el comando sale con 1. Sólo sale con 0 cuando el sistema reporta 26.04 tras la actualización."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Qué es
@@ -89,3 +91,9 @@ por OOM y que sostiene GPU, servicios de usuario y datos del consumidor de conoc
 - Origen: aviso de Ubuntu del 2026-11-23, mostrado a Luis.
 - Esta ficha no verifica que 26.04.1 sea compatible con la máquina; lo declara como
   pregunta abierta.
+
+## Voto de Luis 2026-11-26 (/vote): cierre como void_wontfix
+
+- **Decidido:** cerrar como `void_wontfix`.
+- **Motivo:** conforme a `DECISIONS.md` (2026-10-12 y 2026-10-13), la ATOM permanece en DGX OS 24.04 oficial con kernel `6.17.0-1032-nvidia` y driver 580 mientras NVIDIA no publique OTA oficial sobre Ubuntu 26.04.
+- **Descartado:** mantener la ficha abierta en el backlog con su `close_check` permanentemente en `rc=1`.

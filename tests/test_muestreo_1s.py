@@ -4,6 +4,7 @@ import importlib.util
 import json
 import os
 import pathlib
+import threading
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 # ponytail: la variable solo existe para correr el control negativo contra una copia sin fsync, techo = esta prueba; disparador = otra prueba que necesite sustituir el modulo
@@ -145,6 +146,8 @@ def _main_sintetico(monkeypatch, tmp_path, lecturas, ticks, *, stdout=None,
     monkeypatch.setattr(m.subprocess, "Popen", lambda *a, **k: Proceso())
     monkeypatch.setattr(m.os, "set_blocking", set_blocking or (lambda *a: None))
     def dormir_tick(*args):
+        if threading.current_thread() is not threading.main_thread():
+            threading.Event().wait()
         reloj[0] += 1.0
         if dormir is not None:
             dormir(*args)
