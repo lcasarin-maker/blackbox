@@ -412,6 +412,9 @@ disco.
 | `~/.config/systemd/user/bbtest-oomd-neg.slice` | slice de PRUEBA del experimento de `DEBT-OOMD-PROBAR-Y-DIAGNOSTICAR-01` (gemela sin propiedad de oomd: control negativo), del 2026-10-12; versionada el 2026-11-18 por voto de Luis CON CADUCIDAD 2026-12-18 (30 dias): vencida, se retira (`git rm` de `adopted/systemd-user/bbtest-oomd-neg.slice` y de la maquina) o se renueva con ficha; la vigila `tests/test_caducidad_slices_oomd.py`, que se pone roja ese dia. Ficha: `DEBT-SLICES-OOMD-DE-PRUEBA-CADUCAN-2026-12-18-01` |
 | `/usr/local/bin/journal-udp-forward.sh` | su cuerpo; la copia lleva la IP destino redactada y `bb drift` compara con la misma redaccion. |
 | `/etc/systemd/system/bb-gpu-accounting.service` | enciende el accounting mode de la GPU en cada arranque (`nvidia-smi -am 1`); sin el, `bb scan` no nombra los procesos de GPU ya salidos tras una caida CUDA. Desplegada y habilitada el 2026-10-15. |
+| `/etc/audit/rules.d/10-blackbox-signals.rules` | silencia el diluvio `loginctl` de `reboot_cmd` (`auid=unset`) y captura `kill`/`tkill`/`tgkill` con `SIGTERM`/`SIGKILL`; comparada vía recibo `bb-root-run audit-rules-leer`. |
+| `/etc/audit/rules.d/99-reboot.rules` | regla externa `reboot_cmd`/`reboot_syscall` vigilada en `adopted/solo-registro.txt` vía recibo `bb-root-run audit-rules-leer` (sin instalador propio). |
+| `/etc/audit/rules.d/zz-blackbox-backlog.rules` | fija `-b 32768` al final de `rules.d` para evitar desborde del anillo de auditoría; comparada vía recibo `bb-root-run audit-rules-leer`. |
 
 **Deliberadamente fuera**: `dcgm.service` y la familia `nvsm-*` son la pila de
 monitoreo del fabricante; `bb scan` las lee, no las custodia. `/etc/systemd/system.conf` tampoco se adopta entero, porque el paquete `systemd` lo reescribe: lo que bb

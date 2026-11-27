@@ -194,3 +194,24 @@ etc_systemd_system_snap.openshell.system-gateway.service.d_bb-espera-docker.conf
     Mismo motivo y mismo remedio que los dos anteriores:
       install -D -m 0644 adopted/system-config/etc_systemd_system_snap.openshell.system-gateway.service.d_bb-espera-docker.conf \
         /etc/systemd/system/snap.openshell.system-gateway.service.d/bb-espera-docker.conf && systemctl daemon-reload
+
+
+--- Adoptados el 2026-11-26 (FEATURE-OWNEAR-EN-BB-LO-QUE-ACTUA-SOBRE-LA-MAQUINA-01)
+
+etc_audit_rules.d_10-blackbox-signals.rules
+etc_audit_rules.d_zz-blackbox-backlog.rules
+    Escritos por la seccion 7 de `enable-privileged.sh` (heredocs, sin `cp` desde
+    `adopted/`). `/etc/audit` es `drwxr-x--- root:root`, ilegible sin root;
+    `bb drift` compara estas copias contra el ultimo recibo de
+    `sudo -n bb-root-run audit-rules-leer` en `/var/lib/bb-root-run/`.
+    Remedio de una divergencia: editar la seccion 7 de `enable-privileged.sh`,
+    correrlo, refrescar `sudo -n bb-root-run audit-rules-leer` y re-adoptar.
+
+
+etc_audit_rules.d_99-reboot.rules
+    Regla externa (`reboot_cmd` y `reboot_syscall`) preexistente en
+    `/etc/audit/rules.d/99-reboot.rules`; `enable-privileged.sh` no la instala
+    (la compensa con `10-blackbox-signals.rules`). Se adopta en solo-registro
+    para vigilarla vía `bb-root-run audit-rules-leer` sin redesplegarla.
+    Remedio de una divergencia: revisar si un cambio externo afecta a `bb sigterm`
+    o a la captura de reinicios y re-adoptar tras refrescar `audit-rules-leer`.

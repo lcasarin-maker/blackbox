@@ -1879,6 +1879,55 @@ def test_drift_plantilla_SIGUE_viendo_un_cambio_real(raiz_drift, desplegado):
     assert "divergentes: 1" in r.stdout
 
 
+def test_drift_compara_reglas_audit_via_recibo(raiz_drift, tmp_path):
+    """Cuando /etc/audit/rules.d/* es ilegible sin root, cmp_one lee el ultimo
+    recibo audit-rules-leer-*.txt de BLACKBOX_DRIFT_AUDIT_DIR."""
+    raiz, home = raiz_drift
+    sc = raiz / "adopted" / "system-config"
+    sc.mkdir(parents=True)
+    (sc / "etc_audit_rules.d_10-blackbox-signals.rules").write_text("-b 32768\n", encoding="utf-8")
+    audit_dir = tmp_path / "bb-root-run"
+    audit_dir.mkdir()
+    recibo = audit_dir / "audit-rules-leer-20261126T000000Z.txt"
+    recibo.write_text(
+        "== 1 ficheros *.rules en /etc/audit/rules.d\n"
+        "== /etc/audit/rules.d/10-blackbox-signals.rules\n"
+        "-b 32768\n"
+        "== auditctl -s\n"
+        "enabled 1\n",
+        encoding="utf-8",
+    )
+    r = correr(["drift"], extra_env={
+        "BLACKBOX_DRIFT_ROOT": str(raiz), "HOME": str(home),
+        "BLACKBOX_DRIFT_AUDIT_DIR": str(audit_dir),
+    })
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "igual       /etc/audit/rules.d/10-blackbox-signals.rules" in r.stdout
+
+    # Control negativo 1: recibo con contenido distinto -> DIVERGE
+    recibo.write_text(
+        "== /etc/audit/rules.d/10-blackbox-signals.rules\n"
+        "-b 8192\n"
+        "== auditctl -s\n",
+        encoding="utf-8",
+    )
+    r_div = correr(["drift"], extra_env={
+        "BLACKBOX_DRIFT_ROOT": str(raiz), "HOME": str(home),
+        "BLACKBOX_DRIFT_AUDIT_DIR": str(audit_dir),
+    })
+    assert r_div.returncode != 0, r_div.stdout
+    assert "DIVERGE     /etc/audit/rules.d/10-blackbox-signals.rules" in r_div.stdout
+
+    # Control negativo 2: sin recibo -> AUSENTE
+    recibo.unlink()
+    r_aus = correr(["drift"], extra_env={
+        "BLACKBOX_DRIFT_ROOT": str(raiz), "HOME": str(home),
+        "BLACKBOX_DRIFT_AUDIT_DIR": str(audit_dir),
+    })
+    assert r_aus.returncode != 0, r_aus.stdout
+    assert "AUSENTE     /etc/audit/rules.d/10-blackbox-signals.rules" in r_aus.stdout
+
+
 def test_drift_home_del_usuario_en_system_config_va_al_HOME(raiz_drift):
     """`home_@BB_USUARIO@_<resto>` se compara contra $HOME/<resto>, con el marcador
     entero: el `tr _ /` de siempre lo habria partido en /home/@BB/USUARIO@/."""

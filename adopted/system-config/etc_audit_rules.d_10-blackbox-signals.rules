@@ -1,0 +1,33 @@
+## blackbox -- DEBT-DGX-438: quien manda la senal que mata.
+## Se carga con `augenrules --load`. El numero 10 es para entrar ANTES que la
+## regla estandar que genera el diluvio de abajo: auditd resuelve por primera
+## coincidencia, asi que un `never` posterior no serviria de nada.
+
+## (0) El anillo. El kernel reporto audit_backlog=8193 > audit_backlog_limit=8192
+## y audit_lost=2662 en el boot del 07 al 08-oct (DEBT-AUDIT-ANILLO-DESBORDADO-
+## SIN-LIMITE-01): mientras desborda, la captura de abajo pierde eventos sin
+## avisar. `-b` es el limite de la cola del kernel; 32768 la cuadruplica.
+-b 32768
+
+## (1) Callar el diluvio, sin cegar la regla que lo produce.
+## La regla estandar `reboot_cmd` audita loginctl/systemctl para saber quien
+## reinicio la maquina. rustdesk.service la dispara sondeando sesiones:
+## medido 2026-09-23, 12934 de 12961 execve del anillo eran /usr/bin/loginctl
+## -- 99.8 % del registro -- a 1.9/s con solo el servicio root, y a 14.6/s
+## mientras vive su hijo --server. A esa tasa el anillo (5 x 8 MiB) cae de
+## 248 min a 37 min, y una captura de kill envejeceria antes de que nadie la
+## lea. Esta linea excluye SOLO la invocacion de demonio: los 12934 llevan
+## auid=unset y un humano deja auid puesto (control corrido el 2026-09-23:
+## `loginctl` desde esta terminal quedo con auid=1000, y antes de ese control
+## habia 0 eventos de loginctl con auid humano en tres ficheros del anillo;
+## systemctl da 106 con auid=1000 frente a 10 unset). Lo que reboot_cmd
+## existe para ver -- una persona apagando la maquina -- se sigue auditando.
+-a never,exit -F arch=b64 -S execve -F exe=/usr/bin/loginctl -F auid=unset
+
+## (2) La captura. kill/tkill llevan la senal en a1; tgkill la lleva en a2,
+## asi que van en lineas distintas -- una sola regla con -F a1 dejaria pasar
+## todo tgkill sin que nada lo dijera.
+-a always,exit -F arch=b64 -S kill -S tkill -F a1=15 -k blackbox_sigterm
+-a always,exit -F arch=b64 -S tgkill -F a2=15 -k blackbox_sigterm
+-a always,exit -F arch=b64 -S kill -S tkill -F a1=9 -k blackbox_sigkill
+-a always,exit -F arch=b64 -S tgkill -F a2=9 -k blackbox_sigkill

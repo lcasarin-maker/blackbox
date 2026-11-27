@@ -1,0 +1,5 @@
+-w /usr/bin/systemctl -p x -k reboot_cmd
+-w /usr/sbin/reboot -p x -k reboot_cmd
+-w /usr/sbin/shutdown -p x -k reboot_cmd
+-w /usr/bin/loginctl -p x -k reboot_cmd
+-a always,exit -F arch=b64 -S reboot -k reboot_syscall

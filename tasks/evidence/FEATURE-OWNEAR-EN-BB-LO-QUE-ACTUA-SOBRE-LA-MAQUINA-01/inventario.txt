@@ -13,8 +13,7 @@ tests/test_sin_datos_privados.py).
 
 Columnas: ruta | dueno (fs) | que hace | adoptada? | destino
 
-ESTADO: INCOMPLETO. Falta la pieza 10.1 (regla de auditoria de bb, ilegible sin root).
-Por eso este fichero NO lleva la marca que cierra la ficha.
+ESTADO: COMPLETO (2026-11-26). Reglas de auditoria (10.1) y crontabs (9.6) verificados via bb-root-run.
 
 == 1. /srv/ai ==========================================================================
 1.1  /srv/ai/gpu_governance/{admission_check,gpu_lock,monitor_memory}.sh | <usuario> | veto de memoria, exclusion de GPU, monitor | YA (adopted/gpu_governance) | bb
@@ -100,10 +99,10 @@ Por eso este fichero NO lleva la marca que cierra la ficha.
 9.3  timers de sistema restantes (apt-*, fwupd, anacron, ua, motd, logrotate, man-db, e2scrub, fstrim, dpkg-db-backup, tmpfiles, sysstat-summary, update-notifier-*) | root | paquetes | NO | SO-base
 9.4  /etc/cron.d/{anacron,e2scrub_all,sysstat} | root | paquetes | NO | SO-base
 9.5  crontab de usuario: 3 lineas del kit simplecode, 1 de <proyecto-privado-3> | <usuario> | auditorias de flota / cosecha semanal | NO | otro-repo
-9.6  /var/spool/cron/crontabs | root | ilegible sin root | COULD_NOT_RUN (solo se vio el crontab propio con crontab -l) | --
+9.6  /var/spool/cron/crontabs | root | 1 crontab (usuario, 4 entradas de otros repos, 0 de bb) | NO (leido via bb-root-run crontabs-leer, 2026-11-26) | otro-repo
 
 == 10. Otros escritos por enable-privileged.sh ==========================================
-10.1 /etc/audit/rules.d/10-blackbox-signals.rules | root | regla de auditoria de senales (seccion 7, DEBT-DGX-438) | NO: /etc/audit es ilegible sin root (`ls: Permiso denegado`); y `bb drift` corre como usuario, asi que tampoco podria compararla (la veria AUSENTE) | bb -- PENDIENTE
+10.1 /etc/audit/rules.d/{10-blackbox-signals,zz-blackbox-backlog,99-reboot}.rules | root | reglas de auditoria de senales, backlog y reboot_cmd | ADOPTADAS (2026-11-26 -> adopted/system-config/, comparadas via bb-root-run audit-rules-leer) | bb
 10.2 /etc/security/limits.d/99-blackbox-core.conf | root | core unlimited (seccion 2) | ADOPTADA HOY | bb
 10.3 /etc/security/limits.d/{nv-limits,99-nv-spark-limits}.conf | root | memlock/nofile del fabricante | YA (solo-registro) | bb
 10.4 /etc/security/limits.d/{10-gamemode,25-pw-rlimits}.conf | root | paquetes | NO | SO-base
@@ -123,8 +122,9 @@ produce divergencia en `bb drift`.
 Antes: revisados 47, divergentes 0, ausentes 0, suspendidos 1.
 Despues: revisados 59, divergentes 0, ausentes 0, suspendidos 1 (12 sujetos nuevos).
 
-== Lo que falta para cerrar ============================================================
-- 10.1: adoptar la regla de auditoria. Necesita root para leerla y un camino para que
-  `bb drift` la compare (corre como usuario y /etc/audit es ilegible para el usuario). Hasta entonces
-  queda fuera de la vigilancia.
-- 9.6: crontabs de otros usuarios (root) sin revisar: COULD_NOT_RUN.
+== Lo que falta para cerrar (resuelto 2026-11-26) ======================================
+- 10.1: adoptadas 10-blackbox-signals.rules, zz-blackbox-backlog.rules y 99-reboot.rules
+  en adopted/system-config/, declaradas en adopted/solo-registro.txt e inventariadas en SPEC.md;
+  `bb drift` las compara contra el ultimo recibo de `bb-root-run audit-rules-leer`.
+- 9.6: revisado via `bb-root-run crontabs-leer` (1 crontab de usuario, 0 de bb).
+ownership_revisado

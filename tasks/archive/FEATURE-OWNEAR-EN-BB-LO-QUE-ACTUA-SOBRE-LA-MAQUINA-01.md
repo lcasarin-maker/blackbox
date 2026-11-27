@@ -3,12 +3,14 @@ id: FEATURE-OWNEAR-EN-BB-LO-QUE-ACTUA-SOBRE-LA-MAQUINA-01
 kind: task
 domain: MEMORY
 title: "Adoptar en bb todo lo que mide o actua sobre la maquina y hoy vive fuera (resto de /srv/ai)"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-12
 close_check: {"cmd": "grep -q ownership_revisado tasks/evidence/FEATURE-OWNEAR-EN-BB-LO-QUE-ACTUA-SOBRE-LA-MAQUINA-01/inventario.txt", "expect": "exit_zero", "porque": "Peticion de Luis 2026-10-12: revisar todo y adueñarse en bb de lo que debe vivir en bb. Cierra con un inventario clasificado de /srv/ai, systemd (usuario y sistema), sysctl, earlyoom, docker y drop-ins, cada pieza con su destino, y lo que corresponde adoptado y vigilado por bb drift."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Correccion medida (2026-10-12)
@@ -34,3 +36,10 @@ Luis instalo `bb-root-run` y corrieron `audit-rules-leer` y `crontabs-leer` (rc=
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Lo que falta pide editar SPEC.md, y este lote no puede. Medido hoy: `/etc/audit` es `drwxr-x--- root root`, asi que `test -e /etc/audit/rules.d/10-blackbox-signals.rules` da rc=1 como usuario: `bb drift` las veria AUSENTE. Adoptarlas en `adopted/system-config/` exige (1) una fila por fichero en la tabla `## Inventario de propiedad` de SPEC.md (`tools/inventario.py` falla sin ella, y esa tabla declara que todo lo adoptado esta ahi) y (2) un camino en `cmd_drift` que compare contra la ultima salida de `audit-rules-leer` en `/var/lib/bb-root-run/` (con su fecha) en vez de contra `/etc/audit`. Meterlas en un directorio que `tools/inventario.py` no mapea las sacaria del inventario de propiedad: no se hizo. Disparador: una sesion autorizada a editar SPEC.md (inventario de propiedad) que haga las dos cosas en el mismo commit; `99-reboot.rules` entra ademas en `adopted/solo-registro.txt` (no la instala bb).
+
+## Cierre (2026-11-26)
+
+Adoptadas las 3 reglas de `/etc/audit/rules.d/` (`10-blackbox-signals.rules`, `99-reboot.rules`, `zz-blackbox-backlog.rules`) en `adopted/system-config/`, declaradas en `adopted/solo-registro.txt`, inventariadas en `SPEC.md`, y comparadas en `bin/bb drift` contra el ultimo recibo `audit-rules-leer-*.txt` de `bb-root-run` (`revisados: 72, divergentes: 0`).
+Verificado `close_check` (`rc=0`):
+- Comando: `grep -q ownership_revisado tasks/evidence/FEATURE-OWNEAR-EN-BB-LO-QUE-ACTUA-SOBRE-LA-MAQUINA-01/inventario.txt`
+- Salida literal: `(sin salida)`

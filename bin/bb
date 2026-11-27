@@ -3008,28 +3008,51 @@ cmd_drift() {
 
   cmp_one() { # origen_desplegado, copia_en_repo
     checked=$((checked + 1))
+    local fuente="$1"
     if [ ! -e "$1" ]; then
-      local caduca; caduca=$(suspension_caduca "$1") || true
-      if [ -n "$caduca" ]; then
-        local today; today=$(date +%F)
-        if [[ "$today" > "$caduca" ]]; then
-          echo "  VENCIDA     $1 (suspension en suspended/MANIFIESTO.md vencio $caduca -- revisar)"
-          missing=$((missing + 1)); return
+      fuente=""
+      case "$1" in
+        /etc/audit/rules.d/*)
+          local audit_dir="${BLACKBOX_DRIFT_AUDIT_DIR:-/var/lib/bb-root-run}"
+          local recibo
+          recibo=$(ls -1t "$audit_dir"/audit-rules-leer-*.txt 2>/dev/null | head -1 || true)
+          if [ -n "$recibo" ] && [ -r "$recibo" ]; then
+            fuente=$(mktemp)
+            awk -v sec="== $1" '
+              $0 == sec { in_sec=1; next }
+              in_sec && /^== / { exit }
+              in_sec { print }
+            ' "$recibo" > "$fuente"
+            if [ ! -s "$fuente" ]; then
+              rm -f "$fuente"
+              fuente=""
+            fi
+          fi
+          ;;
+      esac
+      if [ -z "$fuente" ]; then
+        local caduca; caduca=$(suspension_caduca "$1") || true
+        if [ -n "$caduca" ]; then
+          local today; today=$(date +%F)
+          if [[ "$today" > "$caduca" ]]; then
+            echo "  VENCIDA     $1 (suspension en suspended/MANIFIESTO.md vencio $caduca -- revisar)"
+            missing=$((missing + 1)); return
+          fi
+          echo "  SUSPENDIDO  $1 (documentado en suspended/MANIFIESTO.md, vence $caduca)"
+          suspended=$((suspended + 1)); return
         fi
-        echo "  SUSPENDIDO  $1 (documentado en suspended/MANIFIESTO.md, vence $caduca)"
-        suspended=$((suspended + 1)); return
+        echo "  AUSENTE     $1 (esta en el repo pero ya no en la maquina)"
+        missing=$((missing + 1)); return
       fi
-      echo "  AUSENTE     $1 (esta en el repo pero ya no en la maquina)"
-      missing=$((missing + 1)); return
     fi
     # El repo es PUBLICO: una copia adoptada con una IP de LAN la lleva
     # redactada (`<REDACTADO-IP-LAN>`), y se compara contra el desplegado con
     # la misma redaccion. Limite declarado: un cambio de ESA IP no se ve.
-    local desplegado="$1" marca="<REDACTADO-IP-LAN>"
+    local desplegado="$fuente" marca="<REDACTADO-IP-LAN>"
     if grep -qF "$marca" "$2"; then
       desplegado=$(mktemp)
       sed -E "s/\\b(10(\\.[0-9]{1,3}){3}|192\\.168(\\.[0-9]{1,3}){2}|172\\.(1[6-9]|2[0-9]|3[01])(\\.[0-9]{1,3}){2})\\b/$marca/g" \
-        "$1" > "$desplegado"
+        "$fuente" > "$desplegado"
     fi
     # Al reves que la IP, el usuario y su home NO se redactan del desplegado: la
     # copia del repo es una PLANTILLA (boleta #23 A de Luis) y se renderiza con
@@ -3049,7 +3072,8 @@ cmd_drift() {
       diff -u "$repo" "$desplegado" 2>/dev/null | head -12 | sed 's/^/                /'
       diverged=$((diverged + 1))
     fi
-    [ "$desplegado" = "$1" ] || rm -f "$desplegado"
+    [ "$desplegado" = "$fuente" ] || rm -f "$desplegado"
+    [ "$fuente" = "$1" ] || rm -f "$fuente"
     [ "$repo" = "$2" ] || rm -f "$repo"
   }
   _drift_literal() { printf '%s' "$1" | sed -e 's/[\\&|]/\\&/g'; } # valor -> reemplazo literal de sed

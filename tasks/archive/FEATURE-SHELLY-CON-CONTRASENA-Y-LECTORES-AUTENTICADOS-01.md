@@ -3,12 +3,14 @@ id: FEATURE-SHELLY-CON-CONTRASENA-Y-LECTORES-AUTENTICADOS-01
 kind: task
 domain: HARDWARE
 title: "El Shelly que alimenta la ATOM responde sin credenciales: ponerle contrasena y adaptar los dos lectores"
-status: open
+status: done
 severity: P2
 origin: measured
 satd_family: MISSING_CAPABILITY
 created: 2026-11-18
 close_check: {"cmd": "curl -s -m 5 \"$BB_SHELLY_URL/rpc/Shelly.GetDeviceInfo\" | grep -q '\"auth_en\":true' && python3 -m pytest -q tests/test_medidor_energia_auth.py", "expect": "exit_zero", "porque": "Falla hoy en las dos mitades: el Shelly responde con \"auth_en\":false (Shelly.GetDeviceInfo, 2026-11-18) y tests/test_medidor_energia_auth.py no existe. Voto de Luis 2026-11-18 (boleta /vote): contrasena en el Shelly y adaptar los dos lectores, activandola AL FINAL. El comando necesita estar en la red de casa y la variable de entorno BB_SHELLY_URL con la direccion del Shelly (http://<ip-del-shelly>); la IP no se versiona porque este repo es publico."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Medido (2026-11-18)
@@ -29,3 +31,10 @@ Contrasena en el Shelly y lectores autenticados. Descartado: dejarlo sin contras
 ## No medido
 
 Que el digest de este firmware funcione con `urllib` sin dependencias nuevas; si `bb-testigo` en la Dell pierde filas durante el redespliegue.
+
+## Cierre (2026-11-26)
+
+1. Credencial generada en archivo privado (`0600`) en `~/secrets/blackbox/shelly_auth.json` y en la carpeta del testigo en la Dell (sin pasar por chat ni repo).
+2. `tools/testigo/bb_testigo.py` redesplegado en la Dell, `testigo.json` actualizado con `enchufe_auth_file` y tarea `bb-testigo` reiniciada (`energia.jsonl` con `ok: true`, `voltaje_v: 125.4`, `potencia_w: 83.9`; `latido.jsonl` con `errores: {}`).
+3. Autenticacion habilitada en el Shelly (`Shelly.SetAuth`): `Shelly.GetDeviceInfo` devuelve `"auth_en":true`; control negativo sin credenciales en `/rpc/Switch.GetStatus?id=0` devuelve HTTP `401`; `tools.medidor_energia.lee` autenticado devuelve `ok: True`.
+4. `python3 -m pytest -q tests/test_medidor_energia_auth.py` -> `9 passed in 3.70s` (`rc=0`).
