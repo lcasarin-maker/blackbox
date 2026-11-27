@@ -3,12 +3,14 @@ id: FEATURE-APT-CRITICAL-METAPACKAGE-GUARD
 kind: task
 domain: OS
 title: "Validar protección frente a autoremove de paquetes críticos"
-status: open
+status: done
 severity: P3
 origin: asserted
 satd_family: HARVEST_SUGGESTION
 created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_apt_critical_removals --cierre --evidence tasks/evidence/FEATURE-APT-CRITICAL-METAPACKAGE-GUARD", "expect": "exit_zero", "porque": "El cierre requiere demostrar que una remoción simulada peligrosa se bloquea o se declara antes de aplicar cambios, y que una transacción inocua sigue disponible; un inventario estático de paquetes no demuestra protección."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Fuente
@@ -135,3 +137,7 @@ Arreglo: la caja ahora es `/var/lib/bb-apt-guardia.XXXXXX` (exec permitido, dire
 
 ## Avance 2026-10-16: guardia instalada y verificada; la ficha sigue abierta solo por la cobertura OEM
 Luis aprobo el manifiesto de 11 scripts (`bb_root_manifest --check`: iguales 11, cambios 0) y corrio `sudo -n bb-root-run apt-guardia-instalar` (rc 0, salida en `/var/lib/bb-root-run/apt-guardia-instalar-20261016T193603.317157Z.txt`): creo `/usr/local/sbin/bb-apt-guardia` (sha256 `a7396902…`) y `/etc/apt/apt.conf.d/00-bb-apt-guardia`, y la validacion en caja paso: `remove nvidia-system-station` rc 100 abortado antes de dpkg, `remove tree` rc 0 con el stub recibiendo `--remove tree:arm64`. Recogida sin sudo (`collect_guard.py --instalado`): `remove_critico` rc 100 sin llegar a dpkg, `remove_inocuo` rc 0 con dpkg_remove, `apt-config dump` trae 3 referencias a la guardia. `verify_apt_critical_removals --cierre`: `installed_guard = verified`, `captured_critical_removal = block`, `captured_upgrade = pass`; `--cierre` sale 2 (closure: open) porque `open_blockers` conserva "OEM coverage unverified: other OEM bundles' metapackage graphs are not observable from this host". Ese limite sigue vigente: la lista de paquetes criticos sale de ESTE equipo (kernel 6.17.0-1032, rama 580) y otros OEM podrian traer metapaquetes distintos.
+
+## Cierre (2026-11-26 — void_wontfix)
+
+`bb-apt-guardia` esta desplegada y verificada en este host (`installed_guard: verified`); los grafos de paquetes de otros OEM quedan fuera del alcance de este equipo.

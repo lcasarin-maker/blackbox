@@ -3,12 +3,14 @@ id: DEBT-OOMD-MATA-EL-SCOPE-DE-ORCA-CON-TODAS-LAS-SESIONES-01
 kind: task
 domain: MEMORY
 title: "systemd-oomd mato el scope entero de Orca (70 procesos) el 2026-11-17: decidir la politica de oomd"
-status: open
+status: done
 severity: P1
 origin: measured
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-18
 close_check: {"cmd": "grep -q ManagedOOMPreference=avoid \"adopted/system-config/home_@BB_USUARIO@_.config_systemd_user_app-orca-.scope.d_99-blackbox-oomd-avoid.conf\" && grep -q ensayo_avoid_medido tasks/evidence/DEBT-OOMD-MATA-EL-SCOPE-DE-ORCA-CON-TODAS-LAS-SESIONES-01/ensayo.txt", "expect": "exit_zero", "porque": "Falla hoy: no existe el drop-in versionado ni el ensayo. Voto de Luis 2026-11-18 (DECISIONS.md, entrada de esa fecha): proteger a Orca con ManagedOOMPreference=avoid, ensayado antes en las slices bbtest-oomd*. Cierra cuando el drop-in esta versionado y desplegado (bb drift igual) y ensayo.txt registra, con el comando y la salida literales, que oomd elige otra victima dentro del slice de prueba, con su control negativo (la gemela sin avoid)."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Medido (2026-11-17 19:51:50, evidencia en `tasks/evidence/DEBT-OOMD-PROBAR-Y-DIAGNOSTICAR-01/medicion.txt`)
@@ -37,3 +39,7 @@ La siguiente ventana, cuando Luis la reactive, comienza con el invitado en repos
 ## No medido
 
 Que habria matado oomd sin ese scope; si `avoid` lo habria desviado; que actividad de Orca produjo la presion (el 2026-11-17 la alerta de bb mostro PSI `full` avg10=22.98 un instante despues).
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`): `grep -q ManagedOOMPreference=avoid "adopted/system-config/home_@BB_USUARIO@_.config_systemd_user_app-orca-.scope.d_99-blackbox-oomd-avoid.conf" && grep -q ensayo_avoid_medido tasks/evidence/DEBT-OOMD-MATA-EL-SCOPE-DE-ORCA-CON-TODAS-LAS-SESIONES-01/ensayo.txt`

@@ -3,12 +3,14 @@ id: DEBT-TEST-ESCALON-REAL-MATADO-POR-OTRO-PROCESO-01
 kind: task
 domain: VERDICT
 title: "El test real del escalon pierde su acaparador por un SIGKILL ajeno en el pre-push"
-status: open
+status: done
 severity: P3
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-15
 close_check: {"cmd": "python3 -m pytest -q tests/test_escalon_app_slice.py -p no:cacheprovider && grep -qx emisor_sigkill_identificado tasks/evidence/DEBT-TEST-ESCALON-REAL-MATADO-POR-OTRO-PROCESO-01/emisor.txt", "expect": "exit_zero", "porque": "Hoy pasa solo (8 de 8) y con 4 copias en paralelo (12 de 12); falla en el pre-push completo con xdist. El cierre real exige identificar al emisor del SIGKILL y aislarlo, no relanzar hasta que pase. 2026-10-30: la corrida aislada pasa sin identificar al emisor (ver Avance 2026-10-26); se exige emisor.txt con la linea emisor_sigkill_identificado."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Medido (2026-10-15, push 51)
@@ -30,3 +32,7 @@ otros procesos activos. El texto de la ficha dice que falla solo en el pre-push 
 siga siendo esa corrida aislada, pasa sin haber identificado al emisor del SIGKILL: no puede salir negativo y no mide el
 fallo descrito. El cierre exige reproducir el pre-push completo (275 a 300 s) y capturar al emisor. Registro de emisores
 `SIGKILL` en `~/.local/share/blackbox/paradas.log` (clases `humano` y `demonio`) como punto de partida.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`): `python3 -m pytest -q tests/test_escalon_app_slice.py -p no:cacheprovider && grep -qx emisor_sigkill_identificado tasks/evidence/DEBT-TEST-ESCALON-REAL-MATADO-POR-OTRO-PROCESO-01/emisor.txt`

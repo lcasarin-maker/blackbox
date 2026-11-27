@@ -215,3 +215,10 @@ etc_audit_rules.d_99-reboot.rules
     para vigilarla vía `bb-root-run audit-rules-leer` sin redesplegarla.
     Remedio de una divergencia: revisar si un cambio externo afecta a `bb sigterm`
     o a la captura de reinicios y re-adoptar tras refrescar `audit-rules-leer`.
+
+
+home_@BB_USUARIO@_.config_systemd_user_app-orca-.scope.d_99-blackbox-oomd-avoid.conf
+    Drop-in de usuario (`ManagedOOMPreference=avoid`) para proteger el scope
+    de Orca frente a `systemd-oomd` (`DEBT-OOMD-MATA-EL-SCOPE-DE-ORCA-CON-TODAS-LAS-SESIONES-01`).
+    Remedio de una divergencia: copiar a `~/.config/systemd/user/app-orca-.scope.d/`
+    y ejecutar `systemctl --user daemon-reload`.

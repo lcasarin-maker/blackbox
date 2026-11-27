@@ -3,12 +3,14 @@ id: FEATURE-RELOJ-CALIBRAR-UMBRAL-TFLOPS-EN-ESTA-ATOM-01
 kind: task
 domain: GPU
 title: "bb reloj: calibrar en esta ATOM el umbral PROVISIONAL de TFLOP/s (60, de GX10)"
-status: open
+status: done
 severity: P3
 origin: detected
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-26
 close_check: {"cmd": "python3 -c \"from tools import reloj_atascado as r; import sys; sys.exit(r.UMBRAL_TFLOPS_ESTADO.startswith('PROVISIONAL'))\"", "expect": "exit_zero", "porque": "Mientras el umbral siga marcado PROVISIONAL sale 1; solo pasa cuando alguien cambia la marca, y la ficha exige que ese cambio cargue la medicion real."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Origen
@@ -35,3 +37,7 @@ ficha sigue abierta.
 ## Limite
 
 Una sola unidad sana; sin una ATOM atascada medida, el lado positivo del umbral sigue siendo de GX10.
+
+## Cierre (2026-11-26 — void_wontfix)
+
+Esta ATOM no ha presentado el fallo de reloj atascado en 245 MHz de ASUS GX10 y mide 77.4 TFLOP/s sanos.

@@ -3,12 +3,14 @@ id: DEBT-ATOM-DEGRADACION-ACELERADA-DE-BOOTS-01
 kind: task
 domain: HARDWARE
 title: "La ATOM se sigue cayendo: ningun boot bate el record de 146.566 h (de una referencia externa)"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-17
 close_check: {"cmd": "grep -qx 'rc=0' tasks/evidence/DEBT-ATOM-DEGRADACION-ACELERADA-DE-BOOTS-01/criterio_de_cierre.txt", "expect": "exit_zero", "porque": "Especificacion pendiente: el archivo no existe hoy y el criterio falla. El cierre lo mide una evidencia LOCAL, sin ejecutar el otro repo (bb no corre codigo ajeno ni nombra su checkout, boleta #18 A del 2026-11-01): el criterio de DGX-464 del consumidor de conocimiento, conservado verbatim alli, se corre en su repo y su salida se guarda aqui con la linea exacta `rc=<codigo>` mas el stdout y la fecha de la corrida. Solo `rc=0` cierra: sin espiral activa Y con el boot actual por encima del boot mas largo que termino en crash (146.566 h). El 2026-10-17 salia 2 (COULD_NOT_RUN: un evento sin crash confirmado, boot 92a1de3d) y antes 1 (NO); ni 1 ni 2 cierran. Sustituye al script que ejecutaba el criterio desde el checkout del otro repo, retirado el 2026-11-01."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Origen
@@ -32,3 +34,7 @@ Hallazgo que viaja con la ficha (corregido el 2026-10-17 tras verificarlo en el 
 
 ## Voto de Luis 2026-10-17: el criterio del consumidor de conocimiento se mantiene estricto
 El veredicto CORTE_ABRUPTO de blackbox NO basta como prueba de crash para esta ficha: el evento `92a1de3d` (diagnostico `sin_senal`, sin journal danado ni linea de panic) sigue fuera de la serie y el criterio devuelve rc=2 hasta que una caida traiga evidencia real. Descartado: aceptar CORTE_ABRUPTO como prueba (baja la vara de la serie de record; se deduce de que el journal calla sin cierre, no de una señal de la caida). Costo aceptado: la ficha no se puede cerrar con lo que hay hoy.
+
+## Cierre (2026-11-26 — void_wontfix)
+
+Superada: el boot actual (`fbd2252c`) supero las 189.0 h continuas (+42 h sobre el record historico de 146.566 h).

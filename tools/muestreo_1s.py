@@ -87,7 +87,7 @@ def procs():
 
 
 def registro(ts, t, i, pt, pi, cp, pp, gpu, hz, gpu_calidad=None):
-    """Una muestra; las claves y su orden son el formato de linea."""
+    """Una muestra; las claves y su orden son el formato de linea (gpu_calidad expone gpu_edad y estado para detectar gpu_congelada)."""
     dt = max(t - pt, 1)
     top = sorted(((cp[k][1] - pp[k][1], cp[k][0], k) for k in cp if k in pp), reverse=True)[:3]
     return {"ts": ts, "cpu_pct": round(100 * (1 - (i - pi) / dt), 1), "load1": (rd("/proc/loadavg") or "").split()[0],

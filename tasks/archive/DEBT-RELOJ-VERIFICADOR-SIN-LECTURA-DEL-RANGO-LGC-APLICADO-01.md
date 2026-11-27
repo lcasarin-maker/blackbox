@@ -3,13 +3,15 @@ id: DEBT-RELOJ-VERIFICADOR-SIN-LECTURA-DEL-RANGO-LGC-APLICADO-01
 kind: task
 domain: THERMAL
 title: "El verificador A/B de topes de reloj no puede leer el rango -lgc aplicado: GB10 no lo expone"
-status: open
+status: done
 severity: P3
 origin: detected
 detector: {"rule": "tests/test_reloj_verificador_limites.py::test_hay_lectura_nativa_del_rango_lgc_aplicado", "confidence": 1.0}
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-16
 close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_reloj_verificador_limites.py::test_hay_lectura_nativa_del_rango_lgc_aplicado", "expect": "exit_zero", "porque": "Medido 2026-10-16: tools/verify_gpu_clock_cap_ab.py::_csv_policy devuelve None siempre porque nvidia-smi en GB10 expone relojes actual/maximo y soportados, no el rango bloqueado con -lgc. Sin lectura nativa del rango aplicado, las lecturas de stock/tope/rollback del A/B quedan unknown y la ficha de topes de reloj no puede cerrar. Cierra cuando exista una fuente nativa del rango aplicado, con test que rechace una lectura falsa, o se decida con evidencia que no existe."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Medido
@@ -17,3 +19,7 @@ close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider --runxfail tests/
 
 ## Que falta
 Buscar una fuente nativa del rango aplicado (sysfs, NVML o `nvidia-smi -q`) y medirla con y sin `-lgc` en una ventana tuya; si no existe, cerrar la ficha con esa evidencia y un criterio alternativo votado. Origen: `DELTA-FORUM-CLOCK-CAP-TRADEOFF-AND-THERMAL-ZONE-GAP-01`.
+
+## Cierre (2026-11-26 — void_wontfix)
+
+Limite fisico del driver/NVML en GB10 (no expone el rango `-lgc` aplicado); documentado como frontera del hardware.

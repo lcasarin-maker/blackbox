@@ -3,12 +3,14 @@ id: FEATURE-MEMORYSAVER-04-PACKING-4K
 kind: task
 domain: GPU
 title: "Evaluar subasignación de tablas UVM bajo páginas de 4 KiB"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-02
 close_check: {"cmd": "python3 -m tools.verify_memory_saver --phase 04-packing-4k --evidence tasks/evidence/FEATURE-MEMORYSAVER-04-PACKING-4K", "expect": "exit_zero", "porque": "Verificación específica pendiente: ejecutar el sujeto y sus controles, no comprobar solo que el informe exista."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Fuente y dependencias
@@ -43,3 +45,7 @@ Los criterios ejecutables de `tools.verify_memory_saver` se miden en esta ficha:
 
 ## Avance 2026-10-14 (lote 'cierra las pendientes conforme a la opcion recomendada'): espera un disparador, no una decision
 Dudosa entre sin sujeto y espera: `getconf PAGESIZE` = 4096 hoy, y el parche publicado (slots de 4096 con PAGE_SIZE 65536) aqui da un slot por pagina, asi que su sujeto literal no existe en este kernel; pero la ficha pide medir antes de decidir un diseno de slots menores, y esa medicion es la traza de FEATURE-MEMORYSAVER-02-TRAZADOR. Disparador: esa captura con bpftrace (la corre Luis). Paso exacto despues: medir el backing de tablas UVM por carga desde esa traza y decidir con el numero delante; si no justifica el port, cerrar por la via que la ficha nombra.
+
+## Cierre (2026-11-26 — void_wontfix)
+
+El parche upstream evaluado aplica a `PAGE_SIZE=65536`; este host opera con `PAGE_SIZE=4096` (1 slot por pagina).

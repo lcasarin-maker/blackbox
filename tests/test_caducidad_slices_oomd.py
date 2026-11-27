@@ -25,12 +25,20 @@ def test_las_slices_de_prueba_no_estan_vencidas() -> None:
         "(DEBT-SLICES-OOMD-DE-PRUEBA-CADUCAN-2026-12-18-01), o renovar con ficha y mover CADUCA y las filas de SPEC.md")
 
 
-def test_control_negativo_pasada_la_fecha_las_dos_estan_vencidas() -> None:
-    assert vencidas(date(2026, 12, 19)) == list(SLICES)
+def test_control_negativo_pasada_la_fecha_las_dos_estan_vencidas(tmp_path: Path) -> None:
+    d = tmp_path / "adopted" / "systemd-user"
+    d.mkdir(parents=True)
+    for s in SLICES:
+        (d / s).write_text("[Slice]\n", encoding="utf-8")
+    assert vencidas(date(2026, 12, 19), tmp_path) == list(SLICES)
 
 
-def test_control_negativo_el_dia_de_la_fecha_aun_no_vencen() -> None:
-    assert vencidas(CADUCA) == []
+def test_control_negativo_el_dia_de_la_fecha_aun_no_vencen(tmp_path: Path) -> None:
+    d = tmp_path / "adopted" / "systemd-user"
+    d.mkdir(parents=True)
+    for s in SLICES:
+        (d / s).write_text("[Slice]\n", encoding="utf-8")
+    assert vencidas(CADUCA, tmp_path) == []
 
 
 def test_control_negativo_retiradas_no_hay_nada_que_vencer(tmp_path: Path) -> None:
@@ -39,5 +47,7 @@ def test_control_negativo_retiradas_no_hay_nada_que_vencer(tmp_path: Path) -> No
 
 def test_la_fecha_del_test_es_la_de_las_filas_de_spec() -> None:
     """Renovar solo el test sin tocar SPEC.md (o al reves) deja la caducidad mintiendo."""
+    if not any((REPO / "adopted" / "systemd-user" / s).exists() for s in SLICES):
+        return
     filas = [l for l in (REPO / "SPEC.md").read_text(encoding="utf-8").splitlines() if "bbtest-oomd" in l]
     assert len(filas) == 2 and all(CADUCA.isoformat() in l for l in filas), filas

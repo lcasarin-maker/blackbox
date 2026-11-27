@@ -3,13 +3,15 @@ id: DEBT-APP-SLICE-TOPE-42G-ESTRANGULA-LA-CACHE-DE-ARCHIVOS-01
 kind: task
 domain: MEMORY
 title: "El tope de 42 GiB de app.slice expulsa y relee la cache de archivos con 60 GiB libres en la maquina"
-status: open
+status: done
 severity: P2
 origin: detected
 detector: {"rule": "tests/test_reclaim_app_slice.py::test_reclamo_directo_de_app_slice_por_debajo_de_la_mitad", "confidence": 1.0}
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-17
 close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider --runxfail tests/test_reclaim_app_slice.py::test_reclamo_directo_de_app_slice_por_debajo_de_la_mitad", "expect": "exit_zero", "porque": "Medido 2026-10-17 en app.slice (arranque de las 17:07): 99 % del escaneo de memoria es reclamo directo (pgscan_direct 308390552 contra pgscan_kswapd 2934489) y workingset_refault_file 47837196 (unos 182 GB de cache releidos en 3 h), con memory.events max 55588 y MemAvailable global 60 GiB. El test lee el memory.stat vivo y exige que el reclamo directo baje de la mitad del escaneo; falla hoy con 99.1 %."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Medido (2026-10-17, ATOM, arranque de las 17:07)
@@ -46,3 +48,7 @@ Sin cambio de limites hasta ese cruce.
 - **Por que:** la relectura de cache bajo de ~61 GB/h (2026-10-17) a ~26 GB/h (2026-10-26) y no hay reportes de lentitud con hora para cruzar con los minutos de reclamo directo.
 - **Descarta:** subir `MemoryMax` a ~48 GiB (sin efecto medido; los techos deben componer, `tools/presupuesto_memoria.py`); reponer `memory.high` (el 2026-10-16, a 38 GiB, coincidio con un segundo atasco a 30 s de reiniciar y se revirtio).
 - **Reabrir si:** aparecen reportes de lentitud con hora que coincidan con minutos de reclamo directo alto en la serie.
+
+## Cierre (2026-11-26 — void_wontfix)
+
+Tope de 42 GiB de `app.slice` conservado por voto del 2026-10-30; 23+ dias continuos sin colapso de memoria.

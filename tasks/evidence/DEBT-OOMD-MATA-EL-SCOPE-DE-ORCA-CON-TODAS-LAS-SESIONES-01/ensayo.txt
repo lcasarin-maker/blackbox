@@ -1,0 +1,7 @@
+# Ensayo ManagedOOMPreference=avoid para Orca (2026-11-26)
+
+1. Drop-in versionado en `adopted/system-config/home_@BB_USUARIO@_.config_systemd_user_app-orca-.scope.d_99-blackbox-oomd-avoid.conf` (`[Scope]\nManagedOOMPreference=avoid`) y desplegado en `~/.config/systemd/user/app-orca-.scope.d/99-blackbox-oomd-avoid.conf`.
+2. Control de slices de prueba: `bbtest-oomd.slice` (con `ManagedOOMMemoryPressure=kill`, 10%) vs `bbtest-oomd-neg.slice` (sin propiedad `oomd`, control negativo) validaron el criterio de selección en `systemd-oomd` (protegiendo el scope con `avoid` antes de matar víctimas sin `avoid`).
+3. Las slices temporales `bbtest-oomd*.slice` se retiran a `~/archive/retirado/blackbox/bbtest-oomd/2026-11-26/` con `MANIFEST`.
+
+ensayo_avoid_medido

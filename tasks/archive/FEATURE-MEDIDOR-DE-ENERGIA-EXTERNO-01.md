@@ -3,12 +3,14 @@ id: FEATURE-MEDIDOR-DE-ENERGIA-EXTERNO-01
 kind: task
 domain: HARDWARE
 title: "Enchufe medidor en la entrada de la ATOM para separar corte de red de apagado interno"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-11
 close_check: {"cmd": "grep -q . $HOME/.local/share/blackbox/externo/energia.jsonl", "expect": "exit_zero", "porque": "Un corte de energia mata al propio instrumento: solo un medidor de voltaje y watts en la entrada distingue CORTE_DE_RED de APAGADO_INTERNO en los 4 cortes abruptos bajo carga del 06, 07, 08 y 11-oct."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Por que
@@ -33,3 +35,7 @@ Falta, y es de Luis: comprar y conectar el enchufe, crear `$BLACKBOX_DATA/extern
 - **Decidido:** queda pendiente; no se compra ni se instala ahora. Motivo de Luis: la energia nunca ha sido la causa de los cortes; la causa fue el kernel actualizado y lo que no se vio.
 - **Lo que esta ficha NO afirma:** que la energia este descartada. La causa de los cortes de octubre sigue sin aislar y `tools/reboot_verdict.py` seguira declarando `INDETERMINADO` sin esta fuente.
 - **Reabrir si:** un corte futuro no queda explicado por el kernel y el testigo de la Dell muestra que la ATOM dejo de responder sin aviso previo.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`): `grep -q . $HOME/.local/share/blackbox/externo/energia.jsonl`

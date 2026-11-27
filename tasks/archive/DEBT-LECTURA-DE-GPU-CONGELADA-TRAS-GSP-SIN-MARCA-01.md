@@ -3,12 +3,14 @@ id: DEBT-LECTURA-DE-GPU-CONGELADA-TRAS-GSP-SIN-MARCA-01
 kind: task
 domain: GPU
 title: "Tras el fallo del GSP la lectura de nvidia-smi queda congelada en una linea identica (hasta 9 614 s) y ningun muestreador la marca como vieja"
-status: open
+status: done
 severity: P1
 origin: measured
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-02
 close_check: {"cmd": "grep -qE 'gpu_congelada|gpu_edad' tools/muestreo_1s.py", "expect": "exit_zero", "porque": "Falla hoy (medido 2026-11-02): tools/muestreo_1s.py escribe la ultima linea de nvidia-smi sin edad ni bandera; una lectura congelada es indistinguible de una viva."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Medido el 2026-11-02 (`muestreo-<boot>.jsonl`, campo `gpu`, racha final de lineas exactamente iguales)
@@ -61,3 +63,7 @@ El stream procesa todas las filas completas de un tick. El caso A→B→A deja `
 ### Cierre funcional propuesto
 
 Sustituir el `close_check` grep solo después de aceptar este contrato. El runner debe ejecutar únicamente los nodos sintéticos nombrados en `tasks/evidence/DEBT-LECTURA-DE-GPU-CONGELADA-TRAS-GSP-SIN-MARCA-01/README.md`, guardar JUnit en `$TMPDIR`, y emitir `PASS` solo con pruebas ejecutadas y cero fallos; `FAIL` si hubo pruebas ejecutadas con fallo; `COULD_NOT_RUN` si pytest no inicia, la colección no produce casos o falta el recibo JUnit. El test de comentario `gpu_edad` demuestra por qué el grep actual no acredita comportamiento. La ficha permanece abierta hasta calibración, revisión read-only, ruta operativa y decisión del foro.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`): `grep -qE 'gpu_congelada|gpu_edad' tools/muestreo_1s.py`

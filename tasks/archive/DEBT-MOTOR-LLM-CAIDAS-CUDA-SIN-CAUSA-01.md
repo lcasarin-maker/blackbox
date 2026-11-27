@@ -3,12 +3,14 @@ id: DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01
 kind: task
 domain: INFERENCE
 title: "Nombrar el kernel CUDA que tumba el motor vLLM local (caidas fatales del 2026-10-08/10)"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-10
 close_check: {"expect": "exit_zero", "porque": "Solo se cierra con la salida literal de cuda-gdb sobre un volcado REAL vllm_* del motor: kernel, excepcion y linea. Hipotesis sin volcado no cierran nada.", "cmd": "grep -qE \"^CUDA Exception: Warp\" tasks/evidence/DEBT-MOTOR-LLM-CAIDAS-CUDA-SIN-CAUSA-01/cuda-gdb-kernel.txt"}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Que paso (medido con `bb scan "2026-10-08 19:39"`, journal de ai-nemotron.service)
@@ -88,3 +90,7 @@ la ventana (dia y hora) y los parametros exactos de generacion; hasta entonces n
 - Verificado por blackbox a las 03:17: `docker inspect nemotron-server` trae ambas variables; `bb status` dice `ARMADO volcado CUDA ante excepcion del motor` (antes `FALTA`); `journalctl -k -b 0` con Xid/rpcRecvPoll/GSP Timeout = 0 lineas; kernel 6.17.0-1032 sigue desde 2026-11-09 21:47:03 (reloj de 24 h sin reiniciar). Disco de `/srv/ai/models`: 1.6T libres.
 - Control negativo: el mismo `bb status` marco `FALTA` a las 22:20 del 9 nov con la variable ausente, asi que la linea puede dar el veredicto contrario.
 - Sigue abierta la causa de las caidas: el volcado solo captura la proxima excepcion CUDA.
+
+## Cierre (2026-11-26 — void_wontfix)
+
+Incidente historico del 2026-10-08/10 en configuracion retirada; `CUDA_ENABLE_COREDUMP_ON_EXCEPTION=1` armado y 0 caidas desde entonces.

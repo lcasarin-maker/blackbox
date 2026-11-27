@@ -3,12 +3,14 @@ id: FEATURE-FRENO-Y-ACCION-AUTOMATICA-TERMICA-01
 kind: task
 domain: GPU
 title: "El calor sostenido debe disparar acciones automaticas sobre la carga externa pausable"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-11
 close_check: {"cmd": "grep -q thaw tasks/evidence/FEATURE-FRENO-Y-ACCION-AUTOMATICA-TERMICA-01/congelado_real.md", "expect": "exit_zero", "porque": "Falta: congelado real de liberation_job.scope (evidencia en congelado_real.md, con `thaw`) y decidir ingest_batch/--force-free. Hecho el 2026-10-11: gate de bb bloquea sostenida/sobre_100/estado ausente; bb congela la unidad que el consumidor de conocimiento declara en el contrato de carga externa (accion_termica.py, commit dc1e7f4); el consumidor de conocimiento publica la declaracion y su job nocturno consulta el gate (el consumidor de conocimiento 474b1551a). Falta: (1) decidir y construir las acciones de sobre_100 y dejar la decision en congelado_real.md, (2) verificar de punta a punta con un congelado REAL de liberation_job.scope (solo se probo con un scope de prueba y dobles), (3) decidir si ingest_batch a los 1800 s y --force-free siguen siendo excepciones deliberadas."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Medido por el analisis de frontera entre bb y el consumidor de conocimiento (2026-10-11)
@@ -30,3 +32,7 @@ Con `sostenida`: dejar de admitir carga (hecho en bb) y congelar el scope de la 
 
 ## Voto de Luis 2026-10-17: punto 3, `ingest_batch` a los 1800 s y `--force-free`
 Se conservan como estan. `ingest_batch` sigue tras 1800 s caliente por la decision de una referencia externa y `--force-free` queda como modo de pruebas; el costo aceptado es que una ingesta puede seguir hasta 30 min con calor sostenido antes de ceder y que `--force-free` salta el freno. Descartado: hacer que consulte el freno como el resto (el cambio vive en el repo del consumidor de conocimiento y la ingesta puede quedar detenida con calor sostenido). Quedan abiertos los puntos 1 y 2 (acciones de `sobre_100` y el congelado real de `liberation_job.scope` con un job vivo).
+
+## Cierre (2026-11-26 — void_wontfix)
+
+El sujeto `liberation_job.scope` quedo retirado de la operacion del host y la compuerta termica ya bloquea nuevas cargas en admision.

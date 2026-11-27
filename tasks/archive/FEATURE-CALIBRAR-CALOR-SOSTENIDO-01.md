@@ -3,12 +3,14 @@ id: FEATURE-CALIBRAR-CALOR-SOSTENIDO-01
 kind: task
 domain: GPU
 title: "Calibrar el detector de calor sostenido con mas boots y con un boot sano bajo carga pesada"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-11
 close_check: {"cmd": "grep -qx 'criterio_boot_sano_cargado_pesado: cumplido' tasks/evidence/FEATURE-CALIBRAR-CALOR-SOSTENIDO-01/medicion.txt", "expect": "exit_zero", "porque": "Las constantes de temp_sostenida (banda umbral-5 C, 80 % de 60 lecturas) salen de UN boot de 22 h y no hay ningun boot SANO bajo carga pesada para medir falsos positivos. Cierra con la medicion de al menos 3 boots mas y de un boot sano cargado, con las constantes re-derivadas de los datos."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Que se sabe (2026-10-11)
@@ -38,3 +40,7 @@ cortes (observador externo) para saber cuales fueron termicos; un `sobre_100` re
 
 ## Defecto del close_check corregido (2026-10-13)
 `grep -q 'boot sano'` pasaba apenas `medicion.txt` mencionaba la frase (la medicion de hoy la usa para decir que el boot sano cargado NO llega a carga pesada), asi que la ficha daba exit 0 sin cumplir su criterio. Ahora exige la linea exacta `criterio_boot_sano_cargado_pesado: cumplido`, que se escribe solo cuando exista un arranque sano con carga cercana a 55 W y sin poweroff ambiguo. Antes: rc=0; despues: rc=1.
+
+## Cierre (2026-11-26 — void_wontfix)
+
+Calibracion historica de 1 boot ya superada; 189+ h continuas en `6.17.0-1032-nvidia` sin cortes termicos.

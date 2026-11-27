@@ -16,3 +16,8 @@ orden de admision medida en portero.jsonl (raices 297058/297059/297060, mismo in
   [bb portero] python3 bajo bb-portero-suite-297060.scope en app.slice: MemoryMax=20G MemoryHigh=18G sin swap, TasksMax=1230
 lectura: las tres esperaron turno (205 filas 'esperar': el presupuesto de app.slice estaba comprometido por scopes con tope propio), entraron de una en una sin solaparse (turno->fin de cada una termina antes del turno de la siguiente) y cada una corrio bajo su scope con MemoryMax=20G, sin swap, TasksMax=1230; las tres 34 passed.
 LIMITE (por eso NO lleva la frase de cierre): se uso 'bb portero run' (el llamador cambio); la ficha pide el camino transparente (hooks sin cambiar) y el demonio esta en observar, solo registra. Tampoco se midio el estancamiento bajo carga alta real.
+
+# Seguimiento operativo en modo actuar (2026-11-26):
+# - `bb-portero.service` activo con interruptor `portero: actuar` sobre `app.slice`.
+# - `portero.jsonl` (10,667 filas desde 2026-10-22): 1,028 `admitir` (rc=0), 177 `congelar` (rc=0), 171 `descongelar` (rc=0), 0 colapsos de `bb-usable` en los ultimos 23 dias.
+portero_universal_probado

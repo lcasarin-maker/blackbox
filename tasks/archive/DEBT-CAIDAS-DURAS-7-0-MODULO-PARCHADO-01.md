@@ -3,12 +3,14 @@ id: DEBT-CAIDAS-DURAS-7-0-MODULO-PARCHADO-01
 kind: task
 domain: GPU
 title: "Cuatro caidas en 25 min con el modulo nvidia parchado en el kernel 7.0.0-1024; el modulo de fabrica aguanto 1 h 50 con la misma carga"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-30
 close_check: {"cmd": "f=tasks/evidence/DEBT-CAIDAS-DURAS-7-0-MODULO-PARCHADO-01/estable-con-motor.txt; test -s $f && grep -qE '^uptime_min=([6-9][0-9]|[0-9]{3,})$' $f && grep -q '^motor_activo=1$' $f && grep -q '^modulo=.*/updates/nvidia.ko$' $f", "expect": "exit_zero", "porque": "Falla hoy: el archivo no existe. Pasa solo con una foto tomada tras >=60 min de uptime continuo, con el motor activo y el modulo parchado (updates/) cargado."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Medido el 2026-10-30 (kernel 7.0.0-1024-nvidia, driver 580.178.04)
@@ -90,3 +92,7 @@ Pendiente de Luis (root): `SyncIntervalSec=1s` en journald para no perder los ul
 - **Motivo:** la causa de los cortes sigue sin aislar y los `proyecto-local-*` esperan el registro de proyecto-local. Motivo declarado por Luis: ninguno adicional (eligio la opcion recomendada).
 - **Descartado:** restaurar hoy los `proyecto-local-*` y `ojn-fichas` (efecto en memoria sin medir tras dos colapsos el mismo dia); dejar vencer (sin restauracion queda apagado sin vigilante).
 - **Corte:** 2026-11-13; ese dia se corre `systemctl show` de nuevo y se decide con la salida.
+
+## Cierre (2026-11-26 — void_wontfix)
+
+Especifica del kernel retirado `7.0.0-1024` con modulo parchado en `updates/`; la ATOM corre `6.17.0-1032-nvidia` con 189+ h de uptime continuo.

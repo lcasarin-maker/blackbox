@@ -1,0 +1,7 @@
+# Identificacion de emisor SIGKILL en pre-push paralelo (2026-11-26)
+
+1. `sigterm.jsonl` registro `SIGKILL` al proceso candidato `hog` desde un worker paralelo de `pytest` (`xdist`) durante el pre-push completo.
+2. El test `tests/test_escalon_app_slice.py` lleva el marcador `mutates_real_source` en `pytest.ini`, quedando aislado en la fase serial para evitar interferencia entre workers paralelos.
+3. Corrida verificada: `python3 -m pytest -q tests/test_escalon_app_slice.py -p no:cacheprovider` -> `rc=0`.
+
+emisor_sigkill_identificado

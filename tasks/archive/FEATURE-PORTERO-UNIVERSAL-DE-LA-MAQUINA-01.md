@@ -3,12 +3,14 @@ id: FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01
 kind: task
 domain: MEMORY
 title: "Portero universal y automatico de la maquina: cola FIFO y topes por trabajo dentro de cada slice"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-12
 close_check: {"cmd": "grep -q portero_universal_probado tasks/evidence/FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01/medicion.txt", "expect": "exit_zero", "porque": "Los dos colapsos del 11-oct fueron una estampida de git push con pre-push (suite completa) lanzados a la vez por seis sesiones; cada uno corria sin tope propio dentro de un app.slice de 42 GiB compartido, y cerca del techo el kernel se estanca en vez de matar. Cierra cuando haya una medicion con el portero activo: tres suites lanzadas a la vez entran de una en una, cada una bajo su tope, sin que ningun llamador cambie, y el estancamiento no se reproduce. Frase obligatoria en medicion.md: portero_universal_probado."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Decision de ubicacion (voto de Luis 2026-10-12, a partir del estudio de frontera entre bb y el consumidor de conocimiento)
@@ -50,3 +52,7 @@ La pieza vive en bb: mide y actua sobre la maquina y no necesita al consumidor d
 
 ## Avance 2026-10-14: desplegado en observar y medido con 3 suites
 Voto de Luis (observar, medir, luego actuar). `bb-portero.service` corre como servicio de usuario con el interruptor en `observar`. Medicion en `tasks/evidence/FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01/medicion.txt`: tres suites con `bb portero run` entraron de una en una, cada una bajo su scope (20G, sin swap). Falta para la frase de cierre: la prueba por el camino transparente (hooks sin cambiar el llamador, demonio en `actuar`) y el estancamiento bajo carga alta real.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`): `grep -q portero_universal_probado tasks/evidence/FEATURE-PORTERO-UNIVERSAL-DE-LA-MAQUINA-01/medicion.txt`

@@ -3,12 +3,14 @@ id: FEATURE-OBSERVADOR-EXTERNO-DE-REINICIOS-01
 kind: task
 domain: HARDWARE
 title: "Observador externo de ping 1 s y netconsole para saber si la maquina murio entera"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-11
 close_check: {"cmd": "grep -q . $HOME/.local/share/blackbox/externo/ping.jsonl", "expect": "exit_zero", "porque": "Un corte de energia mata al propio instrumento: la evidencia tiene que venir de afuera. Sin registro externo de ping Y de voltaje/consumo, CORTE_ABRUPTO no se separa en CORTE_DE_RED o APAGADO_INTERNO."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Por que
@@ -52,3 +54,7 @@ Sigue sin verificar: el NAS real nunca se toco (ni SMB, ni busybox del QNAP, ni 
 - Control: sin receptor vivo, el datagrama de prueba de la ATOM no deja rastro; con el receptor desacoplado, `prueba-atom-final` aparece con hora e IP origen.
 - Emisor: capa `netconsole-runtime` de `tools/opt_in_captura.sh` (necesita sudo en terminal). Pendiente de que Luis teclee la contrasena.
 - Pendiente: enchufe inteligente con medicion de energia (en camino) para distinguir corte de energia de reset interno; hasta entonces el veredicto por arranque sigue `INDETERMINADA (energia vs hardware interno)`.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`): `grep -q . $HOME/.local/share/blackbox/externo/ping.jsonl`

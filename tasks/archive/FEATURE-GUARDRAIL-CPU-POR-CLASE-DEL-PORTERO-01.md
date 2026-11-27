@@ -3,12 +3,14 @@ id: FEATURE-GUARDRAIL-CPU-POR-CLASE-DEL-PORTERO-01
 kind: task
 domain: CPU
 title: "Ningun guardrail limita la CPU de un proceso o de una clase de trabajo: el portero topa memoria e io, pero no tiene ni una linea de CPU"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-30
 close_check: {"cmd": "test -f tests/test_portero_cpu.py && python3 -m pytest -q -p no:cacheprovider tests/test_portero_cpu.py", "expect": "exit_zero", "porque": "Falla hoy: el archivo no existe. Pasa cuando el portero aplique y pruebe un tope de CPU por clase, con control negativo (sin tope un proceso de prueba satura el nucleo; con tope no)."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Que se midio (2026-10-30)
@@ -29,3 +31,7 @@ close_check: {"cmd": "test -f tests/test_portero_cpu.py && python3 -m pytest -q 
 ## No hacer
 
 Poner `CPUQuota` global en `app.slice` sin datos: ahi corren OpenCode, el escritorio y las compilaciones, y se estrangularian sin evidencia de que la CPU sea la causa de nada.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`): `test -f tests/test_portero_cpu.py && python3 -m pytest -q -p no:cacheprovider tests/test_portero_cpu.py`

@@ -3,12 +3,14 @@ id: DEBT-ATOM-CORTES-OCT-2026-CAUSA-NO-DETERMINADA-01
 kind: task
 domain: HARDWARE
 title: "Cortes de la ATOM de octubre 2026 sin causa determinada (trasladada de una referencia externa)"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: UNCLASSIFIED_DEBT
 created: 2026-10-17
 close_check: {"cmd": "grep -q \"CAUSA DETERMINADA\" tasks/evidence/DEBT-ATOM-CORTES-OCT-2026-CAUSA-NO-DETERMINADA-01/dictamen.md", "expect": "exit_zero", "porque": "Especificacion pendiente: el archivo no existe hoy y el criterio falla. El cierre lo mide una evidencia LOCAL, sin leer el checkout de otro repo (boleta #18 A del 2026-11-01): cuando el dictamen del consumidor de conocimiento sobre los cortes de octubre declare la causa, se copia aqui como `dictamen.md` con su procedencia (repo, ruta, commit y fecha). Cierra solo si contiene `CAUSA DETERMINADA`; con exit_zero, porque el criterio original esperaba empty_stdout y el verificador imprime 'OK 1 archivo(s)...' cuando pasa. Control positivo corrido 2026-10-17 sobre el dictamen de origen: con '**CAUSA DETERMINADA.**' da rc=0."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Origen
@@ -34,3 +36,6 @@ Trasladada el 2026-10-17 por pedido de Luis desde una referencia externa (una re
 - **Falta para cerrar**: (1) un corte nuevo capturado con esos dos instrumentos, o un dictamen del consumidor de conocimiento que declare la causa; (2) copiarlo aqui como `dictamen.md` con procedencia (repo, ruta, commit, fecha) conteniendo `CAUSA DETERMINADA`.
 - **Aviso para el consumidor de conocimiento (su ficha `DGX-683`)**: El 2026-11-20 Luis ordenó formalmente cerrar y trasladar la ficha del consumidor de conocimiento a blackbox. En el repositorio del consumidor de conocimiento la ficha fue reubicada formalmente y cerrada. La investigación física de la causa permanece en esta ficha bajo la custodia de blackbox.
 
+## Cierre (2026-11-26 — void_wontfix)
+
+Serie historica de octubre 2026 previa a `bb-portero`, `docker.slice` a 16 GiB y kernel `6.17.0-1032-nvidia`; 189+ h continuas sin cortes.

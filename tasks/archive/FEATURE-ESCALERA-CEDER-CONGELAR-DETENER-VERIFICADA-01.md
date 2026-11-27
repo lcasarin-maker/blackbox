@@ -3,12 +3,14 @@ id: FEATURE-ESCALERA-CEDER-CONGELAR-DETENER-VERIFICADA-01
 kind: task
 domain: MEMORY
 title: "Escalera ceder, congelar, detener con cada escalon verificado por la caida medida de memory.current (idea de ceder y recuperar de Athena's Engine, adaptada a un observador externo)"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-30
 close_check: {"cmd": "python3 -m pytest -q tests/test_escalera_ceder.py", "expect": "exit_zero", "porque": "Especificacion pendiente: el archivo de pruebas no existe hoy (rc=4 medido el 2026-10-30), asi que falla. Pasa solo cuando una unidad de laboratorio con tope de memoria recorra los tres escalones y la prueba demuestre que cada escalon escala solo si memory.current no cayo, con el control negativo de una unidad que cede al primer escalon y no se congela."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Idea de origen y por que no se copia tal cual
@@ -42,3 +44,7 @@ Regla central: cada escalon se da por logrado solo si `memory.current` de la uni
 ## Limites declarados
 
 Memoria fijada o gestionada de CUDA no se carga a cgroup (`FEATURE-1358-CGROUP-*`); ceder sobre ella no se mide con `memory.current`. Detener pierde trabajo y puede reiniciar solo si la unidad tiene `Restart=` (revisar por unidad antes de elegirla).
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`): `python3 -m pytest -q tests/test_escalera_ceder.py`

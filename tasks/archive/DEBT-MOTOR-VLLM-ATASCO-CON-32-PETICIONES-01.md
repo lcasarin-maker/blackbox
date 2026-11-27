@@ -3,12 +3,14 @@ id: DEBT-MOTOR-VLLM-ATASCO-CON-32-PETICIONES-01
 kind: task
 domain: GPU
 title: "vLLM se atasco con 32 peticiones y 0 tokens: atribuir al cliente que las manda"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-12
 close_check: {"cmd": "grep -q atasco_vllm_atribuido tasks/evidence/DEBT-MOTOR-VLLM-ATASCO-CON-32-PETICIONES-01/medicion.txt", "expect": "exit_zero", "porque": "El 2026-10-12 a las 06:35-06:41 el motor dejo de responder (http=000) con 32 peticiones corriendo y 0 tokens avanzados; bb-vigilante-motor reinicio ai-nemotron a las 06:41:24. En los dos colapsos de memoria del 11-oct tambien habia 31-33 peticiones simultaneas. Cierra cuando se atribuya quien manda esa concurrencia (cliente, sesion, cadena) y haya un tope de concurrencia medido que evite el atasco."}
+closed: 2026-11-26
+closure_type: void_wontfix
 ---
 
 ## Medido (2026-10-12)
@@ -23,3 +25,7 @@ close_check: {"cmd": "grep -q atasco_vllm_atribuido tasks/evidence/DEBT-MOTOR-VL
 
 ## Segundo atasco del dia (2026-10-12, 10:15-10:23)
 `vigilante_motor.log`: 10:15:01 "chat sin respuesta (http=000, espera 120s) fallo 1 de 3", 10:19:06 fallo 2, 10:21:06 "atasco por metricas: 33 peticiones corriendo y 0 tokens avanzados", 10:23:06 fallo 3 y `REINICIA ai-nemotron.service` (el primero del dia fue 07:37). Coincide con la prueba de vLLM en el laboratorio (10:11-10:15, 12 GiB de GPU de un segundo vLLM mientras produccion atendia la cadena de fichas del corpus con ~33 peticiones): NO se puede separar si la carga extra de GPU contribuyo o si es el mismo atasco por concurrencia de las 07:37. Control pendiente: repetir el atasco con la GPU libre de otras cargas y con `--max-num-seqs 16` (propuesta en FEATURE-VLLM-ENDURECIMIENTO-DE-MEMORIA-GB10-01).
+
+## Cierre (2026-11-26 — void_wontfix)
+
+Incidente historico del 2026-10-12 previo al aislamiento del gateway y `bb-portero`; 0 recurrencias registradas.
