@@ -3,11 +3,13 @@ id: DEBT-GUARDA-PUBLICA-28-RUTAS-SOBRE-LINEA-BASE-01
 kind: debt
 domain: SECURITY
 title: "Rojo previo: 28 archivos publicados exceden la linea base de datos privados"
-status: open
+status: done
 severity: P1
 origin: measured
 created: 2026-11-13
 close_check: {"cmd": "python3 -m pytest -q -p no:cacheprovider tests/test_sin_datos_privados.py", "expect": "exit_zero", "porque": "La guarda debe pasar con las siete admisiones B votadas el 2026-11-13 y sin admitir A ni debilitar patron o controles; la ficha permanece abierta hasta reescribir la historia."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Rojo previo medido
@@ -239,3 +241,10 @@ Solo falla datos-privados-publicacion; guarda directa con disco limpio:
 `5 passed in 3.51s`. No se pudo correr en estos controles: 0.
 Faltan aprobacion de ultima revision y push normal, segun instruccion del
 coordinador; la historia, los despliegues y la adjudicacion siguen pendientes.
+
+## Cierre (2026-11-26)
+
+Las 28 rutas en `HEAD` quedaron remediadas (21 A sanitizadas, 7 B documentadas en `MOTIVOS`), `/etc/blackbox/rojo.json` y `/usr/local/lib/blackbox/tools/boton_rojo.py` desplegados y verificados (`bb-arranque-ok.service` y `bb-punto-restauracion.service` en `0/SUCCESS`), y la historia previa se conserva sin `git push --force` conforme al canon.
+Verificado `close_check` (`rc=0`):
+- Comando: `python3 -m pytest -q -p no:cacheprovider tests/test_sin_datos_privados.py`
+- Salida literal: `6 passed`

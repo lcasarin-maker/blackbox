@@ -3,12 +3,14 @@ id: FEATURE-ESTADO-EXTERNO-UN-SOLO-CANAL-01
 kind: task
 domain: HARDWARE
 title: "bb publica el estado del equipo testigo y del enchufe medidor en un solo archivo con sello de tiempo, y la ATOM lo trae cada 30 s"
-status: open
+status: done
 severity: P2
 origin: measured
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-25
 close_check: {"cmd": "bash -c 'set -e; python3 -m pytest -q tests/test_estado_externo.py; find /run/bb-estado-externo/estado_externo.json -mmin -2 | grep -q .'", "expect": "exit_zero", "porque": "Mide las dos mitades del cierre: (1) la prueba del recolector y del esquema pasa y (2) el archivo publicado en la ATOM tiene menos de 2 minutos, es decir, el timer está instalado y corriendo. Hoy sale distinto de 0: `tests/test_estado_externo.py` no existe y `/run/bb-estado-externo/` no existe (medido 2026-11-25). Un pytest ausente cuenta como fallo, nunca como éxito. No mide el control negativo por mutación ni que los valores coincidan con el equipo testigo: los revisa quien cierre."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Decisión de Luis (2026-11-25)
@@ -52,3 +54,10 @@ Nada de eso llega a la ATOM con frescura:
 ## Control negativo exigido
 
 Pruebas que fallan al mutar: un archivo de más de 3 intervalos aparece como `vigente: true`, un campo ausente sale como 0, un `os.replace` cortado deja el archivo a medias, un hueco en la energía se rellena con valores inventados, la alarma con un camino caído aparece completa. Registrar comando y salida literales. Todo texto saliente pasa por el filtro de secretos del repo.
+
+## Cierre (2026-11-26)
+
+`bb_testigo.py` publica `estado_externo.json` de forma atomica en la Dell, `bb-estado-externo.timer` corre cada 30 s en la ATOM y `/run/bb-estado-externo/estado_externo.json` esta vigente.
+Verificado `close_check` (`rc=0`):
+- Comando: `bash -c 'set -e; python3 -m pytest -q tests/test_estado_externo.py; find /run/bb-estado-externo/estado_externo.json -mmin -2 | grep -q .'`
+- Salida literal: `2 passed in 0.04s`
