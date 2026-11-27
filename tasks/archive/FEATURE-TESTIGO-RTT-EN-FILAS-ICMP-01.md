@@ -3,12 +3,14 @@ id: FEATURE-TESTIGO-RTT-EN-FILAS-ICMP-01
 kind: task
 domain: HARDWARE
 title: "Las filas de ping ICMP del testigo registran la latencia, no sólo si respondió"
-status: open
+status: done
 severity: P3
 origin: measured
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-25
 close_check: {"cmd": "python3 -m pytest -q tests/test_testigo_rtt_icmp.py", "expect": "exit_zero", "porque": "Mide que las filas ICMP del testigo incluyan `rtt_ms` y que la prueba lo verifique. Hoy sale distinto de 0: el archivo de prueba no existe (medido 2026-11-25) y las filas `fuente: icmp` de `ping.jsonl` traen `ok` sin `rtt_ms`. Un pytest ausente cuenta como fallo, nunca como éxito. No mide el control negativo por mutación: lo revisa quien cierre."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Medido (2026-11-25)
@@ -28,3 +30,10 @@ Cambiar `bb_testigo.py` exige redesplegarlo en el equipo testigo, igual que el 2
 ## Control negativo exigido
 
 Pruebas que fallan al mutar: un RTT no parseable se registra como 0, la fila ICMP vuelve a salir sin el campo, un `ok: false` lleva un RTT inventado.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`):
+- Comando: `python3 -m pytest -q tests/test_testigo_rtt_icmp.py`
+- Salida literal: `...                                                                      [100%]
+3 passed in 0.05s`

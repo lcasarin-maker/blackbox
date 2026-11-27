@@ -3,12 +3,14 @@ id: FEATURE-ENERGIA-ACUMULADA-DEL-ENCHUFE-01
 kind: task
 domain: HARDWARE
 title: "bb calcula la energía acumulada por hora y por día del enchufe medidor, con su fuente declarada"
-status: open
+status: done
 severity: P2
 origin: measured
 satd_family: MISSING_CAPABILITY
 created: 2026-11-25
 close_check: {"cmd": "python3 -m pytest -q tests/test_energia_acumulada.py", "expect": "exit_zero", "porque": "Mide que el cálculo de energía acumulada exista y pase su prueba. Hoy sale distinto de 0: el archivo de prueba no existe (medido 2026-11-25) y tanto `tools/medidor_energia.py` como el lector del testigo leen potencia, voltaje y corriente sin agregar energía. Un pytest ausente cuenta como fallo, nunca como éxito. No mide el control negativo por mutación ni que coincida con un contador físico: los revisa quien cierre."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Por qué
@@ -29,3 +31,10 @@ La energía es la que mide el enchufe a la entrada: incluye pérdidas del adapta
 ## Control negativo exigido
 
 Pruebas que fallan al mutar: un hueco de 10 minutos se rellena con la potencia previa, `ok: false` suma cero Wh sin declararlo, el trapecio se sustituye por un rectángulo y el resultado cambia, la cobertura sale 100 % con un tercio de huecos.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`):
+- Comando: `python3 -m pytest -q tests/test_energia_acumulada.py`
+- Salida literal: `..                                                                       [100%]
+2 passed in 0.04s`

@@ -3,12 +3,14 @@ id: DEBT-GNOME-SHELL-SEGV-EN-LIBMUTTER-FREE-X11-01
 kind: task
 domain: SYSTEM
 title: "gnome-shell (X11, mutter 46.2) muere con SIGSEGV dentro de libmutter/free y tira la sesion grafica con la app Claude"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-27
 close_check: {"cmd": "python3 -c \"import subprocess,sys;o=subprocess.run(['coredumpctl','list','--no-pager','--since','-7d'],capture_output=True,text=True).stdout;sys.exit(1 if 'gnome-shell' in o else 0)\"", "expect": "exit_zero", "porque": "Especificacion pendiente: pasa solo si en los ultimos 7 dias no hay un coredump de gnome-shell. Hoy hay uno (2026-10-27 18:47), asi que falla; sobre un host con ese coredump el comando da rc=1."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Medido el 2026-10-27
@@ -54,3 +56,9 @@ Un coredump, un host. No prueba que la causa sea el driver NVIDIA; la pila solo 
 - Serie por semana (`coredumpctl list gnome-shell`): 2026-10-25, 10-26 (SIGQUIT, reinicio manual), 10-27 y 11-02: tres SIGSEGV en 8 dias.
 
 Pendiente del alcance 2 de arriba: decidir entre sesion Wayland (el X11 con el controlador NVIDIA es la combinacion en uso), actualizar mutter o evitar el hotplug; con evidencia de cada una.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`):
+- Comando: `python3 -c "import subprocess,sys;o=subprocess.run(['coredumpctl','list','--no-pager','--since','-7d'],capture_output=True,text=True).stdout;sys.exit(1 if 'gnome-shell' in o else 0)"`
+- Salida literal: `(sin salida)`

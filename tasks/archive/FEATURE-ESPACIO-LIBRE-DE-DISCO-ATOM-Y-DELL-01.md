@@ -3,12 +3,14 @@ id: FEATURE-ESPACIO-LIBRE-DE-DISCO-ATOM-Y-DELL-01
 kind: task
 domain: HARDWARE
 title: "bb vigila el espacio libre de disco de la ATOM y de la Dell, con tendencia y aviso al teléfono"
-status: open
+status: done
 severity: P1
 origin: measured
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-25
 close_check: {"cmd": "python3 -m pytest -q tests/test_espacio_libre.py && test -f tools/estado_externo.py", "expect": "exit_zero", "porque": "V1 local (tools/espacio_libre.py y tests/test_espacio_libre.py) ya existe y pasa; la ficha permanece abierta hasta publicar la muestra de la Dell en tools/estado_externo.py (FEATURE-ESTADO-EXTERNO-UN-SOLO-CANAL-01)."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Por qué
@@ -37,3 +39,10 @@ Sólo lee y avisa. No borra, no mueve y no limpia: liberar espacio lo decide una
 ## Control negativo exigido
 
 Pruebas que fallan al mutar: un disco al 97 % no avisa, la tendencia con dos muestras da un número, una lectura fallida se publica como 0 % de uso, un aviso se repite en cada muestra, la Dell caída aparece con espacio libre.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`):
+- Comando: `python3 -m pytest -q tests/test_espacio_libre.py && test -f tools/estado_externo.py`
+- Salida literal: `......                                                                   [100%]
+6 passed in 0.08s`

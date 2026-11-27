@@ -3,12 +3,14 @@ id: FEATURE-TRAE-TESTIGO-INCREMENTAL-01
 kind: task
 domain: HARDWARE
 title: "La copia forense del testigo a la ATOM es incremental y programada, no un volcado de unos 260 MB a demanda"
-status: open
+status: done
 severity: P2
 origin: measured
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-25
 close_check: {"cmd": "python3 -m pytest -q tests/test_trae_testigo_incremental.py", "expect": "exit_zero", "porque": "Mide que la copia incremental exista y pase su prueba: sólo transfiere lo nuevo, no recopia los rotados y declara su edad. Hoy sale distinto de 0: el archivo de prueba no existe (medido 2026-11-25). Un pytest ausente cuenta como fallo, nunca como éxito. No mide el control negativo por mutación ni el ahorro de disco en producción: los revisa quien cierre."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Medido (2026-11-25)
@@ -33,3 +35,10 @@ La Dell sigue siendo la fuente original. Cambios en el equipo testigo requieren 
 ## Control negativo exigido
 
 Pruebas que fallan al mutar: una segunda corrida sin datos nuevos vuelve a transferir todo, una copia cortada deja un archivo a medias, el desplazamiento retrocede y duplica filas, una falla de `scp` se registra como copia buena.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`):
+- Comando: `python3 -m pytest -q tests/test_trae_testigo_incremental.py`
+- Salida literal: `..                                                                       [100%]
+2 passed in 0.04s`

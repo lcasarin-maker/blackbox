@@ -3,12 +3,14 @@ id: DEBT-RELOJ-DE-PARED-ADELANTADO-HORAS-EN-ARRANQUE-01
 kind: task
 domain: SYSTEM
 title: "Dos arranques del 2026-11-02 y 11-01 tienen el reloj de pared horas adelantado; el temporizador de reloj de arranque estaba suspendido y ningun monitor lo vio"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-02
 close_check: {"cmd": "python3 - <<'E'\nimport json,subprocess,sys\nbl=json.loads(subprocess.run(['journalctl','--list-boots','--no-pager','-o','json'],capture_output=True,text=True,errors='replace').stdout)\nmal=[b['boot_id'] for b in bl if b['last_entry']<b['first_entry']]\nsys.exit(1 if mal else 0)\nE", "expect": "exit_zero", "porque": "Falla hoy (medido 2026-11-02): el arranque c092e563 tiene last_entry anterior a first_entry. Pasa solo cuando ningun arranque del journal tiene el reloj hacia atras."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Medido el 2026-11-02
@@ -32,3 +34,14 @@ El `close_check` falla hoy (arranque c092e563). Para el detector: debe marcar c0
 ## Limite
 
 No hay datos del RTC fisico de esos arranques; solo se midio el desfase que dejo el journal.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`):
+- Comando: `python3 - <<'E'
+import json,subprocess,sys
+bl=json.loads(subprocess.run(['journalctl','--list-boots','--no-pager','-o','json'],capture_output=True,text=True,errors='replace').stdout)
+mal=[b['boot_id'] for b in bl if b['last_entry']<b['first_entry']]
+sys.exit(1 if mal else 0)
+E`
+- Salida literal: `(sin salida)`

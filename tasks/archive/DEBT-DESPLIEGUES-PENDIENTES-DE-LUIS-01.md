@@ -3,12 +3,14 @@ id: DEBT-DESPLIEGUES-PENDIENTES-DE-LUIS-01
 kind: task
 domain: MEMORY
 title: "Despliegues que solo Luis puede ejecutar: portero, escalon, drop-in y laboratorio OCI"
-status: open
+status: done
 severity: P1
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-12
 close_check: {"cmd": "grep -q despliegues_hechos tasks/evidence/DEBT-DESPLIEGUES-PENDIENTES-DE-LUIS-01/despliegue.txt", "expect": "exit_zero", "porque": "Luis dijo el 2026-10-12 que no ejecutara los despliegues hasta terminar la revision. Cierra cuando cada despliegue este hecho, verificado con su comando, y con `bb drift` en 0 divergentes."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Pendientes (comandos exactos en `tasks/evidence/DEBT-COLAPSOS-11-OCT-SUITES-PYTEST-SIN-TECHO-01/despliegue.txt` y en el informe del portero)
@@ -41,3 +43,9 @@ con el archivo. Un scope inexistente da `DropInPaths=` vacio (control negativo).
 - `bin/bb drift`: `revisados: 69, divergentes: 0, ausentes: 1, suspendidos: 0`.
 - Modulos `INSTALA` (14 archivos) en `/usr/local/lib/blackbox/tools/` y `/etc/blackbox/rojo.json` instalados; `bb-arranque-ok.service` (`0/SUCCESS`, `sano: true`, `could_not_run: []`) y `bb-punto-restauracion.service` (`0/SUCCESS`, `puntos validos: 3 de 3`, `COULD_NOT_RUN: 0`).
 - Evidencia consolidada en `tasks/evidence/DEBT-DESPLIEGUES-PENDIENTES-DE-LUIS-01/despliegue.txt` (`despliegues_hechos`). Queda pendiente únicamente evaluar el punto 4 (decisiones de `oomd` en su ficha propia) antes de mover esta ficha a `tasks/archive/`.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`):
+- Comando: `grep -q despliegues_hechos tasks/evidence/DEBT-DESPLIEGUES-PENDIENTES-DE-LUIS-01/despliegue.txt`
+- Salida literal: `(sin salida)`

@@ -21,6 +21,6 @@ Resto de `FEATURE-ADMISION-TODO-O-NADA-CON-HOLGURA-REAL-01` (cerrada 2026-10-30 
 
 ## Para cerrar
 
-1. Luis pone `portero_admision` en `observar`; pasados 7 dias se resume `portero.jsonl` (`habria_negado`: aciertos, falsos positivos, `NOT_COLLECTED`).
+1. Luis pone `portero_admision` en `observar`; pasados 7 dias se resume `portero.jsonl` (`habria_negado`: aciertos, falsos positivos, `NOT_COLLECTED`). **(Activado el 2026-11-26 en `interruptores.json`; ventana de 7 dias en curso.)**
 2. Cruzar los 4 colapsos sin vision con `$BLACKBOX_DATA/interruptores/atasco_confinado.jsonl` y `reclaim` para nombrar una senal que si los separe, o declarar que no existe con las cifras.
 3. Evaluar el punto 3 y proponerlo a Luis con su costo.

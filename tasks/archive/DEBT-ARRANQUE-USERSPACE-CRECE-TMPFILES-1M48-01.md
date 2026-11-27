@@ -3,12 +3,14 @@ id: DEBT-ARRANQUE-USERSPACE-CRECE-TMPFILES-1M48-01
 kind: task
 domain: SYSTEM
 title: "El tiempo de userspace del arranque crece en cada boot (9.6 s a 132 s) y systemd-tmpfiles-setup tarda 1 min 48 s"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-26
 close_check: {"cmd": "python3 -c \"import re,subprocess,sys;o=subprocess.run(['systemd-analyze'],capture_output=True,text=True).stdout;m=re.search(r'\\+ (?:(\\d+)min )?([\\d.]+)s \\(userspace\\)',o);s=(int(m.group(1) or 0)*60+float(m.group(2))) if m else 1e9;sys.exit(0 if s<30 else 1)\"", "expect": "exit_zero", "porque": "Especificacion pendiente: pasa solo si el userspace del boot actual dura menos de 30 s. Hoy dura 132.6 s, asi que falla. Sin linea de userspace en la salida cuenta como fallo."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Medido el 2026-10-26 (`systemd-analyze` y journal por arranque)
@@ -132,3 +134,9 @@ El enjambre de opencode termino (ultimo registro 23:21 del 2026-10-27: `Your cre
 ## Desacoplamiento de frontera (2026-11-26, orden de Luis)
 
 La corrección de los lanzadores que escribían worktrees en `/tmp` pasó al backlog de su proyecto dueño. En `blackbox`, esta ficha conserva únicamente la verificación física del próximo arranque (`userspace < 30 s` en `systemd-analyze`) y la vigilancia de inodos y entradas en `/tmp`.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`):
+- Comando: `python3 -c "import re,subprocess,sys;o=subprocess.run(['systemd-analyze'],capture_output=True,text=True).stdout;m=re.search(r'\+ (?:(\d+)min )?([\d.]+)s \(userspace\)',o);s=(int(m.group(1) or 0)*60+float(m.group(2))) if m else 1e9;sys.exit(0 if s<30 else 1)"`
+- Salida literal: `(sin salida)`

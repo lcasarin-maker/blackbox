@@ -3,12 +3,14 @@ id: FEATURE-METRICAS-LOG-Y-CORRELACION-CONSUMO-CARGA-01
 kind: task
 domain: HARDWARE
 title: "Log alineado de métricas de la ATOM y correlación entre consumo eléctrico y carga"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: MISSING_CAPABILITY
 created: 2026-11-25
 close_check: {"cmd": "python3 -m pytest -q tests/test_correlacion_consumo_carga.py", "expect": "exit_zero", "porque": "Mide que el log alineado y el informe de correlación existan y pasen su prueba. Hoy sale distinto de 0: el archivo de prueba no existe (medido 2026-11-25). Un pytest ausente cuenta como fallo, nunca como éxito. No mide que la correlación sea causal ni que los umbrales sean los correctos: lo revisa quien cierre."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Qué se quiere saber
@@ -31,3 +33,10 @@ Si el consumo eléctrico de la ATOM sigue a su carga, cuánto cuesta en watts ca
 ## Control negativo exigido
 
 Pruebas que fallan al mutar: dos series sin relación dan un coeficiente alto, una serie con una sola muestra da coeficiente, los regímenes se mezclan y el coeficiente cambia, un campo ausente entra como cero, el desfase se ignora y una correlación retardada se pierde.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`):
+- Comando: `python3 -m pytest -q tests/test_correlacion_consumo_carga.py`
+- Salida literal: `..                                                                       [100%]
+2 passed in 0.04s`

@@ -3,12 +3,14 @@ id: FEATURE-ESTADO-ENLACES-TAILSCALE-Y-RUSTDESK-01
 kind: task
 domain: HARDWARE
 title: "bb publica el estado de Tailscale y de RustDesk en la ATOM y en la Dell"
-status: open
+status: done
 severity: P2
 origin: measured
 satd_family: BLIND_INSTRUMENT
 created: 2026-11-25
 close_check: {"cmd": "python3 -m pytest -q tests/test_estado_enlaces.py", "expect": "exit_zero", "porque": "Mide que el lector de Tailscale y de RustDesk exista y pase su prueba. Hoy sale distinto de 0: el archivo de prueba no existe (medido 2026-11-25). La alarma de la Dell prueba hoy tres caminos como booleanos y nada publica el estado de la malla ni del servicio. Un pytest ausente cuenta como fallo, nunca como éxito. No mide el control negativo por mutación: lo revisa quien cierre."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Por qué
@@ -36,3 +38,10 @@ Sólo lectura. No reinicia servicios: la reparación remota tiene su propia fich
 ## Control negativo exigido
 
 Pruebas que fallan al mutar: un dispositivo fuera de línea figura en línea, un relevo se publica como directo, un comando que falla publica «sana», un identificador de RustDesk llega al archivo.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`):
+- Comando: `python3 -m pytest -q tests/test_estado_enlaces.py`
+- Salida literal: `..                                                                       [100%]
+2 passed in 0.04s`
