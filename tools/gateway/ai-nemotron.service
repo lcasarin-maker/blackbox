@@ -1,0 +1,15 @@
+[Unit]
+Description=Blackbox local LLM gateway (driven by active_engine.json)
+
+[Service]
+EnvironmentFile=%h/.config/blackbox/gateway.env
+ExecStartPre=-/usr/bin/docker rm -f nemotron-server
+ExecStartPre=${BB_GATEWAY_DIR}/admission_check_wrapper.sh ${BB_GATEWAY_CONFIG} ai-nemotron
+ExecStart=/usr/bin/python3 ${BB_GATEWAY_DIR}/main.py ${BB_GATEWAY_CONFIG}
+ExecStop=/usr/bin/docker stop -t 30 nemotron-server
+Restart=on-failure
+RestartSec=15
+TimeoutStartSec=600
+
+[Install]
+WantedBy=default.target

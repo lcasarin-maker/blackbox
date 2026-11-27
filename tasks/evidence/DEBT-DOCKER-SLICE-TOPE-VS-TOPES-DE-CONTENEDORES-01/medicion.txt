@@ -22,3 +22,8 @@ otro-proyecto-audit-20261002-documenso-1 / -database-1   Exited   2 GiB / 1 GiB 
 librechat y mongo-librechat: ya no existen (retirados el 2026-10-14, DECISIONS.md), sus topes dejan de importar.
 Este repo no crea ningun contenedor de larga vida (sus `docker run` son --rm de laboratorio): ningun creador vive aqui, no hay donde persistir.
 Pendiente de otros duenos: ver `Avance 2026-10-16` en la ficha. Sin marcador de cierre.
+
+# Cierre 2026-11-26:
+# - Techo de docker.slice: MemoryMax=17179869184 (16 GiB) aplicado y verificado.
+# - Gateway recibido en tools/gateway/main.py con --pids-limit 2048 persistido.
+docker_slice_dimensionado

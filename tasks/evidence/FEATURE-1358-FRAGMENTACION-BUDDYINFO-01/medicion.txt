@@ -1,0 +1,26 @@
+# Medicion de fragmentacion (/proc/buddyinfo y pagetypeinfo) - 2026-11-26
+
+## 1. Antes de carga (con LLM local residente)
+- `cat /proc/buddyinfo`:
+Node 0, zone      DMA      4      6      4      4      1     19      0      2      7      8      9      7      3     10 
+Node 0, zone   Normal 144742 120085  37806  23649  15374   2356   4482   5574   3398   1741    163      5      0      0
+- `incident_report.collect_fragmentation(Path('/proc'))`:
+  `{"schema": "bb-fragmentacion/1", "buddyinfo": {"status": "ok", "nodes": {"0": {"order_8_plus": 5307, "order_10_plus": 168}}, "sum": {"order_8_plus": 5307, "order_10_plus": 168}}, "pagetypeinfo": {"status": "COLLECTION_FAILED", "reason": "unreadable"}}`
+
+## 2. Durante asignacion de 2 GiB + peticion al LLM local (`http=200 len=722`)
+- `cat /proc/buddyinfo`:
+Node 0, zone      DMA      4      6      4      4      1     19      0      2      7      8      9      7      3     10 
+Node 0, zone   Normal  38019  23156  17181  19083  15286   2308   4388   5574   3398   1741    163      5      0      0
+- `incident_report.collect_fragmentation(Path('/proc'))`:
+  `{"schema": "bb-fragmentacion/1", "buddyinfo": {"status": "ok", "nodes": {"0": {"order_8_plus": 5307, "order_10_plus": 168}}, "sum": {"order_8_plus": 5307, "order_10_plus": 168}}, "pagetypeinfo": {"status": "COLLECTION_FAILED", "reason": "unreadable"}}`
+
+## 3. Despues de liberar (control negativo de cambio de fragmentacion)
+- `cat /proc/buddyinfo`:
+Node 0, zone      DMA      4      6      4      4      1     19      0      2      7      8      9      7      3     10 
+Node 0, zone   Normal 194269 126637  38759  23689  15056   2557   4847   5574   3398   1741    163      5      0      0
+- `incident_report.collect_fragmentation(Path('/proc'))`:
+  `{"schema": "bb-fragmentacion/1", "buddyinfo": {"status": "ok", "nodes": {"0": {"order_8_plus": 5307, "order_10_plus": 168}}, "sum": {"order_8_plus": 5307, "order_10_plus": 168}}, "pagetypeinfo": {"status": "COLLECTION_FAILED", "reason": "unreadable"}}`
+
+Nota: `/proc/pagetypeinfo` es `0400 root:root`, por lo que sin root devuelve `COLLECTION_FAILED (unreadable)` segun contrato.
+
+buddyinfo_muestreado

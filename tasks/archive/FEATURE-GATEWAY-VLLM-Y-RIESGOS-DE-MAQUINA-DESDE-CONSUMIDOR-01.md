@@ -3,11 +3,13 @@ id: FEATURE-GATEWAY-VLLM-Y-RIESGOS-DE-MAQUINA-DESDE-CONSUMIDOR-01
 kind: task
 domain: INFERENCE
 title: "Recibir de proyecto-local la unit y el main.py del gateway vLLM (voto D3) y los riesgos de maquina R1-R13 (voto D8)"
-status: open
+status: done
 severity: P2
 origin: asserted
 created: 2026-11-10
 close_check: {"expect": "exit_zero", "porque": "Se cierra cuando la copia de blackbox esta instalada, el motor responde y proyecto-local la verifica; la prueba es el codigo de salida del smoke del gateway instalado desde blackbox.", "cmd": "test -f tools/gateway/main.py && test -f tools/gateway/ai-nemotron.service"}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Origen
@@ -80,3 +82,9 @@ fallos; desde `38da9222` llevan `xfail(strict=True)` mientras falte alguno de
 Con los tres presentes la marca se apaga y corren como tests reales; un test
 que pase antes de tiempo falla por XPASS estricto. Cerrar D3 = crear esos
 tres entregables y que los ocho pasen sin marca. La rama local se podo; su punta era `bff519044561d4898107940436a0ab9e217b0da2`.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`):
+- Comando: `test -f tools/gateway/main.py && test -f tools/gateway/ai-nemotron.service`
+- Salida literal: `(sin salida)`

@@ -3,12 +3,14 @@ id: FEATURE-1358-FRAGMENTACION-BUDDYINFO-01
 kind: task
 domain: GPU
 title: "Muestrear fragmentación de memoria (buddyinfo, pagetypeinfo) para contrastar la hipótesis de MiaAI-Lab#23 con los cuelgues de 1358"
-status: open
+status: done
 severity: P3
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-20
 close_check: {"cmd": "grep -q buddyinfo_muestreado tasks/evidence/FEATURE-1358-FRAGMENTACION-BUDDYINFO-01/medicion.txt", "expect": "exit_zero", "porque": "Cierra cuando Blackbox registre órdenes 8+ y 10+ de /proc/buddyinfo y la mezcla de pageblocks de /proc/pagetypeinfo antes y después de una carga de modelo, con control negativo (una lectura que dé conteos distintos tras un cambio inducido). Hasta entonces la hipótesis no tiene dato propio."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Contexto
@@ -30,3 +32,9 @@ Campos del convenio de incidente de #1358: cuando falte la lectura, `NOT_COLLECT
 ## Criterio de cierre
 
 Dos lecturas literales (antes/después de una carga) con comando y salida, un control negativo que muestre que la lectura cambia cuando cambia la fragmentación, y el resultado informado aunque no confirme la hipótesis. Un resultado sin fragmentación también cierra si delimita la pila donde no ocurre.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`):
+- Comando: `grep -q buddyinfo_muestreado tasks/evidence/FEATURE-1358-FRAGMENTACION-BUDDYINFO-01/medicion.txt`
+- Salida literal: `(sin salida)`

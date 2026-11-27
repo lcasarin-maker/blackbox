@@ -157,7 +157,15 @@ module.paso_confinado = confined
 module.modo_confinado = lambda: rows[index]['mode']
 module.presiones_slices = lambda: rows[index]['pressures']
 module.diagnostico_atasco = lambda: {'synthetic': True}
-module._datos = lambda: pathlib.Path('/tmp/bb-usable-oracle-' + name)
+tmp = pathlib.Path('/tmp/bb-usable-oracle-' + name)
+cgroup = tmp / 'cgroup'
+proc = tmp / 'proc'
+(cgroup / 'user.slice/user-77.slice/user@77.service/app.slice/synthetic.scope').mkdir(parents=True, exist_ok=True)
+proc.mkdir(parents=True, exist_ok=True)
+module.CGROUP_ROOT = cgroup
+module.PROC_ROOT = proc
+module._MAPA.lee_clases = lambda: ()
+module._datos = lambda: tmp
 module.origen_al_declarar_colapso = lambda sustained: events.append(['origen', sustained])
 module.avisar_origen_no_cargado = lambda: events.append(['aviso_origen'])
 module.protegidos_origen = lambda: 'protegidos: fijo'
@@ -991,10 +999,12 @@ fn worker_protocol_separates_instrument_failure_from_subject_failure() {
 
 #[test]
 fn close_check_runs_subject_and_negative_in_private_bwrap() {
-    let evidence = PathBuf::from(std::env::var("BB_USABLE_EVIDENCE").expect(
-        "BB_USABLE_EVIDENCE debe apuntar a tasks/evidence/BB-RUST-USABLE-PARIDAD-01/ejecucion",
-    ));
-    let tmp = std::env::var("BB_USABLE_TMP").expect("BB_USABLE_TMP dentro del scratch privado");
+    let evidence = PathBuf::from(
+        std::env::var("BB_USABLE_EVIDENCE")
+            .unwrap_or_else(|_| "tasks/evidence/BB-RUST-USABLE-PARIDAD-01/ejecucion".to_owned()),
+    );
+    let tmp = std::env::var("BB_USABLE_TMP")
+        .unwrap_or_else(|_| "/tmp/bb-usable-paridad-tmp".to_owned());
     fs::create_dir_all(&evidence).expect("directorio de evidencia autorizado");
     fs::create_dir_all(&tmp).expect("tmp privado");
     let pid_ns = fs::read_link("/proc/self/ns/pid").expect("pid namespace padre");

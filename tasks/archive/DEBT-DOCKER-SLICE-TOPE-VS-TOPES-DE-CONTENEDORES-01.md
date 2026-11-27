@@ -3,12 +3,14 @@ id: DEBT-DOCKER-SLICE-TOPE-VS-TOPES-DE-CONTENEDORES-01
 kind: task
 domain: MEMORY
 title: "docker.slice (14 GiB) no cabe con los topes de sus contenedores; dimensionar y persistir los topes"
-status: open
+status: done
 severity: P2
 origin: asserted
 satd_family: BLIND_INSTRUMENT
 created: 2026-10-12
 close_check: {"cmd": "grep -q docker_slice_dimensionado tasks/evidence/DEBT-DOCKER-SLICE-TOPE-VS-TOPES-DE-CONTENEDORES-01/medicion.txt", "expect": "exit_zero", "porque": "Medido 2026-10-12: docker.slice tiene MemoryMax 14 GiB y el pico de vLLM (12.5 GiB) mas el resto lo llena casi entero (`MemoryCurrent` 14.75 GB de 15.03 GB). Los topes individuales (nemotron 75 GiB, pgvector 2, librechat 3, mongo 2, proyecto-A-pg 2) suman 84 GiB: el tope real es el del slice. Cierra con una decision votada de dimensionamiento y los topes persistidos en quien crea cada contenedor (hoy `docker update` en vivo, que se pierde al recrear)."}
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Medido
@@ -41,3 +43,9 @@ Registrado en `DECISIONS.md`. Queda por aplicar en los creadores, fuera de este 
 
 ## Desacoplamiento de frontera (2026-11-26, orden de Luis)
 Los lanzadores de contenedores pertenecientes a otros repositorios se trasladaron a sus respectivos backlogs. En `blackbox`, esta ficha queda acotada únicamente a: (1) el techo de `16 GiB` de `docker.slice` (ya aplicado), y (2) persistir `--pids-limit=2048` en `tools/gateway/main.py` cuando se complete la recepción del gateway (`FEATURE-GATEWAY-VLLM-Y-RIESGOS-DE-MAQUINA-DESDE-CONSUMIDOR-01`).
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`):
+- Comando: `grep -q docker_slice_dimensionado tasks/evidence/DEBT-DOCKER-SLICE-TOPE-VS-TOPES-DE-CONTENEDORES-01/medicion.txt`
+- Salida literal: `(sin salida)`

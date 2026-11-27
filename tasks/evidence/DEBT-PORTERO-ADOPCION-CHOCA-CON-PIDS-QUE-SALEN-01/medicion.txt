@@ -1,0 +1,12 @@
+# Seguimiento de adopciones del portero y estabilidad 14+ dias
+
+1. Parte 1 (`carrera-systemd.txt`, 2026-10-14):
+   - A/B de 40 intentos con systemd real: codigo anterior marcaba 18 scopes `failed` como `rc=0`; codigo actual registra los 18 `failed` como `rc=1` y los 22 `active` como `rc=0`.
+   - `_adopta` comprueba `ActiveState`/`Result` antes de congelar y `aplica` filtra PIDs muertos antes de llamar a systemd.
+
+2. Parte 2 (seguimiento operativo >= 14 dias sin COLAPSO de `bb-usable`):
+   - Ultimo `COLAPSO_MEMORIA` en `reboots.jsonl`: boot `fc60e471` (`2026-11-03T14:50:39Z`).
+   - Al `2026-11-26` (23 dias continuos posteriores, con el boot actual en `188.6 h` continuas): `0` reinicios por `COLAPSO` de `bb-usable`.
+   - Registro acumulado en `portero.jsonl` (`10,667` filas): `admitir` (`rc=0`: 1028, `rc=1`: 23), `congelar` (`rc=0`: 177, `rc=1`: 5), `descongelar` (`rc=0`: 171), `no_actua`: 514.
+
+adopcion_sin_carrera

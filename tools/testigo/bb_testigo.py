@@ -496,6 +496,52 @@ class Testigo:
         self.diarios["energia"].escribe({"ts": _iso(t), "epoch": t, "tipo": self.cfg["enchufe_tipo"], **f})
         self.cuentas["enchufe"] += 1
 
+    def _publica_estado_externo(self, t: float) -> None:
+        """Publica estado_externo.json de forma atomica para consumo por un solo canal."""
+        try:
+            datos_energia = []
+            e_path = self.datos / "energia.jsonl"
+            if e_path.is_file():
+                for ln in e_path.read_text(encoding="utf-8", errors="replace").splitlines()[-5:]:
+                    try:
+                        datos_energia.append(json.loads(ln))
+                    except ValueError:
+                        pass
+            ultima_en = next((f for f in reversed(datos_energia) if f.get("ok") is True), None)
+            nc_path = self.datos / "netconsole.jsonl"
+            nc_st = nc_path.stat() if nc_path.is_file() else None
+            payload = {
+                "esquema": "bb-estado-externo/1",
+                "ts": _iso(t),
+                "epoch": t,
+                "intervalo_s": 30.0,
+                "vigente": True,
+                "motivo_vigencia": "vigente",
+                "procesos": {
+                    "testigo": "activo",
+                    "alarma": "NOT_COLLECTED",
+                    "receptor_netconsole": "activo" if self.cuentas.get("udp", 0) > 0 else "sin_datagramas",
+                },
+                "alarma_caminos": {"ssh_casa": "NOT_COLLECTED", "ssh_tailscale": "NOT_COLLECTED", "rustdesk": "NOT_COLLECTED", "completa": False},
+                "netconsole": {"edad_s": round(max(0.0, t - nc_st.st_mtime), 2) if nc_st else "NOT_COLLECTED", "tamano_bytes": nc_st.st_size if nc_st else "NOT_COLLECTED"},
+                "sondeos_5m": {"tcp": {"muestras": self.cuentas.get("tcp", 0)}, "icmp": {"muestras": self.cuentas.get("icmp", 0)}},
+                "enchufe": {
+                    "ok": bool(ultima_en) if datos_energia else "NOT_COLLECTED",
+                    "potencia_w": ultima_en.get("potencia_w", "NOT_COLLECTED") if ultima_en else "NOT_COLLECTED",
+                    "voltaje_v": ultima_en.get("voltaje_v", "NOT_COLLECTED") if ultima_en else "NOT_COLLECTED",
+                    "corriente_a": ultima_en.get("corriente_a", "NOT_COLLECTED") if ultima_en else "NOT_COLLECTED",
+                },
+                "disco": {"ok": False, "volumenes": []},
+                "enlaces": {"estado": "NOT_COLLECTED"},
+                "deriva_despliegue": {"divergente": False, "archivos": {}},
+            }
+            dest = self.datos / "estado_externo.json"
+            tmp = self.datos / ".tmp-estado_externo.json"
+            tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            os.replace(tmp, dest)
+        except OSError:
+            pass
+
     def _late(self) -> None:
         t = time.time()
         fila_latido = {"ts": _iso(t), "epoch": t, "evento": "latido", "pid": os.getpid(), "version": VERSION,
@@ -503,6 +549,7 @@ class Testigo:
                        "cuentas": dict(self.cuentas), "errores": dict(self.errores)}
         self.diarios["latido"].escribe(fila_latido)
         self.cuentas["latido"] += 1
+        self._publica_estado_externo(t)
 
     def _escucha(self, sock: socket.socket) -> None:
         while not self.parar.is_set():

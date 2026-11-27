@@ -2,12 +2,14 @@
 id: IDEA-DECLARAR-DUENIO-UNICO-DEL-MONITOREO-Y-AREAS
 kind: task
 title: "Declarar en el repo el dueño único del monitoreo de la máquina y el dueño de cada área (scripts, mejora, consolidación, reinicio)"
-status: open
+status: done
 severity: P3
 origin: asserted
 satd_family: PROCESS_DEBT
 close_check: {"cmd": "test -s docs/OWNERSHIP.md", "expect": "exit_zero"}
 created: 2026-11-10
+closed: 2026-11-26
+closure_type: fixed
 ---
 
 ## Contexto
@@ -21,3 +23,9 @@ Existe docs/OWNERSHIP.md con la lista de áreas y su dueño único, y la regla d
 ## Origen
 
 Idea de Luis en sus conversaciones con agentes, cosecha de ideas de proyecto-local del 2026-11-10. Ideas agrupadas: I-Chat-0863, I-Chat-0866.
+
+## Cierre (2026-11-26)
+
+Verificado `close_check` (`rc=0`):
+- Comando: `test -s docs/OWNERSHIP.md`
+- Salida literal: `(sin salida)`
